@@ -32,6 +32,7 @@ interface ActivePackingViewProps {
   onChangeBoxType: (boxType: BoxType) => void;
   stationConfigId: string;
   onToggleGift?: () => void;
+  onTogglePhysicalDocument?: () => void;
 }
 
 export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
@@ -43,6 +44,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   onChangeBoxType,
   stationConfigId,
   onToggleGift,
+  onTogglePhysicalDocument,
 }) => {
   // Calculations
   const totalItemsRequired = order.items.reduce((sum, it) => sum + it.quantityRequired, 0);
@@ -53,9 +55,10 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   const isFlyersFullyScanned = order.marketingFlyers.every(f => f.isIncluded);
   const requiresGift = order.retentionGift && order.retentionGift !== 'none';
   const isGiftConfirmed = !requiresGift || order.giftConfirmed;
+  const isPhysicalDocumentConfirmed = !order.requiresPhysicalDocument || order.physicalDocumentConfirmed;
 
   // Marketing flyers and gifts are now mandatory per Subscription and MVP requirements
-  const isOrderFullyReady = isProductsFullyScanned && isFlyersFullyScanned && isGiftConfirmed;
+  const isOrderFullyReady = isProductsFullyScanned && isFlyersFullyScanned && isGiftConfirmed && isPhysicalDocumentConfirmed;
   const overallProgress = totalItemsRequired > 0 ? Math.round((totalItemsScanned / totalItemsRequired) * 100) : 0;
 
   // Total weight estimate
@@ -220,6 +223,42 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
             <div className="font-black text-sm uppercase">Nota Speciale (Ordine Telefonico/WhatsApp)</div>
             <div className="text-sm font-semibold mt-1">{order.specialNotes}</div>
           </div>
+        </div>
+      )}
+
+      {/* Physical Document Request Banner (Print-on-Demand) */}
+      {order.requiresPhysicalDocument && (
+        <div className={`p-3 rounded-xl border-2 flex items-center justify-between shadow-sm ${
+          order.physicalDocumentConfirmed 
+            ? 'bg-emerald-50 border-emerald-400' 
+            : 'bg-rose-50 border-rose-500 ring-2 ring-rose-500/20'
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className="text-2xl">📄</div>
+            <div>
+              <div className={`font-black text-sm ${order.physicalDocumentConfirmed ? 'text-emerald-800' : 'text-rose-900'}`}>
+                OBBLIGATORIO: Stampare e inserire Fattura / DDT cartaceo
+              </div>
+              <div className="text-xs text-slate-600 font-semibold mt-0.5">
+                Richiesta del cliente o documento B2B
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={onTogglePhysicalDocument}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all active:scale-95 ${
+              order.physicalDocumentConfirmed
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400'
+            }`}
+          >
+            <div className={`w-5 h-5 rounded flex items-center justify-center border-2 ${
+              order.physicalDocumentConfirmed ? 'border-white bg-emerald-500' : 'border-slate-300 bg-white'
+            }`}>
+              {order.physicalDocumentConfirmed && <Check className="w-3.5 h-3.5 text-white" />}
+            </div>
+            <span>Documento inserito</span>
+          </button>
         </div>
       )}
 

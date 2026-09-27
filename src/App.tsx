@@ -229,6 +229,17 @@ export function App() {
     if (!isMuted) playScanSuccess();
   }, [activeOrderId, isMuted, playScanSuccess]);
 
+  // Toggle physical document confirmation
+  const handleTogglePhysicalDocument = useCallback(() => {
+    setOrders(prev => prev.map(o => {
+      if (o.id === activeOrderId) {
+        return { ...o, physicalDocumentConfirmed: !o.physicalDocumentConfirmed };
+      }
+      return o;
+    }));
+    if (!isMuted) playScanSuccess();
+  }, [activeOrderId, isMuted, playScanSuccess]);
+
   // Simulate Incoming Web Order from norsan.it
   const handleSimulateIncomingWebOrder = useCallback(() => {
     const webOrderNum = `ORD-2026-${Math.floor(8820 + Math.random() * 80)}`;
@@ -783,6 +794,7 @@ export function App() {
               onChangeBoxType={handleChangeBoxType}
               stationConfigId={stationConfigId}
               onToggleGift={handleToggleGift}
+              onTogglePhysicalDocument={handleTogglePhysicalDocument}
             />
           </div>
         </main>

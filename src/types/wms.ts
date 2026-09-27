@@ -107,6 +107,8 @@ export interface Order {
   customerOrderCount: number;
   retentionGift?: RetentionGiftType;
   giftConfirmed?: boolean;
+  requiresPhysicalDocument?: boolean;
+  physicalDocumentConfirmed?: boolean;
 }
 
 export type ScanResultType =

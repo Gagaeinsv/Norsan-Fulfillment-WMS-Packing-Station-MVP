@@ -131,7 +131,41 @@ const RAW_ORDERS: Order[] = [
     status: 'ready_to_pack',
     isSubscription: false,
     customerOrderCount: 1,
-    retentionGift: 'none'
+    retentionGift: 'none',
+    requiresPhysicalDocument: false
+  },
+  {
+    id: 'ord-mvp-5',
+    orderNumber: 'B2B-FARM-202612',
+    barcode: 'B2B-FARM-202612',
+    source: 'B2B Farmacia EDI',
+    createdAt: Date.now() - 1000 * 60 * 60,
+    customerName: 'Farmacia San Raffaele',
+    customerAddress: 'Via Olgettina, 60',
+    customerCity: 'Milano',
+    customerZip: '20132',
+    customerProvince: 'MI',
+    customerCountry: 'IT',
+    courier: 'DHL Paket',
+    trackingNumber: 'DHL-B2B-9988-777',
+    priority: 'standard',
+    boxBranding: 'norsan_logo',
+    boxRecommendation: 'BOX-NOR-M',
+    items: [
+      {
+        product: NORSAN_PRODUCTS.find(p => p.sku === 'NOR-TOT-200-LEM')!,
+        quantityRequired: 6,
+        quantityScanned: 0,
+        status: 'pending'
+      }
+    ],
+    marketingFlyers: [],
+    status: 'ready_to_pack',
+    specialNotes: 'B2B Pharmacy. Stampare Documento di Trasporto (DDT) / Fattura',
+    isSubscription: false,
+    customerOrderCount: 10,
+    retentionGift: 'none',
+    requiresPhysicalDocument: true
   }
 ];
 
