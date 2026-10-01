@@ -13,7 +13,7 @@ export interface Product {
   brand: BrandFamily; // NORSAN vs ZREEN (Azienda Docciaria Nutraceutica)
   volume: string; // e.g. "200 ml", "120 capsule", "300 g"
   packageType: PackageType;
-  shelfLocation: string; // e.g. "S1-A", "S2-C", "D2-C" (S=Sinistra, D=Destra)
+  shelfLocation: string; // e.g. "N-A1", "A-01", "D-38"
   rackSide: RackSide;
   tier: 1 | 2 | 3; // 1 = Basso (Terra), 2 = Medio (Golden Zone), 3 = Alto
   weightGrams: number;
@@ -24,6 +24,11 @@ export interface Product {
   storageZone?: StorageZone;
   shelfCoordinate?: string;
   colorCategory?: ZreenColorCategory;
+  // Pick-to-Light (IoT LED WS2812B strip)
+  p2lTier?: 'A' | 'B' | 'C' | 'D'; // Physical shelf tier for LED strip
+  p2lLedIndex?: number;              // LED index on strip, e.g. D-38 → 38
+  // Fast-pick buffer (tavolo buffer next to packer)
+  isFastBuffer?: boolean;            // true = item lives in N-B1..N-B3 table buffer
 }
 
 export interface OrderItem {
@@ -48,7 +53,14 @@ export type BoxType =
   | 'BOX-AMZ-L';
 
 export type CourierService = 'DHL Express' | 'DHL Paket';
-export type OrderSource = 'norsan.it Web Shop' | 'zreen.it Shop' | 'Amazon Marketplace' | 'B2B Farmacia EDI' | 'WhatsApp / Telefono';
+export type OrderSource =
+  | 'norsan.it Web Shop'
+  | 'zreen.it Shop'
+  | 'Amazon Marketplace'
+  | 'B2B Farmacia EDI'
+  | 'WhatsApp / Telefono'
+  | 'SellyErp INT'    // Internet orders: INT50953
+  | 'SellyErp ORDVE'; // B2B orders: ORDVE2026121172
 
 export type StorageZone = 'norsan_side_shelf' | 'zreen_rack_shared';
 export type PhysicalSide = 'left' | 'right';
@@ -109,6 +121,17 @@ export interface Order {
   giftConfirmed?: boolean;
   requiresPhysicalDocument?: boolean;
   physicalDocumentConfirmed?: boolean;
+  // SellyErp integration
+  sellyErpOrderId?: string; // e.g. "INT50953", "ORDVE2026121172"
+  sellyErpRawItems?: SellyErpLineItem[]; // Raw lines before service filtering
+}
+
+export interface SellyErpLineItem {
+  sku: string;       // e.g. "3000-001", "5000-019"
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  isService: boolean; // true = Spedizione, handling fee, etc. → filtered from packing UI
 }
 
 export type ScanResultType =

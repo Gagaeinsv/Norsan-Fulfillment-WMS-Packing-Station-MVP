@@ -302,6 +302,20 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
         </div>
       )}
 
+      {/* SellyErp Loyalty Badge — shown for INT/ORDVE orders with customerOrderCount */}
+      {(order.source === 'SellyErp INT' || order.source === 'SellyErp ORDVE') && order.customerOrderCount > 1 && (
+        <div className="bg-amber-50 border-l-4 border-amber-400 text-amber-900 p-3 rounded-r flex items-center gap-3 shadow-sm">
+          <span className="text-xl">⭐</span>
+          <div>
+            <div className="font-black text-sm">Cliente Fedele — {order.customerOrderCount}° ordine</div>
+            <div className="text-xs font-semibold text-slate-600 mt-0.5">
+              Progressivo ordine: {order.sellyErpOrderId || order.orderNumber}
+              {order.customerOrderCount >= 4 && ' · Valutare sample bonus'}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Grid: Visual Product Cards with High Contrast 2-Meter Shelf Coordinates */}
       <div className="flex-1 overflow-y-auto pr-1">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -312,13 +326,18 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
 
             let cardClass = 'bg-white border-2 border-slate-300 shadow-sm hover:border-slate-400';
             const isStation1 = stationConfigId === 'STATION_01';
+
+            // ── Reachability direction (mirrors on station switch) ──────────
             let reachabilityText = '';
-            if (item.product.brand === 'NORSAN') {
-              reachabilityText = isStation1 ? '⬅️ ZONA SINISTRA (Полиця NORSAN)' : '➡️ ZONA DESTRA (Полиця NORSAN)';
+            if (item.product.isFastBuffer) {
+              reachabilityText = ''; // No arrow — it's on the table
+            } else if (item.product.brand === 'NORSAN') {
+              reachabilityText = isStation1 ? '⬅️ ZONA SINISTRA (Scaffale NORSAN)' : '➡️ ZONA DESTRA (Scaffale NORSAN)';
             } else if (item.product.brand === 'ZREEN') {
-              reachabilityText = isStation1 ? '➡️ ZONA DESTRA' : '⬅️ ZONA SINISTRA';
+              reachabilityText = isStation1 ? '➡️ ZONA DESTRA (Scaffale ZREEN)' : '⬅️ ZONA SINISTRA (Scaffale ZREEN)';
             }
 
+            // ── Color badge per brand/category ─────────────────────────────
             let badgeShelfClass = 'bg-amber-100 text-amber-950 border-amber-400';
             if (item.product.brand === 'ZREEN') {
               if (item.product.colorCategory === 'sleep_calm') badgeShelfClass = 'bg-blue-100 text-blue-900 border-blue-400';
@@ -326,9 +345,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
               else if (item.product.colorCategory === 'amino_energy') badgeShelfClass = 'bg-orange-100 text-orange-900 border-orange-400';
               else badgeShelfClass = 'bg-slate-100 text-slate-900 border-slate-400';
             } else {
-              if (item.product.rackSide === 'D') {
-                badgeShelfClass = 'bg-cyan-100 text-cyan-950 border-cyan-400';
-              }
+              if (item.product.rackSide === 'D') badgeShelfClass = 'bg-cyan-100 text-cyan-950 border-cyan-400';
             }
 
             if (isCompleted) {
@@ -340,19 +357,38 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
             const remainingQty = item.quantityRequired - item.quantityScanned;
             const isBulkMultiple = remainingQty >= 6;
 
+            // ── Pick-to-Light virtual emulator glow ─────────────────────────
+            const hasP2L = !!(item.product.p2lTier && item.product.p2lLedIndex != null);
+            const p2lGlowClass = hasP2L && !isCompleted
+              ? 'after:absolute after:inset-0 after:rounded-3xl after:pointer-events-none after:animate-p2l-pulse'
+              : '';
+
             return (
               <div
                 key={item.product.id}
-                className={`rounded-3xl p-4.5 flex flex-col justify-between transition-all duration-200 relative overflow-hidden ${cardClass}`}
+                className={`rounded-3xl p-4.5 flex flex-col justify-between transition-all duration-200 relative overflow-hidden ${cardClass} ${p2lGlowClass}`}
               >
+                {/* Pick-to-Light LED Badge */}
+                {hasP2L && !isCompleted && (
+                  <div className="absolute top-2 right-2 flex items-center gap-1 bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg animate-pulse">
+                    <span className="w-2 h-2 rounded-full bg-white inline-block" />
+                    LED {item.product.p2lTier}-{item.product.p2lLedIndex}
+                  </div>
+                )}
+
                 {/* Top: Shelf Badge & Item Status */}
                 <div className="flex flex-col gap-2 pb-2.5 border-b border-slate-200">
-                  <div className="text-xs font-black uppercase text-slate-500 tracking-wide">{reachabilityText}</div>
+                  <div className="text-xs font-black uppercase text-slate-500 tracking-wide">
+                    {item.product.isFastBuffer
+                      ? <span className="text-violet-700">📍 TAVOLO — Scatola aperta sul tavolo</span>
+                      : reachabilityText
+                    }
+                  </div>
                   <div className="flex items-center justify-between gap-2">
-                    {/* Huge Shelf Coordinate Pill */}
-                    <div className={`px-3.5 py-1.5 rounded-xl border-2 font-mono font-black text-xl flex items-center gap-2 shadow-xs ${badgeShelfClass}`}>
+                    {/* Huge Shelf Coordinate Pill — glow if P2L active */}
+                    <div className={`px-3.5 py-1.5 rounded-xl border-2 font-mono font-black text-xl flex items-center gap-2 shadow-xs ${badgeShelfClass} ${hasP2L && !isCompleted ? 'ring-2 ring-emerald-400 shadow-emerald-300 shadow-md' : ''}`}>
                       <MapPin className="w-5 h-5 text-slate-800" />
-                      <span>📍 [{item.product.shelfCoordinate || item.product.shelfLocation}]</span>
+                      <span>{item.product.isFastBuffer ? '📍 TAVOLO' : (item.product.shelfCoordinate || item.product.shelfLocation)}</span>
                     </div>
 
                   <div className="flex items-center gap-1.5">

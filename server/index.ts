@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { db, initDatabase } from './db';
+import { lightOrderItems, markItemScanned, blinkError, clearAllLeds, getP2lStatus } from './services/p2lService';
 
 const app = express();
 const PORT = 3001;
@@ -133,6 +134,53 @@ app.post('/api/audit/scan', (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
   insert.run(operatorCode, rawCode, resultType, status, message, orderId || null, productId || null, Date.now());
+  res.json({ success: true });
+});
+
+// --- 3. PICK-TO-LIGHT API ---
+
+// GET /api/p2l/status — Health check for ESP32 controller
+app.get('/api/p2l/status', (_req, res) => {
+  res.json(getP2lStatus());
+});
+
+// POST /api/p2l/light — Light up LEDs for open order items (GREEN)
+app.post('/api/p2l/light', async (req, res) => {
+  const { items } = req.body as { items: Array<{ tier?: string; ledIndex?: number }> };
+  if (!items || !Array.isArray(items)) {
+    return res.status(400).json({ error: 'items array required' });
+  }
+  await lightOrderItems(items as any);
+  res.json({ success: true });
+});
+
+// POST /api/p2l/scanned — Mark item LED as scanned (blink green × 2, then off)
+app.post('/api/p2l/scanned', async (req, res) => {
+  const { tier, ledIndex } = req.body as { tier?: string; ledIndex?: number };
+  if (!tier || ledIndex == null) {
+    return res.status(400).json({ error: 'tier and ledIndex required' });
+  }
+  await markItemScanned(tier as any, ledIndex);
+  res.json({ success: true });
+});
+
+// POST /api/p2l/error — Blink LED red × 2 (wrong scan feedback)
+app.post('/api/p2l/error', async (req, res) => {
+  const { tier, ledIndex } = req.body as { tier?: string; ledIndex?: number };
+  if (!tier || ledIndex == null) {
+    return res.status(400).json({ error: 'tier and ledIndex required' });
+  }
+  await blinkError(tier as any, ledIndex);
+  res.json({ success: true });
+});
+
+// POST /api/p2l/clear — Turn off all LEDs for completed order
+app.post('/api/p2l/clear', async (req, res) => {
+  const { items } = req.body as { items: Array<{ tier?: string; ledIndex?: number }> };
+  if (!items || !Array.isArray(items)) {
+    return res.status(400).json({ error: 'items array required' });
+  }
+  await clearAllLeds(items as any);
   res.json({ success: true });
 });
 
