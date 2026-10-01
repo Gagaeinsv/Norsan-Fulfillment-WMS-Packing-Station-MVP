@@ -57,7 +57,7 @@ export const ScannerStatusBanner: React.FC<ScannerStatusBannerProps> = ({ lastSc
         </div>
         <div className="min-w-0">
           <div className="text-xs font-mono uppercase font-black tracking-widest text-white/90">
-            {lastScan.title} â€¢ CODICE: <span className="font-mono bg-black/30 px-2 py-0.5 rounded text-white">{lastScan.rawCode}</span>
+            {lastScan.title} • CODICE: <span className="font-mono bg-black/30 px-2 py-0.5 rounded text-white">{lastScan.rawCode}</span>
           </div>
           <div className="text-2xl lg:text-3xl font-black text-white tracking-wide truncate mt-0.5">
             {lastScan.message}

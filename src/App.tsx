@@ -88,7 +88,7 @@ export function App() {
       slot_code: newSlotCode,
       side: side,
       tier: tier,
-      description: `Scaffale ${side} â€¢ Piano ${tier} â€¢ Slot ${newSlotCode}`,
+      description: `Scaffale ${side} • Piano ${tier} • Slot ${newSlotCode}`,
       product_id: null
     };
 
@@ -275,7 +275,7 @@ export function App() {
       isSubscription: false,
       customerOrderCount: 1,
       retentionGift: 'none',
-      specialNotes: 'ORDINE ONLINE DIRETTO DA NORSAN.IT â€¢ Scatola Logo NORSAN + Volantino Guida 2026',
+      specialNotes: 'ORDINE ONLINE DIRETTO DA NORSAN.IT • Scatola Logo NORSAN + Volantino Guida 2026',
       items: [
         {
           product: NORSAN_PRODUCTS[0], // Total Limone 200ml (Slot S2-A)
@@ -322,7 +322,7 @@ export function App() {
         resultType: 'operator_login',
         status: 'info',
         title: 'Login Operatore Riuscito',
-        message: `Autenticato: ${matchedOperator.name} [${matchedOperator.operatorCode}] â€¢ Ruolo: ${matchedOperator.role === 'team_lead' ? 'Team Lead' : 'Packer'}`,
+        message: `Autenticato: ${matchedOperator.name} [${matchedOperator.operatorCode}] • Ruolo: ${matchedOperator.role === 'team_lead' ? 'Team Lead' : 'Packer'}`,
         timestamp: Date.now(),
       });
       return;
@@ -390,7 +390,7 @@ export function App() {
           resultType: 'unknown_code',
           status: 'warning',
           title: 'Volantino Non Richiesto',
-          message: `Il volantino "${matchedFlyer.title}" non Ã¨ previsto per questo ordine.`,
+          message: `Il volantino "${matchedFlyer.title}" non è previsto per questo ordine.`,
           timestamp: Date.now(),
         });
         return;
@@ -725,7 +725,7 @@ export function App() {
       resultType: 'operator_login',
       status: 'info',
       title: 'Login Riuscito',
-      message: `Benvenuto ${operator.name} [${operator.operatorCode}] â€¢ Ruolo: ${operator.role === 'team_lead' ? 'Team Lead' : 'Packer'}`,
+      message: `Benvenuto ${operator.name} [${operator.operatorCode}] • Ruolo: ${operator.role === 'team_lead' ? 'Team Lead' : 'Packer'}`,
       timestamp: Date.now(),
     });
   }, [isMuted, playScanSuccess]);

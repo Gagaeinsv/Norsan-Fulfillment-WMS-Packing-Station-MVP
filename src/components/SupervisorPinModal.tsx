@@ -79,7 +79,7 @@ export const SupervisorPinModal: React.FC<SupervisorPinModalProps> = ({
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="text-xs text-slate-600">
-            L'accesso alle metriche di magazzino, alla gestione del personale e alla riconfigurazione delle baie Ã¨ riservato ai responsabili di reparto.
+            L'accesso alle metriche di magazzino, alla gestione del personale e alla riconfigurazione delle baie è riservato ai responsabili di reparto.
           </div>
 
           <div>

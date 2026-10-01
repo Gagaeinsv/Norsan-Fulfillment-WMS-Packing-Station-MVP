@@ -205,7 +205,7 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
                     <div className="min-w-0 flex-1">
                       <div className="font-bold text-slate-900 truncate">{item.product.name}</div>
                       <div className="text-[10px] font-mono text-emerald-800 font-bold">
-                        EAN: {item.product.ean} â€¢ Pos: [{item.product.shelfLocation}]
+                        EAN: {item.product.ean} • Pos: [{item.product.shelfLocation}]
                       </div>
                     </div>
                     <span className="text-[11px] font-mono font-black px-2.5 py-1 rounded-lg bg-emerald-600 text-white flex-shrink-0 ml-2">
@@ -232,7 +232,7 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
                 >
                   <div className="min-w-0 flex-1">
                     <div className="font-bold text-slate-900 truncate">{flyer.title}</div>
-                    <div className="text-[10px] font-mono text-slate-500">{flyer.code} â€¢ Pos: [{flyer.shelfLocation}]</div>
+                    <div className="text-[10px] font-mono text-slate-500">{flyer.code} • Pos: [{flyer.shelfLocation}]</div>
                   </div>
                   <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
                     Skan Flyer
@@ -255,8 +255,8 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
                 className="w-full p-2 bg-cyan-50 hover:bg-cyan-100 border-2 border-norsan-400 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between"
               >
                 <div>
-                  <div className="font-bold text-norsan-950">Scatola M â€¢ LOGO NORSAN</div>
-                  <div className="text-[10px] font-mono text-norsan-800">BOX-NOR-M â€¢ Per ordini norsan.it</div>
+                  <div className="font-bold text-norsan-950">Scatola M • LOGO NORSAN</div>
+                  <div className="text-[10px] font-mono text-norsan-800">BOX-NOR-M • Per ordini norsan.it</div>
                 </div>
                 <span className="text-[9px] font-black px-2 py-0.5 rounded bg-norsan-600 text-white">NORSAN</span>
               </button>
@@ -267,8 +267,8 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
                 className="w-full p-2 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-400 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between"
               >
                 <div>
-                  <div className="font-bold text-emerald-950">Scatola M â€¢ LOGO ZREEN (Docciaria)</div>
-                  <div className="text-[10px] font-mono text-emerald-800">BOX-ZRE-M â€¢ Per linea ZREEN Nutraceutica</div>
+                  <div className="font-bold text-emerald-950">Scatola M • LOGO ZREEN (Docciaria)</div>
+                  <div className="text-[10px] font-mono text-emerald-800">BOX-ZRE-M • Per linea ZREEN Nutraceutica</div>
                 </div>
                 <span className="text-[9px] font-black px-2 py-0.5 rounded bg-emerald-700 text-white">ZREEN</span>
               </button>
@@ -279,8 +279,8 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
                 className="w-full p-2 bg-amber-50 hover:bg-amber-100 border-2 border-amber-400 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between"
               >
                 <div>
-                  <div className="font-bold text-amber-950">Scatola M â€¢ NEUTRA SENZA LOGO</div>
-                  <div className="text-[10px] font-mono text-amber-800">BOX-AMZ-M â€¢ Obbligatorio Amazon</div>
+                  <div className="font-bold text-amber-950">Scatola M • NEUTRA SENZA LOGO</div>
+                  <div className="text-[10px] font-mono text-amber-800">BOX-AMZ-M • Obbligatorio Amazon</div>
                 </div>
                 <span className="text-[9px] font-black px-2 py-0.5 rounded bg-amber-600 text-white">AMAZON</span>
               </button>

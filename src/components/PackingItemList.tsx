@@ -64,7 +64,7 @@ export const PackingItemList: React.FC<PackingItemListProps> = ({
 
                   {item.product.fragile && (
                     <span className="text-[11px] font-semibold text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/80">
-                      Vetro â€¢ Pluriball
+                      Vetro • Pluriball
                     </span>
                   )}
                 </div>

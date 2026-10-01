@@ -56,11 +56,11 @@ export const TerminalLockScreen: React.FC<TerminalLockScreenProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-black text-lg tracking-widest text-white">NORSAN</span>
-              <span className="text-slate-500">â€¢</span>
+              <span className="text-slate-500">•</span>
               <span className="text-cyan-400 font-mono text-xs font-bold uppercase tracking-wider">ZREEN NUTRACEUTICA</span>
             </div>
             <div className="text-xs text-slate-400 font-mono">
-              WMS Packaging Terminal â€¢ Hub di Spedizione Bolzano (BZ)
+              WMS Packaging Terminal • Hub di Spedizione Bolzano (BZ)
             </div>
           </div>
         </div>
@@ -162,7 +162,7 @@ export const TerminalLockScreen: React.FC<TerminalLockScreenProps> = ({
                       )}
                     </div>
                     <div className="text-[10px] text-slate-400 truncate mt-0.5">
-                      {op.stationId} â€¢ {op.packedToday} colli
+                      {op.stationId} • {op.packedToday} colli
                     </div>
                   </div>
                 </button>
@@ -179,7 +179,7 @@ export const TerminalLockScreen: React.FC<TerminalLockScreenProps> = ({
           <span>Lettore Barcode USB / Bluetooth sempre attivo in modalitÃ  Keyboard Wedge</span>
         </div>
         <div>
-          Conforme standard Lean 5S & Poka-Yoke â€¢ NORSAN Italia
+          Conforme standard Lean 5S & Poka-Yoke • NORSAN Italia
         </div>
       </div>
     </div>

@@ -35,15 +35,15 @@ export const StationRackGuide: React.FC<StationRackGuideProps> = ({
 
   // Italian standard: S = Sinistra (Left), D = Destra (Right)
   const leftSlots = [
-    { tier: 3, name: 'Piano 3 (Alto - 1.7m) â€¢ 10 Posizioni', slots: letters.map(l => `S3-${l}`) },
-    { tier: 2, name: 'Piano 2 (Medio - Golden Zone) â€¢ 10 Posizioni', slots: letters.map(l => `S2-${l}`) },
-    { tier: 1, name: 'Piano 1 (Basso - Terra) â€¢ 10 Posizioni', slots: letters.map(l => `S1-${l}`) },
+    { tier: 3, name: 'Piano 3 (Alto - 1.7m) • 10 Posizioni', slots: letters.map(l => `S3-${l}`) },
+    { tier: 2, name: 'Piano 2 (Medio - Golden Zone) • 10 Posizioni', slots: letters.map(l => `S2-${l}`) },
+    { tier: 1, name: 'Piano 1 (Basso - Terra) • 10 Posizioni', slots: letters.map(l => `S1-${l}`) },
   ];
 
   const rightSlots = [
-    { tier: 3, name: 'Piano 3 (Alto - 1.7m) â€¢ 10 Posizioni', slots: letters.map(l => `D3-${l}`) },
-    { tier: 2, name: 'Piano 2 (Medio - Golden Zone) â€¢ 10 Posizioni', slots: letters.map(l => `D2-${l}`) },
-    { tier: 1, name: 'Piano 1 (Basso - Terra) â€¢ 10 Posizioni', slots: letters.map(l => `D1-${l}`) },
+    { tier: 3, name: 'Piano 3 (Alto - 1.7m) • 10 Posizioni', slots: letters.map(l => `D3-${l}`) },
+    { tier: 2, name: 'Piano 2 (Medio - Golden Zone) • 10 Posizioni', slots: letters.map(l => `D2-${l}`) },
+    { tier: 1, name: 'Piano 1 (Basso - Terra) • 10 Posizioni', slots: letters.map(l => `D1-${l}`) },
   ];
 
   const renderSlotCell = (slotCode: string) => {
@@ -141,9 +141,9 @@ export const StationRackGuide: React.FC<StationRackGuideProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-                Mappa Posizioni Scaffalature â€¢ Hub Bolzano
+                Mappa Posizioni Scaffalature • Hub Bolzano
                 <span className="text-xs bg-slate-200 text-slate-800 px-2.5 py-0.5 rounded-full font-mono font-bold">
-                  10 Posizioni per Piano (A..J) â€¢ Standard S/D
+                  10 Posizioni per Piano (A..J) • Standard S/D
                 </span>
               </h2>
               <p className="text-xs text-slate-600">
@@ -178,10 +178,10 @@ export const StationRackGuide: React.FC<StationRackGuideProps> = ({
                 <div className="flex items-center gap-2">
                   <div className="w-3.5 h-3.5 rounded-full bg-amber-500" />
                   <h3 className="font-black text-amber-900 text-sm tracking-wide">
-                    SCAFFALE S â€¢ SINISTRA (Oli Liquidi & Flaconi Vetro)
+                    SCAFFALE S • SINISTRA (Oli Liquidi & Flaconi Vetro)
                   </h3>
                 </div>
-                <span className="text-[11px] text-slate-500 font-mono">3 Piani â€¢ 30 Posizioni (A..J)</span>
+                <span className="text-[11px] text-slate-500 font-mono">3 Piani • 30 Posizioni (A..J)</span>
               </div>
 
               <div className="space-y-3">
@@ -205,10 +205,10 @@ export const StationRackGuide: React.FC<StationRackGuideProps> = ({
                 <div className="flex items-center gap-2">
                   <div className="w-3.5 h-3.5 rounded-full bg-cyan-500" />
                   <h3 className="font-black text-cyan-900 text-sm tracking-wide">
-                    SCAFFALE D â€¢ DESTRA (Capsule, Gocce, Nutraceutici & Volantini)
+                    SCAFFALE D • DESTRA (Capsule, Gocce, Nutraceutici & Volantini)
                   </h3>
                 </div>
-                <span className="text-[11px] text-slate-500 font-mono">3 Piani â€¢ 30 Posizioni (A..J)</span>
+                <span className="text-[11px] text-slate-500 font-mono">3 Piani • 30 Posizioni (A..J)</span>
               </div>
 
               <div className="space-y-3">

@@ -46,7 +46,7 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-                Ordine Verificato al 100% â€¢ Etichetta Spedizione Pronta
+                Ordine Verificato al 100% • Etichetta Spedizione Pronta
               </h2>
               <p className="text-xs text-slate-500">
                 Tutti i prodotti corrispondono al foglio d'ordine {order.orderNumber}
@@ -92,7 +92,7 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
               </div>
               <div className="text-right">
                 <div className="text-[9px] uppercase font-bold text-gray-600">Pezzi / Peso</div>
-                <div className="text-sm font-bold font-mono">1 collo â€¢ {((order.items.reduce((s, i) => s + (i.product.weightGrams * i.quantityScanned), 0) + 180) / 1000).toFixed(2)} kg</div>
+                <div className="text-sm font-bold font-mono">1 collo • {((order.items.reduce((s, i) => s + (i.product.weightGrams * i.quantityScanned), 0) + 180) / 1000).toFixed(2)} kg</div>
               </div>
             </div>
 

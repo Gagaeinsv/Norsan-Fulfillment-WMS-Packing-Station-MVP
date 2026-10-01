@@ -107,7 +107,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
 
           <div className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
             <span>{order.customerName}</span>
-            <span className="text-slate-300">â€¢</span>
+            <span className="text-slate-300">•</span>
             <span className="text-slate-700 font-semibold flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-amber-600" />
               {order.customerCity}
@@ -186,7 +186,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
           {/* Scale Weight & Progress */}
           <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-mono font-bold">
             <span className="text-slate-800">{totalItemsScanned}/{totalItemsRequired} pz ({overallProgress}%)</span>
-            <span className="text-slate-300">â€¢</span>
+            <span className="text-slate-300">•</span>
             <span className="text-emerald-700 font-black flex items-center gap-1 text-sm">
               <Scale className="w-4 h-4 text-emerald-600" />
               {(totalGrossWeight / 1000).toFixed(2)} kg
@@ -449,7 +449,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
                     <div className="mt-2 flex items-center gap-1.5 flex-wrap">
                       {item.product.fragile && (
                         <span className="text-xs font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300">
-                          Vetro â€¢ Pluriball
+                          Vetro • Pluriball
                         </span>
                       )}
 

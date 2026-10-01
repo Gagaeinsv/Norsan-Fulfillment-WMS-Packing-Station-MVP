@@ -105,7 +105,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="font-black tracking-wider text-base text-slate-900 font-sans">NORSAN</span>
             <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-300 font-mono font-black">
-              {currentOperator.stationId} â€¢ BOLZANO
+              {currentOperator.stationId} • BOLZANO
             </span>
             <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-0.5 font-bold">
               <ShieldCheck className="w-3 h-3 text-emerald-600" />
@@ -152,7 +152,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div className="min-w-0">
             <div className="text-[10px] font-black uppercase tracking-wider opacity-90 truncate">
-              {lastScan ? lastScan.title : 'SCANNER PRONTO â€¢ INSERIMENTO CODICE'}
+              {lastScan ? lastScan.title : 'SCANNER PRONTO • INSERIMENTO CODICE'}
             </div>
             <div className="text-xs font-black truncate leading-tight">
               {lastScan ? lastScan.message : "Scansiona foglio d'ordine, prodotto, scatola o badge"}

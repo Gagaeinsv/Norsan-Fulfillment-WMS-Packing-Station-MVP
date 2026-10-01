@@ -258,7 +258,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Puoi aggiungere nuovi slot o rimuoverli se un prodotto occupa piÃ¹ spazio (ad es. 8 o 9 slot piÃ¹ larghi per piano invece di 10).
+              Puoi aggiungere nuovi slot o rimuoverli se un prodotto occupa più spazio (ad es. 8 o 9 slot più larghi per piano invece di 10).
             </p>
           </div>
         </div>
@@ -277,7 +277,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
             <div className="flex items-center gap-2">
               <div className="w-3.5 h-3.5 rounded-full bg-amber-500" />
               <h3 className="font-black text-amber-950 text-sm tracking-wide">
-                SCAFFALE S â€¢ SINISTRA (Oli Liquidi & Barattoli)
+                SCAFFALE S • SINISTRA (Oli Liquidi & Barattoli)
               </h3>
             </div>
             <span className="text-xs font-mono text-slate-500 font-bold">
@@ -319,7 +319,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
             <div className="flex items-center gap-2">
               <div className="w-3.5 h-3.5 rounded-full bg-cyan-500" />
               <h3 className="font-black text-cyan-950 text-sm tracking-wide">
-                SCAFFALE D â€¢ DESTRA (Capsule, Gocce, Nutraceutici & Volantini)
+                SCAFFALE D • DESTRA (Capsule, Gocce, Nutraceutici & Volantini)
               </h3>
             </div>
             <span className="text-xs font-mono text-slate-500 font-bold">
@@ -370,7 +370,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                     Modifica Slot [{selectedSlot.slot_code}]
                   </h3>
                   <p className="text-xs text-slate-500">
-                    {selectedSlot.side === 'S' ? 'Scaffale Sinistro (S)' : 'Scaffale Destro (D)'} â€¢ Piano {selectedSlot.tier}
+                    {selectedSlot.side === 'S' ? 'Scaffale Sinistro (S)' : 'Scaffale Destro (D)'} • Piano {selectedSlot.tier}
                   </p>
                 </div>
               </div>

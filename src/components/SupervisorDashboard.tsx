@@ -467,7 +467,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   </span>
                   <div>
                     <div className="text-xs font-bold text-slate-900">{o.customerName} ({o.customerCity})</div>
-                    <div className="text-[10px] text-slate-500">{o.source} â€¢ {o.items.reduce((s, i) => s + i.quantityRequired, 0)} prodotti</div>
+                    <div className="text-[10px] text-slate-500">{o.source} • {o.items.reduce((s, i) => s + i.quantityRequired, 0)} prodotti</div>
                   </div>
                 </div>
 
@@ -547,7 +547,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                           }`}>
                             {op.operatorCode}
                           </span>
-                          <span>â€¢</span>
+                          <span>•</span>
                           <span className="text-slate-500 truncate">{op.stationId}</span>
                         </div>
                         <div className="text-[10px] text-slate-500 truncate mt-0.5">{op.shift}</div>
@@ -643,7 +643,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                       <div className="text-xs font-black text-slate-900">{iss.type}</div>
                       <div className="text-xs text-slate-600 mt-0.5">{iss.note}</div>
                       <div className="text-[10px] text-slate-500 font-mono mt-1">
-                        Postazione: {iss.stationId} â€¢ Operatore: {iss.operatorName} â€¢ Ordine: {iss.orderNumber}
+                        Postazione: {iss.stationId} • Operatore: {iss.operatorName} • Ordine: {iss.orderNumber}
                       </div>
                     </div>
                   </div>
@@ -681,7 +681,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   <span className="text-xs bg-emerald-700 text-emerald-100 font-mono px-3 py-1 rounded-full font-black uppercase tracking-wider">
                     LEAN WAREHOUSING & 5S AUDIT
                   </span>
-                  <span className="text-xs text-emerald-300 font-bold">â€¢ HUB BOLZANO</span>
+                  <span className="text-xs text-emerald-300 font-bold">• HUB BOLZANO</span>
                 </div>
                 <h2 className="text-2xl font-black mt-2">
                   Eliminazione degli Sprechi (8 Muda) & Flusso Continuo
@@ -717,7 +717,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 <span className="text-xs bg-emerald-100 text-emerald-900 font-black px-2 py-0.5 rounded font-mono">0.0% Errori Reclami</span>
               </div>
               <p className="text-xs text-slate-600 mt-2">
-                <strong>Poka-Yoke obbligatorio:</strong> la stampa dell'etichetta DHL Ã¨ bloccata finchÃ© lo scanner non valida il 100% degli EAN corretti.
+                <strong>Poka-Yoke obbligatorio:</strong> la stampa dell'etichetta DHL è bloccata finché lo scanner non valida il 100% degli EAN corretti.
               </p>
             </div>
 
@@ -964,10 +964,10 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
               {/* Company Logo Header */}
               <div className="text-[10px] uppercase font-mono tracking-widest text-cyan-400 font-black">
-                NORSAN â€¢ ZREEN LOGISTICS
+                NORSAN • ZREEN LOGISTICS
               </div>
               <div className="text-[9px] text-slate-400 uppercase font-semibold">
-                Hub di Spedizione â€¢ Bolzano (BZ)
+                Hub di Spedizione • Bolzano (BZ)
               </div>
 
               {/* Photo & Role */}
@@ -1230,7 +1230,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               Eliminare {operatorToDelete.name}?
             </h3>
             <p className="text-xs text-slate-500 mt-1">
-              Il badge <strong className="font-mono text-slate-800">[{operatorToDelete.operatorCode}]</strong> verrÃ  revocato e l'operatore non potrÃ  piÃ¹ accedere alle postazioni di magazzino.
+              Il badge <strong className="font-mono text-slate-800">[{operatorToDelete.operatorCode}]</strong> verrÃ  revocato e l'operatore non potrÃ  più accedere alle postazioni di magazzino.
             </p>
 
             <div className="w-full flex items-center gap-2 mt-5">
@@ -1249,7 +1249,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs rounded-xl shadow transition active:scale-95 cursor-pointer flex items-center justify-center gap-1"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>SÃ¬, Elimina</span>
+                <span>Sì, Elimina</span>
               </button>
             </div>
           </div>
