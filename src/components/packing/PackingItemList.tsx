@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import { Check, Sparkles, ShieldAlert, Barcode, MapPin } from 'lucide-react';
-import { OrderItem } from '../types/wms';
+import { OrderItem } from '../../types/wms';
 
 interface PackingItemListProps {
   items: OrderItem[];

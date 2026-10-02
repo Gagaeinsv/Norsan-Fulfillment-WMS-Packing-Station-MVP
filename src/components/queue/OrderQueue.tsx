@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { FileText, CheckCircle2, Truck, Repeat } from 'lucide-react';
-import { Order } from '../types/wms';
+import { Order } from '../../types/wms';
 
 interface OrderQueueProps {
   orders: Order[];

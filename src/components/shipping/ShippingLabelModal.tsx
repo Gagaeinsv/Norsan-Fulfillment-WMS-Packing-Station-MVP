@@ -1,7 +1,7 @@
 ﻿import React, { useEffect } from 'react';
 import { X, Printer, CheckCircle, ArrowRight, ShieldAlert } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Order } from '../types/wms';
+import { Order } from '../../types/wms';
 
 interface ShippingLabelModalProps {
   order: Order;

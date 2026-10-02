@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import { X, UserCheck, Barcode, Shield } from 'lucide-react';
-import { Operator } from '../types/wms';
+import { Operator } from '../../types/wms';
 
 interface OperatorAuthModalProps {
   operators: Operator[];

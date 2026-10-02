@@ -1,15 +1,15 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Header } from './components/Header';
-import { OrderQueue } from './components/OrderQueue';
-import { ActivePackingView } from './components/ActivePackingView';
-import { StationRackGuide } from './components/StationRackGuide';
-import { BarcodeSimulator } from './components/BarcodeSimulator';
-import { ShippingLabelModal } from './components/ShippingLabelModal';
-import { IssueReportModal } from './components/IssueReportModal';
-import { SupervisorDashboard } from './components/SupervisorDashboard';
-import { OperatorAuthModal } from './components/OperatorAuthModal';
-import { TerminalLockScreen } from './components/TerminalLockScreen';
-import { SupervisorPinModal } from './components/SupervisorPinModal';
+import { Header } from './components/layout/Header';
+import { OrderQueue } from './components/queue/OrderQueue';
+import { ActivePackingView } from './components/packing/ActivePackingView';
+import { StationRackGuide } from './components/rack/StationRackGuide';
+import { BarcodeSimulator } from './components/dev/BarcodeSimulator';
+import { ShippingLabelModal } from './components/shipping/ShippingLabelModal';
+import { IssueReportModal } from './components/dev/IssueReportModal';
+import { SupervisorDashboard } from './components/supervisor/SupervisorDashboard';
+import { OperatorAuthModal } from './components/auth/OperatorAuthModal';
+import { TerminalLockScreen } from './components/auth/TerminalLockScreen';
+import { SupervisorPinModal } from './components/auth/SupervisorPinModal';
 import { INITIAL_ORDERS } from './data/mockOrders';
 import { NORSAN_PRODUCTS, BOX_TYPES, MARKETING_FLYERS } from './data/norsanProducts';
 import { OPERATORS, INITIAL_STATIONS } from './data/mockOperators';
@@ -17,7 +17,7 @@ import { Order, ScanEvent, StationKPIs, BoxType, OrderItem, Operator, WarehouseS
 import { useBarcodeScanner } from './hooks/useBarcodeScanner';
 import { useSoundEffects } from './hooks/useSoundEffects';
 import { fetchProducts, fetchWarehouseSlots, updateSlotAssignment, addNewSlot, deleteSlot } from './services/api';
-import { WarehouseSlotData } from './components/SlottingManager';
+import { WarehouseSlotData } from './components/supervisor/SlottingManager';
 
 export function App() {
   const [activeView, setActiveView] = useState<'packing' | 'supervisor'>('packing');

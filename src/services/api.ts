@@ -1,5 +1,5 @@
 import { Product } from '../types/wms';
-import { WarehouseSlotData } from '../components/SlottingManager';
+import { WarehouseSlotData } from '../components/supervisor/SlottingManager';
 import { NORSAN_PRODUCTS } from '../data/norsanProducts';
 
 const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:3001/api`;

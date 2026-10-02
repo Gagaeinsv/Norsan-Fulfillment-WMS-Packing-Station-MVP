@@ -11,7 +11,7 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
-import { Product } from '../types/wms';
+import { Product } from '../../types/wms';
 
 export interface WarehouseSlotData {
   slot_code: string;

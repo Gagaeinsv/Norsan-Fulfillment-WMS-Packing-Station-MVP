@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import { CheckCircle, AlertTriangle, XCircle, Barcode, MapPin } from 'lucide-react';
-import { ScanEvent } from '../types/wms';
+import { ScanEvent } from '../../types/wms';
 
 interface ScannerStatusBannerProps {
   lastScan: ScanEvent | null;

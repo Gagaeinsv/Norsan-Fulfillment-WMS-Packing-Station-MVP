@@ -19,7 +19,7 @@ import {
   Edit3,
   Trash2
 } from 'lucide-react';
-import { WarehouseStation, Operator, Order, IssueTicket, Product } from '../types/wms';
+import { WarehouseStation, Operator, Order, IssueTicket, Product } from '../../types/wms';
 import { SlottingManager, WarehouseSlotData } from './SlottingManager';
 
 interface SupervisorDashboardProps {
@@ -467,7 +467,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   </span>
                   <div>
                     <div className="text-xs font-bold text-slate-900">{o.customerName} ({o.customerCity})</div>
-                    <div className="text-[10px] text-slate-500">{o.source} • {o.items.reduce((s, i) => s + i.quantityRequired, 0)} prodotti</div>
+                    <div className="text-[10px] text-slate-500">{o.source} • {o.items.reduce((s: number, i: any) => s + i.quantityRequired, 0)} prodotti</div>
                   </div>
                 </div>
 

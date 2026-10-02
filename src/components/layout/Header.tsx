@@ -17,7 +17,7 @@ import {
   MapPin,
   Lock
 } from 'lucide-react';
-import { StationKPIs, Operator, ScanEvent } from '../types/wms';
+import { StationKPIs, Operator, ScanEvent } from '../../types/wms';
 
 interface HeaderProps {
   currentOperator: Operator;

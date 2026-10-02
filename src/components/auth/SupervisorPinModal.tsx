@@ -8,7 +8,7 @@ import {
   ShieldCheck,
   Barcode
 } from 'lucide-react';
-import { Operator } from '../types/wms';
+import { Operator } from '../../types/wms';
 
 interface SupervisorPinModalProps {
   isOpen: boolean;

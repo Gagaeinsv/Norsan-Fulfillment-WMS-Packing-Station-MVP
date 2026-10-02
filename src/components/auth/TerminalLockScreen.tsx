@@ -10,7 +10,7 @@ import {
   ShieldAlert,
   KeyRound
 } from 'lucide-react';
-import { Operator } from '../types/wms';
+import { Operator } from '../../types/wms';
 
 interface TerminalLockScreenProps {
   operators: Operator[];

@@ -1,6 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { X, AlertOctagon, Check } from 'lucide-react';
-import { Order } from '../types/wms';
+import { Order } from '../../types/wms';
 
 interface IssueReportModalProps {
   order: Order;

@@ -13,8 +13,8 @@ import {
   Globe,
   BookOpen
 } from 'lucide-react';
-import { Order, Operator } from '../types/wms';
-import { NORSAN_PRODUCTS, MARKETING_FLYERS } from '../data/norsanProducts';
+import { Order, Operator } from '../../types/wms';
+import { NORSAN_PRODUCTS, MARKETING_FLYERS } from '../../data/norsanProducts';
 
 interface BarcodeSimulatorProps {
   orders: Order[];
