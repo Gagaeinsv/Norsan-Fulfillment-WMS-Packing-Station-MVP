@@ -186,6 +186,9 @@ export function App() {
     return operators.filter(o => o.role === 'team_lead' || o.role === 'supervisor');
   }, [operators]);
 
+  // True when the logged-in operator has edit rights (team lead or supervisor)
+  const isTeamLead = currentOperator.role === 'team_lead' || currentOperator.role === 'supervisor';
+
   // KPIs
   const [kpis, setKpis] = useState<StationKPIs>({
     totalPackedToday: 24,
@@ -825,6 +828,8 @@ export function App() {
       {isRackGuideOpen && (
         <StationRackGuide
           activeOrder={activeOrder}
+          stationConfigId={stationConfigId}
+          isTeamLead={isTeamLead}
           onClose={() => setIsRackGuideOpen(false)}
           onSimulateScan={triggerManualScan}
         />
