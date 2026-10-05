@@ -1,6 +1,6 @@
-﻿import React, { useState } from 'react';
-import { X, AlertOctagon, Check } from 'lucide-react';
-import { Order } from '../../types/wms';
+﻿import React, { useState } from "react";
+import { X, AlertOctagon, Check } from "lucide-react";
+import { Order } from "../../types/wms";
 
 interface IssueReportModalProps {
   order: Order;
@@ -15,8 +15,8 @@ export const IssueReportModal: React.FC<IssueReportModalProps> = ({
   onClose,
   onSubmitIssue,
 }) => {
-  const [selectedType, setSelectedType] = useState('damaged_glass');
-  const [note, setNote] = useState('');
+  const [selectedType, setSelectedType] = useState("damaged_glass");
+  const [note, setNote] = useState("");
 
   if (!isOpen) return null;
 
@@ -27,10 +27,26 @@ export const IssueReportModal: React.FC<IssueReportModalProps> = ({
   };
 
   const issueTypes = [
-    { id: 'damaged_glass', label: 'Bottiglia in vetro rotta / sigillo danneggiato', desc: 'Sostituzione immediata del flacone per sicurezza' },
-    { id: 'missing_stock', label: 'Scorta esaurita sullo scaffale (Slot vuoto)', desc: 'Richiesta rifornimento celere dal magazzino centrale' },
-    { id: 'order_discrepancy', label: 'Discrepanza nel foglio d\'ordine stampato', desc: 'Incongruenza tra articoli fisici e foglio cartaceo' },
-    { id: 'call_team_lead', label: 'Richiedi assistenza Team Leader alla postazione', desc: 'Supporto diretto del caposquadra' },
+    {
+      id: "damaged_glass",
+      label: "Bottiglia in vetro rotta / sigillo danneggiato",
+      desc: "Sostituzione immediata del flacone per sicurezza",
+    },
+    {
+      id: "missing_stock",
+      label: "Scorta esaurita sullo scaffale (Slot vuoto)",
+      desc: "Richiesta rifornimento celere dal magazzino centrale",
+    },
+    {
+      id: "order_discrepancy",
+      label: "Discrepanza nel foglio d'ordine stampato",
+      desc: "Incongruenza tra articoli fisici e foglio cartaceo",
+    },
+    {
+      id: "call_team_lead",
+      label: "Richiedi assistenza Team Leader alla postazione",
+      desc: "Supporto diretto del caposquadra",
+    },
   ];
 
   return (
@@ -47,7 +63,10 @@ export const IssueReportModal: React.FC<IssueReportModalProps> = ({
                 Segnalazione Anomalia Postazione
               </h2>
               <p className="text-xs text-slate-500">
-                Riferimento Ordine: <strong className="font-mono text-norsan-800">{order.orderNumber}</strong>
+                Riferimento Ordine:{" "}
+                <strong className="font-mono text-norsan-800">
+                  {order.orderNumber}
+                </strong>
               </p>
             </div>
           </div>
@@ -72,8 +91,8 @@ export const IssueReportModal: React.FC<IssueReportModalProps> = ({
                   onClick={() => setSelectedType(type.id)}
                   className={`p-3.5 rounded-2xl border-2 cursor-pointer transition flex items-start gap-3 ${
                     selectedType === type.id
-                      ? 'bg-rose-50 border-rose-500 text-rose-950 shadow-xs'
-                      : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                      ? "bg-rose-50 border-rose-500 text-rose-950 shadow-xs"
+                      : "bg-white border-slate-200 hover:border-slate-300 text-slate-800"
                   }`}
                 >
                   <input
@@ -83,8 +102,12 @@ export const IssueReportModal: React.FC<IssueReportModalProps> = ({
                     className="mt-1 accent-rose-600"
                   />
                   <div>
-                    <div className="font-black text-xs text-slate-900">{type.label}</div>
-                    <div className="text-[11px] text-slate-600 mt-0.5">{type.desc}</div>
+                    <div className="font-black text-xs text-slate-900">
+                      {type.label}
+                    </div>
+                    <div className="text-[11px] text-slate-600 mt-0.5">
+                      {type.desc}
+                    </div>
                   </div>
                 </div>
               ))}

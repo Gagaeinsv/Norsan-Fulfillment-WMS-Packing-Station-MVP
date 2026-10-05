@@ -1,7 +1,7 @@
-﻿import React, { useEffect } from 'react';
-import { X, Printer, CheckCircle, ArrowRight, ShieldAlert } from 'lucide-react';
-import confetti from 'canvas-confetti';
-import { Order } from '../../types/wms';
+﻿import React, { useEffect } from "react";
+import { X, Printer, CheckCircle, ArrowRight, ShieldAlert } from "lucide-react";
+import confetti from "canvas-confetti";
+import { Order } from "../../types/wms";
 
 interface ShippingLabelModalProps {
   order: Order;
@@ -21,7 +21,7 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
       confetti({
         particleCount: 50,
         spread: 60,
-        origin: { y: 0.6 }
+        origin: { y: 0.6 },
       });
     }
   }, [isOpen]);
@@ -29,7 +29,7 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
   if (!isOpen) return null;
 
   const totalUnits = order.items.reduce((s, i) => s + i.quantityScanned, 0);
-  const isFragile = order.items.some(i => i.product.fragile);
+  const isFragile = order.items.some((i) => i.product.fragile);
 
   const handlePrint = () => {
     window.print();
@@ -49,7 +49,8 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
                 Ordine Verificato al 100% • Etichetta Spedizione Pronta
               </h2>
               <p className="text-xs text-slate-500">
-                Tutti i prodotti corrispondono al foglio d'ordine {order.orderNumber}
+                Tutti i prodotti corrispondono al foglio d'ordine{" "}
+                {order.orderNumber}
               </p>
             </div>
           </div>
@@ -85,14 +86,30 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
             {/* Routing / AWB Code */}
             <div className="mt-3 border-b-2 border-black pb-2 flex items-center justify-between">
               <div>
-                <div className="text-[9px] uppercase font-bold text-gray-600">Routing Code</div>
+                <div className="text-[9px] uppercase font-bold text-gray-600">
+                  Routing Code
+                </div>
                 <div className="text-xl font-black font-mono tracking-wider">
-                  {order.customerCountry}-{order.customerProvince || 'REG'}-{order.customerZip}
+                  {order.customerCountry}-{order.customerProvince || "REG"}-
+                  {order.customerZip}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-[9px] uppercase font-bold text-gray-600">Pezzi / Peso</div>
-                <div className="text-sm font-bold font-mono">1 collo • {((order.items.reduce((s, i) => s + (i.product.weightGrams * i.quantityScanned), 0) + 180) / 1000).toFixed(2)} kg</div>
+                <div className="text-[9px] uppercase font-bold text-gray-600">
+                  Pezzi / Peso
+                </div>
+                <div className="text-sm font-bold font-mono">
+                  1 collo •{" "}
+                  {(
+                    (order.items.reduce(
+                      (s, i) => s + i.product.weightGrams * i.quantityScanned,
+                      0,
+                    ) +
+                      180) /
+                    1000
+                  ).toFixed(2)}{" "}
+                  kg
+                </div>
               </div>
             </div>
 
@@ -100,30 +117,46 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
             <div className="mt-3 grid grid-cols-2 gap-3 border-b-2 border-black pb-3 text-xs">
               {/* Shipper (From) */}
               <div className="border-r border-gray-300 pr-2">
-                <div className="text-[9px] uppercase font-bold text-gray-500">Mittente (Shipper):</div>
-                <div className="font-bold text-[11px] text-gray-900 mt-0.5">NORSAN S.r.l.</div>
+                <div className="text-[9px] uppercase font-bold text-gray-500">
+                  Mittente (Shipper):
+                </div>
+                <div className="font-bold text-[11px] text-gray-900 mt-0.5">
+                  NORSAN S.r.l.
+                </div>
                 <div className="text-[10px] text-gray-700 leading-tight">
-                  Via Macello 30 / SchlachthofstraÃŸe<br />
-                  39100 Bolzano (BZ) - ITALY<br />
+                  Via Macello 30 / SchlachthofstraÃŸe
+                  <br />
+                  39100 Bolzano (BZ) - ITALY
+                  <br />
                   Tel: +39 0471 123456
                 </div>
               </div>
 
               {/* Consignee (To) */}
               <div>
-                <div className="text-[9px] uppercase font-bold text-gray-500">Destinatario (To):</div>
-                <div className="font-bold text-sm text-black mt-0.5">{order.customerName}</div>
+                <div className="text-[9px] uppercase font-bold text-gray-500">
+                  Destinatario (To):
+                </div>
+                <div className="font-bold text-sm text-black mt-0.5">
+                  {order.customerName}
+                </div>
                 <div className="text-xs font-semibold text-gray-800 leading-tight mt-0.5">
-                  {order.customerAddress}<br />
-                  {order.customerZip} {order.customerCity} ({order.customerProvince})<br />
-                  {order.customerCountry === 'IT' ? 'ITALIA' : order.customerCountry}
+                  {order.customerAddress}
+                  <br />
+                  {order.customerZip} {order.customerCity} (
+                  {order.customerProvince})<br />
+                  {order.customerCountry === "IT"
+                    ? "ITALIA"
+                    : order.customerCountry}
                 </div>
               </div>
             </div>
 
             {/* Barcode & Tracking Number */}
             <div className="mt-3 text-center space-y-1">
-              <div className="text-[9px] font-bold text-gray-500 uppercase">Waybill / Tracking Number</div>
+              <div className="text-[9px] font-bold text-gray-500 uppercase">
+                Waybill / Tracking Number
+              </div>
               <div className="font-mono text-sm font-black tracking-widest bg-gray-100 py-1 rounded">
                 {order.trackingNumber}
               </div>
@@ -135,7 +168,11 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
                     <div
                       key={idx}
                       className={`h-full bg-white ${
-                        idx % 3 === 0 ? 'w-1.5' : idx % 2 === 0 ? 'w-0.5' : 'w-1'
+                        idx % 3 === 0
+                          ? "w-1.5"
+                          : idx % 2 === 0
+                            ? "w-0.5"
+                            : "w-1"
                       }`}
                     />
                   ))}
@@ -153,7 +190,9 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
                   </>
                 )}
               </div>
-              <div className="font-mono">Rif. Ordine: {order.orderNumber} ({totalUnits} pz)</div>
+              <div className="font-mono">
+                Rif. Ordine: {order.orderNumber} ({totalUnits} pz)
+              </div>
             </div>
           </div>
         </div>

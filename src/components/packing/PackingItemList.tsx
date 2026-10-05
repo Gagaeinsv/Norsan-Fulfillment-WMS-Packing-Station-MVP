@@ -1,6 +1,6 @@
-﻿import React from 'react';
-import { Check, Sparkles, ShieldAlert, Barcode, MapPin } from 'lucide-react';
-import { OrderItem } from '../../types/wms';
+﻿import React from "react";
+import { Check, Sparkles, ShieldAlert, Barcode, MapPin } from "lucide-react";
+import { OrderItem } from "../../types/wms";
 
 interface PackingItemListProps {
   items: OrderItem[];
@@ -16,13 +16,19 @@ export const PackingItemList: React.FC<PackingItemListProps> = ({
       {items.map((item) => {
         const isCompleted = item.quantityScanned >= item.quantityRequired;
         const isPartial = item.quantityScanned > 0 && !isCompleted;
-        const progressPercent = Math.min(100, Math.round((item.quantityScanned / item.quantityRequired) * 100));
+        const progressPercent = Math.min(
+          100,
+          Math.round((item.quantityScanned / item.quantityRequired) * 100),
+        );
 
-        let cardBorder = 'border-slate-800 bg-slate-900/80 hover:border-slate-700';
+        let cardBorder =
+          "border-slate-800 bg-slate-900/80 hover:border-slate-700";
         if (isCompleted) {
-          cardBorder = 'border-emerald-500/80 bg-emerald-950/20 shadow-[0_0_20px_rgba(16,185,129,0.12)]';
+          cardBorder =
+            "border-emerald-500/80 bg-emerald-950/20 shadow-[0_0_20px_rgba(16,185,129,0.12)]";
         } else if (isPartial) {
-          cardBorder = 'border-amber-500/80 bg-amber-950/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]';
+          cardBorder =
+            "border-amber-500/80 bg-amber-950/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]";
         }
 
         return (
@@ -78,7 +84,12 @@ export const PackingItemList: React.FC<PackingItemListProps> = ({
 
                 <div className="flex items-center gap-2 text-xs font-mono text-slate-400 mt-1">
                   <Barcode className="w-3.5 h-3.5 text-slate-400" />
-                  <span>EAN: <strong className="text-slate-200">{item.product.ean}</strong></span>
+                  <span>
+                    EAN:{" "}
+                    <strong className="text-slate-200">
+                      {item.product.ean}
+                    </strong>
+                  </span>
                 </div>
               </div>
             </div>
@@ -88,11 +99,22 @@ export const PackingItemList: React.FC<PackingItemListProps> = ({
               {/* Progress Bar & Numerical count */}
               <div className="text-right flex-shrink-0 min-w-[140px]">
                 <div className="flex items-center justify-end gap-2 mb-1.5">
-                  <span className="text-xs uppercase font-semibold text-slate-400">Scansionati:</span>
-                  <span className={`text-2xl font-black font-mono ${
-                    isCompleted ? 'text-emerald-400' : isPartial ? 'text-amber-400' : 'text-slate-300'
-                  }`}>
-                    {item.quantityScanned} <span className="text-base text-slate-500 font-normal">/ {item.quantityRequired}</span>
+                  <span className="text-xs uppercase font-semibold text-slate-400">
+                    Scansionati:
+                  </span>
+                  <span
+                    className={`text-2xl font-black font-mono ${
+                      isCompleted
+                        ? "text-emerald-400"
+                        : isPartial
+                          ? "text-amber-400"
+                          : "text-slate-300"
+                    }`}
+                  >
+                    {item.quantityScanned}{" "}
+                    <span className="text-base text-slate-500 font-normal">
+                      / {item.quantityRequired}
+                    </span>
                   </span>
                 </div>
 
@@ -101,10 +123,10 @@ export const PackingItemList: React.FC<PackingItemListProps> = ({
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${
                       isCompleted
-                        ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]'
+                        ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]"
                         : isPartial
-                        ? 'bg-amber-400'
-                        : 'bg-slate-700'
+                          ? "bg-amber-400"
+                          : "bg-slate-700"
                     }`}
                     style={{ width: `${progressPercent}%` }}
                   />

@@ -1,7 +1,9 @@
-export type ProductCategory = 'oil' | 'capsules' | 'kids' | 'vitamins' | 'nutraceutical' | 'collagen';
-export type PackageType = 'glass_bottle' | 'plastic_bottle' | 'blister_box' | 'dropper' | 'jar_powder';
-export type RackSide = 'S' | 'D'; // S = Sinistra (Left), D = Destra (Right) per standard italiano magazzino
-export type BrandFamily = 'NORSAN' | 'ZREEN' | 'AMAZON_WHITE_LABEL';
+export type ProductCategory =
+  "oil" | "capsules" | "kids" | "vitamins" | "nutraceutical" | "collagen";
+export type PackageType =
+  "glass_bottle" | "plastic_bottle" | "blister_box" | "dropper" | "jar_powder";
+export type RackSide = "S" | "D"; // S = Sinistra (Left), D = Destra (Right) per standard italiano magazzino
+export type BrandFamily = "NORSAN" | "ZREEN" | "AMAZON_WHITE_LABEL";
 
 export interface Product {
   id: string;
@@ -25,55 +27,57 @@ export interface Product {
   shelfCoordinate?: string;
   colorCategory?: ZreenColorCategory;
   // Pick-to-Light (IoT LED WS2812B strip)
-  p2lTier?: 'A' | 'B' | 'C' | 'D'; // Physical shelf tier for LED strip
-  p2lLedIndex?: number;              // LED index on strip, e.g. D-38 → 38
+  p2lTier?: "A" | "B" | "C" | "D"; // Physical shelf tier for LED strip
+  p2lLedIndex?: number; // LED index on strip, e.g. D-38 → 38
   // Fast-pick buffer (tavolo buffer next to packer)
-  isFastBuffer?: boolean;            // true = item lives in N-B1..N-B3 table buffer
+  isFastBuffer?: boolean; // true = item lives in N-B1..N-B3 table buffer
+  aliases?: string[]; // Real factory barcodes, UPC-12, EAN-13, PZN, Minsan
 }
 
 export interface OrderItem {
   product: Product;
   quantityRequired: number;
   quantityScanned: number;
-  status: 'pending' | 'in_progress' | 'completed' | 'overpack';
+  status: "pending" | "in_progress" | "completed" | "overpack";
 }
 
-export type OrderPriority = 'standard' | 'express' | 'urgent';
-export type BoxBranding = 'norsan_logo' | 'zreen_logo' | 'neutral_unbranded';
+export type OrderPriority = "standard" | "express" | "urgent";
+export type BoxBranding = "norsan_logo" | "zreen_logo" | "neutral_unbranded";
 
 export type BoxType =
-  | 'BOX-NOR-S'
-  | 'BOX-NOR-M'
-  | 'BOX-NOR-L'
-  | 'BOX-ZRE-S'
-  | 'BOX-ZRE-M'
-  | 'BOX-ZRE-L'
-  | 'BOX-AMZ-S'
-  | 'BOX-AMZ-M'
-  | 'BOX-AMZ-L';
+  | "BOX-NOR-S"
+  | "BOX-NOR-M"
+  | "BOX-NOR-L"
+  | "BOX-ZRE-S"
+  | "BOX-ZRE-M"
+  | "BOX-ZRE-L"
+  | "BOX-AMZ-S"
+  | "BOX-AMZ-M"
+  | "BOX-AMZ-L";
 
-export type CourierService = 'DHL Express' | 'DHL Paket';
+export type CourierService = "DHL Express" | "DHL Paket";
 export type OrderSource =
-  | 'norsan.it Web Shop'
-  | 'zreen.it Shop'
-  | 'Amazon Marketplace'
-  | 'B2B Farmacia EDI'
-  | 'WhatsApp / Telefono'
-  | 'SellyErp INT'    // Internet orders: INT50953
-  | 'SellyErp ORDVE'; // B2B orders: ORDVE2026121172
+  | "norsan.it Web Shop"
+  | "zreen.it Shop"
+  | "Amazon Marketplace"
+  | "B2B Farmacia EDI"
+  | "WhatsApp / Telefono"
+  | "SellyErp INT" // Internet orders: INT50953
+  | "SellyErp ORDVE"; // B2B orders: ORDVE2026121172
 
-export type StorageZone = 'norsan_side_shelf' | 'zreen_rack_shared';
-export type PhysicalSide = 'left' | 'right';
+export type StorageZone = "norsan_side_shelf" | "zreen_rack_shared";
+export type PhysicalSide = "left" | "right";
 
 export interface StationConfig {
-  stationId: 'STATION_01' | 'STATION_02' | 'STATION_03';
+  stationId: "STATION_01" | "STATION_02" | "STATION_03";
   stationName: string;
   norsanSide: PhysicalSide; // 'left' для Столу 1, 'right' для Столу 2
-  zreenSide: PhysicalSide;  // 'right' для Столу 1, 'left' для Столу 2
+  zreenSide: PhysicalSide; // 'right' для Столу 1, 'left' для Столу 2
 }
 
-export type RetentionGiftType = 'none' | 'card_discount_15' | 'branded_spoon' | 'retest_flyer_kit';
-export type ZreenColorCategory = 'sleep_calm' | 'gut_detox' | 'amino_energy';
+export type RetentionGiftType =
+  "none" | "card_discount_15" | "branded_spoon" | "retest_flyer_kit";
+export type ZreenColorCategory = "sleep_calm" | "gut_detox" | "amino_energy";
 
 export interface MarketingFlyer {
   id: string;
@@ -106,7 +110,7 @@ export interface Order {
   boxRecommendation: BoxType;
   items: OrderItem[];
   marketingFlyers: MarketingFlyer[]; // Opuscoli / flyer pubblicitari obbligatori
-  status: 'ready_to_pack' | 'packing' | 'packed' | 'shipped';
+  status: "ready_to_pack" | "packing" | "packed" | "shipped";
   specialNotes?: string;
   assignedOperatorId?: string;
   packingStartedAt?: number;
@@ -114,7 +118,7 @@ export interface Order {
   // Subscription fields
   isSubscription: boolean;
   subscriptionCycle?: number; // e.g., 1, 3, 6
-  subscriptionFrequency?: 'monthly' | 'bimonthly';
+  subscriptionFrequency?: "monthly" | "bimonthly";
   // MVP fields
   customerOrderCount: number;
   retentionGift?: RetentionGiftType;
@@ -127,7 +131,7 @@ export interface Order {
 }
 
 export interface SellyErpLineItem {
-  sku: string;       // e.g. "3000-001", "5000-019"
+  sku: string; // e.g. "3000-001", "5000-019"
   description: string;
   quantity: number;
   unitPrice: number;
@@ -135,32 +139,37 @@ export interface SellyErpLineItem {
 }
 
 export type ScanResultType =
-  | 'product_match'
-  | 'flyer_match'
-  | 'order_switch'
-  | 'box_selected'
-  | 'operator_login'
-  | 'command'
-  | 'wrong_product'
-  | 'overpack'
-  | 'unknown_code';
+  | "product_match"
+  | "flyer_match"
+  | "order_switch"
+  | "box_selected"
+  | "operator_login"
+  | "command"
+  | "wrong_product"
+  | "overpack"
+  | "unknown_code";
 
 export interface ScanEvent {
   id: string;
   rawCode: string;
   resultType: ScanResultType;
-  status: 'success' | 'error' | 'warning' | 'info';
+  status: "success" | "error" | "warning" | "info";
   title: string;
   message: string;
   timestamp: number;
   matchedProduct?: Product;
+  otherOrderCandidate?: {
+    orderId: string;
+    orderNumber: string;
+    customerName: string;
+  };
 }
 
 export interface Operator {
   id: string;
   operatorCode: string; // e.g. "OP-042" (Badge barcode)
   name: string;
-  role: 'packer' | 'team_lead' | 'supervisor';
+  role: "packer" | "team_lead" | "supervisor";
   stationId: string;
   shift: string; // e.g. "Mattina (06:00 - 14:00)"
   avatarUrl: string;
@@ -178,7 +187,7 @@ export interface IssueTicket {
   type: string;
   note: string;
   timestamp: number;
-  status: 'pending' | 'resolved';
+  status: "pending" | "resolved";
 }
 
 export interface WarehouseStation {
@@ -187,7 +196,7 @@ export interface WarehouseStation {
   operatorName: string;
   operatorCode: string;
   currentOrderNumber?: string;
-  status: 'packing' | 'idle' | 'issue' | 'break';
+  status: "packing" | "idle" | "issue" | "break";
   ordersPackedToday: number;
   currentSpeedUPH: number;
   accuracy: number;

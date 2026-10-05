@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Lock,
   Barcode,
@@ -8,9 +8,9 @@ import {
   Sparkles,
   ArrowRight,
   ShieldAlert,
-  KeyRound
-} from 'lucide-react';
-import { Operator } from '../../types/wms';
+  KeyRound,
+} from "lucide-react";
+import { Operator } from "../../types/wms";
 
 interface TerminalLockScreenProps {
   operators: Operator[];
@@ -21,7 +21,7 @@ export const TerminalLockScreen: React.FC<TerminalLockScreenProps> = ({
   operators,
   onLogin,
 }) => {
-  const [manualCode, setManualCode] = useState('');
+  const [manualCode, setManualCode] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleManualSubmit = (e: React.FormEvent) => {
@@ -30,7 +30,9 @@ export const TerminalLockScreen: React.FC<TerminalLockScreenProps> = ({
     if (!cleanCode) return;
 
     const matched = operators.find(
-      op => op.operatorCode.toUpperCase() === cleanCode || op.name.toUpperCase() === cleanCode
+      (op) =>
+        op.operatorCode.toUpperCase() === cleanCode ||
+        op.name.toUpperCase() === cleanCode,
     );
 
     if (matched) {
@@ -55,9 +57,13 @@ export const TerminalLockScreen: React.FC<TerminalLockScreenProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-black text-lg tracking-widest text-white">NORSAN</span>
+              <span className="font-black text-lg tracking-widest text-white">
+                NORSAN
+              </span>
               <span className="text-slate-500">•</span>
-              <span className="text-cyan-400 font-mono text-xs font-bold uppercase tracking-wider">ZREEN NUTRACEUTICA</span>
+              <span className="text-cyan-400 font-mono text-xs font-bold uppercase tracking-wider">
+                ZREEN NUTRACEUTICA
+              </span>
             </div>
             <div className="text-xs text-slate-400 font-mono">
               WMS Packaging Terminal • Hub di Spedizione Bolzano (BZ)
@@ -89,11 +95,19 @@ export const TerminalLockScreen: React.FC<TerminalLockScreenProps> = ({
           Postazione di Imballaggio Bloccata
         </h1>
         <p className="text-sm text-slate-400 text-center max-w-lg mt-2 font-medium">
-          Scansiona il tuo <strong className="text-cyan-400 font-mono">Badge Barcode (OP-XXX)</strong> con il lettore ottico oppure seleziona il tuo profilo operatore in basso.
+          Scansiona il tuo{" "}
+          <strong className="text-cyan-400 font-mono">
+            Badge Barcode (OP-XXX)
+          </strong>{" "}
+          con il lettore ottico oppure seleziona il tuo profilo operatore in
+          basso.
         </p>
 
         {/* Manual Barcode Input Form */}
-        <form onSubmit={handleManualSubmit} className="w-full max-w-md mt-6 flex items-center gap-2">
+        <form
+          onSubmit={handleManualSubmit}
+          className="w-full max-w-md mt-6 flex items-center gap-2"
+        >
           <div className="relative flex-1">
             <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
@@ -126,14 +140,19 @@ export const TerminalLockScreen: React.FC<TerminalLockScreenProps> = ({
           <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
             <span className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Users className="w-4 h-4 text-cyan-400" />
-              <span>Operatori Autorizzati su questo Terminale ({operators.length})</span>
+              <span>
+                Operatori Autorizzati su questo Terminale ({operators.length})
+              </span>
             </span>
-            <span className="text-[11px] font-mono text-slate-500">Accesso 1-Click</span>
+            <span className="text-[11px] font-mono text-slate-500">
+              Accesso 1-Click
+            </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {operators.map(op => {
-              const isLead = op.role === 'team_lead' || op.role === 'supervisor';
+            {operators.map((op) => {
+              const isLead =
+                op.role === "team_lead" || op.role === "supervisor";
 
               return (
                 <button
@@ -176,11 +195,12 @@ export const TerminalLockScreen: React.FC<TerminalLockScreenProps> = ({
       <div className="w-full max-w-5xl z-10 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 font-mono">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-cyan-400" />
-          <span>Lettore Barcode USB / Bluetooth sempre attivo in modalitÃ  Keyboard Wedge</span>
+          <span>
+            Lettore Barcode USB / Bluetooth sempre attivo in modalitÃ  Keyboard
+            Wedge
+          </span>
         </div>
-        <div>
-          Conforme standard Lean 5S & Poka-Yoke • NORSAN Italia
-        </div>
+        <div>Conforme standard Lean 5S & Poka-Yoke • NORSAN Italia</div>
       </div>
     </div>
   );

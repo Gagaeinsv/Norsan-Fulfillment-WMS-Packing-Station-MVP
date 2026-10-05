@@ -1,6 +1,6 @@
-﻿import React from 'react';
-import { X, UserCheck, Barcode, Shield } from 'lucide-react';
-import { Operator } from '../../types/wms';
+﻿import React from "react";
+import { X, UserCheck, Barcode, Shield } from "lucide-react";
+import { Operator } from "../../types/wms";
 
 interface OperatorAuthModalProps {
   operators: Operator[];
@@ -33,7 +33,9 @@ export const OperatorAuthModal: React.FC<OperatorAuthModalProps> = ({
                 Identificazione Operatore Postazione
               </h2>
               <p className="text-xs text-slate-500">
-                Scansiona il tuo badge (<strong className="font-mono text-norsan-700">OP-XXX</strong>) o seleziona il profilo
+                Scansiona il tuo badge (
+                <strong className="font-mono text-norsan-700">OP-XXX</strong>) o
+                seleziona il profilo
               </p>
             </div>
           </div>
@@ -59,8 +61,8 @@ export const OperatorAuthModal: React.FC<OperatorAuthModalProps> = ({
                 }}
                 className={`p-3.5 rounded-2xl border-2 cursor-pointer transition flex items-center justify-between gap-4 ${
                   isCurrent
-                    ? 'bg-cyan-50 border-norsan-600 shadow-sm ring-2 ring-norsan-600/30'
-                    : 'bg-white border-slate-200 hover:border-slate-400'
+                    ? "bg-cyan-50 border-norsan-600 shadow-sm ring-2 ring-norsan-600/30"
+                    : "bg-white border-slate-200 hover:border-slate-400"
                 }`}
               >
                 <div className="flex items-center gap-3.5 min-w-0">
@@ -71,14 +73,23 @@ export const OperatorAuthModal: React.FC<OperatorAuthModalProps> = ({
                   />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-black text-sm text-slate-900 truncate">{op.name}</span>
+                      <span className="font-black text-sm text-slate-900 truncate">
+                        {op.name}
+                      </span>
                       <span className="text-[10px] font-mono font-black bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-300">
                         {op.operatorCode}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-500 mt-0.5">{op.shift}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      {op.shift}
+                    </div>
                     <div className="text-[11px] text-slate-600 font-mono mt-0.5">
-                      Ruolo: <strong className="text-slate-800">{op.role === 'packer' ? 'Operatore Imballaggio' : 'Team Leader'}</strong>
+                      Ruolo:{" "}
+                      <strong className="text-slate-800">
+                        {op.role === "packer"
+                          ? "Operatore Imballaggio"
+                          : "Team Leader"}
+                      </strong>
                     </div>
                   </div>
                 </div>
@@ -106,7 +117,8 @@ export const OperatorAuthModal: React.FC<OperatorAuthModalProps> = ({
             <span>Supporto lettura diretta con lettore ottico</span>
           </div>
           <div className="flex items-center gap-1 font-mono text-[10px] text-emerald-700 font-bold">
-            <Shield className="w-3.5 h-3.5 text-emerald-600" /> Accesso Tracciato
+            <Shield className="w-3.5 h-3.5 text-emerald-600" /> Accesso
+            Tracciato
           </div>
         </div>
       </div>

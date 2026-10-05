@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   X,
   ShieldAlert,
@@ -6,9 +6,9 @@ import {
   Lock,
   ArrowRight,
   ShieldCheck,
-  Barcode
-} from 'lucide-react';
-import { Operator } from '../../types/wms';
+  Barcode,
+} from "lucide-react";
+import { Operator } from "../../types/wms";
 
 interface SupervisorPinModalProps {
   isOpen: boolean;
@@ -23,7 +23,7 @@ export const SupervisorPinModal: React.FC<SupervisorPinModalProps> = ({
   onSuccess,
   leadOperators,
 }) => {
-  const [pin, setPin] = useState('');
+  const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -34,23 +34,29 @@ export const SupervisorPinModal: React.FC<SupervisorPinModalProps> = ({
 
     // Valid authentication: Master PIN "9999" or scanning a valid Lead badge (e.g. "TL-001")
     const matchedLead = leadOperators.find(
-      op => op.operatorCode.toUpperCase() === cleanPin
+      (op) => op.operatorCode.toUpperCase() === cleanPin,
     );
 
-    const MASTER_PIN = import.meta.env.VITE_SUPERVISOR_PIN || '9999';
+    const MASTER_PIN = import.meta.env.VITE_SUPERVISOR_PIN || "9999";
 
     if (cleanPin === MASTER_PIN || matchedLead) {
-      const targetLead = matchedLead || (leadOperators.length > 0 ? leadOperators[0] : undefined);
+      const targetLead =
+        matchedLead ||
+        (leadOperators.length > 0 ? leadOperators[0] : undefined);
       if (targetLead) {
         setError(null);
-        setPin('');
+        setPin("");
         onSuccess(targetLead);
         onClose();
       } else {
-        setError('Nessun profilo Team Lead configurato nel sistema. Crea prima un operatore con ruolo Team Lead.');
+        setError(
+          "Nessun profilo Team Lead configurato nel sistema. Crea prima un operatore con ruolo Team Lead.",
+        );
       }
     } else {
-      setError('Credenziali non valide. Inserisci il PIN corretto o scansiona il Badge Team Lead.');
+      setError(
+        "Credenziali non valide. Inserisci il PIN corretto o scansiona il Badge Team Lead.",
+      );
     }
   };
 
@@ -64,8 +70,12 @@ export const SupervisorPinModal: React.FC<SupervisorPinModalProps> = ({
               <Lock className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black">Accesso Riservato Team Lead</h3>
-              <p className="text-xs text-purple-200 font-medium">Autenticazione richiesta per il pannello direzione</p>
+              <h3 className="text-base font-black">
+                Accesso Riservato Team Lead
+              </h3>
+              <p className="text-xs text-purple-200 font-medium">
+                Autenticazione richiesta per il pannello direzione
+              </p>
             </div>
           </div>
           <button
@@ -79,7 +89,9 @@ export const SupervisorPinModal: React.FC<SupervisorPinModalProps> = ({
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="text-xs text-slate-600">
-            L'accesso alle metriche di magazzino, alla gestione del personale e alla riconfigurazione delle baie è riservato ai responsabili di reparto.
+            L'accesso alle metriche di magazzino, alla gestione del personale e
+            alla riconfigurazione delle baie è riservato ai responsabili di
+            reparto.
           </div>
 
           <div>
@@ -108,7 +120,10 @@ export const SupervisorPinModal: React.FC<SupervisorPinModalProps> = ({
 
           <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 flex items-center gap-2">
             <Barcode className="w-4 h-4 text-purple-700 flex-shrink-0" />
-            <span>Puoi scansionare direttamente il barcode del badge con il lettore ottico.</span>
+            <span>
+              Puoi scansionare direttamente il barcode del badge con il lettore
+              ottico.
+            </span>
           </div>
 
           <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">

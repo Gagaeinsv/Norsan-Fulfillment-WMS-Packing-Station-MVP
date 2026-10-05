@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState } from "react";
 import {
   MapPin,
   Sparkles,
@@ -9,13 +9,13 @@ import {
   CheckCircle2,
   X,
   Plus,
-  Trash2
-} from 'lucide-react';
-import { Product } from '../../types/wms';
+  Trash2,
+} from "lucide-react";
+import { Product } from "../../types/wms";
 
 export interface WarehouseSlotData {
   slot_code: string;
-  side: 'S' | 'D';
+  side: "S" | "D";
   tier: 1 | 2 | 3;
   description: string;
   product_id?: string | null;
@@ -31,7 +31,7 @@ interface SlottingManagerProps {
   slots: WarehouseSlotData[];
   products: Product[];
   onAssignSlot: (slotCode: string, productId: string | null) => Promise<void>;
-  onAddSlot: (side: 'S' | 'D', tier: 1 | 2 | 3) => Promise<void>;
+  onAddSlot: (side: "S" | "D", tier: 1 | 2 | 3) => Promise<void>;
   onDeleteSlot: (slotCode: string) => Promise<void>;
 }
 
@@ -42,14 +42,16 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
   onAddSlot,
   onDeleteSlot,
 }) => {
-  const [selectedSlot, setSelectedSlot] = useState<WarehouseSlotData | null>(null);
-  const [chosenProductId, setChosenProductId] = useState<string>('');
+  const [selectedSlot, setSelectedSlot] = useState<WarehouseSlotData | null>(
+    null,
+  );
+  const [chosenProductId, setChosenProductId] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const handleOpenAssignModal = (slot: WarehouseSlotData) => {
     setSelectedSlot(slot);
-    setChosenProductId(slot.product_id || '');
+    setChosenProductId(slot.product_id || "");
     setSaveSuccess(false);
   };
 
@@ -69,7 +71,9 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
   };
 
   const handleDeleteCurrentSlot = async (slotCode: string) => {
-    if (confirm(`Sei sicuro di voler eliminare lo slot fisico [${slotCode}]?`)) {
+    if (
+      confirm(`Sei sicuro di voler eliminare lo slot fisico [${slotCode}]?`)
+    ) {
       setIsSaving(true);
       try {
         await onDeleteSlot(slotCode);
@@ -83,13 +87,13 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
   };
 
   // Group slots by Left / Right and Tiers
-  const leftSlots = slots.filter(s => s.side === 'S');
-  const rightSlots = slots.filter(s => s.side === 'D');
+  const leftSlots = slots.filter((s) => s.side === "S");
+  const rightSlots = slots.filter((s) => s.side === "D");
 
   const renderSlotCard = (slot: WarehouseSlotData) => {
     const isOccupied = !!slot.product_id;
-    const isZreen = slot.product_brand === 'ZREEN';
-    const isFlyerSlot = slot.slot_code === 'D3-J' || slot.slot_code === 'D3-C';
+    const isZreen = slot.product_brand === "ZREEN";
+    const isFlyerSlot = slot.slot_code === "D3-J" || slot.slot_code === "D3-C";
 
     return (
       <div
@@ -97,10 +101,10 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
         onClick={() => !isFlyerSlot && handleOpenAssignModal(slot)}
         className={`p-2 rounded-xl border-2 transition-all flex flex-col justify-between min-h-[110px] shadow-xs relative group ${
           isFlyerSlot
-            ? 'bg-cyan-50/80 border-cyan-300 cursor-default'
+            ? "bg-cyan-50/80 border-cyan-300 cursor-default"
             : isOccupied
-            ? 'bg-white border-slate-300 hover:border-norsan-600 hover:shadow-md cursor-pointer'
-            : 'bg-slate-50/60 border-dashed border-slate-300 hover:border-slate-400 cursor-pointer hover:bg-slate-100'
+              ? "bg-white border-slate-300 hover:border-norsan-600 hover:shadow-md cursor-pointer"
+              : "bg-slate-50/60 border-dashed border-slate-300 hover:border-slate-400 cursor-pointer hover:bg-slate-100"
         }`}
       >
         {/* Top: Slot code, Badge & Quick Delete */}
@@ -115,9 +119,13 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                 VOLANTINI
               </span>
             ) : isOccupied ? (
-              <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${
-                isZreen ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-cyan-100 text-cyan-900 border border-cyan-300'
-              }`}>
+              <span
+                className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${
+                  isZreen
+                    ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                    : "bg-cyan-100 text-cyan-900 border border-cyan-300"
+                }`}
+              >
                 {slot.product_brand}
               </span>
             ) : (
@@ -145,13 +153,15 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
         {/* Center: Product info */}
         {isFlyerSlot ? (
           <div className="my-1 text-[10px]">
-            <div className="font-black text-cyan-950 truncate">Opuscoli NORSAN/ZREEN</div>
+            <div className="font-black text-cyan-950 truncate">
+              Opuscoli NORSAN/ZREEN
+            </div>
             <div className="text-[9px] text-cyan-700">Slot Volantini</div>
           </div>
         ) : isOccupied ? (
           <div className="my-1 flex items-center gap-2">
             <img
-              src={slot.product_image_url || ''}
+              src={slot.product_image_url || ""}
               alt=""
               className="w-8 h-8 rounded-lg object-cover border border-slate-300 bg-white flex-shrink-0"
             />
@@ -170,7 +180,9 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
         {/* Bottom footer button */}
         {!isFlyerSlot && (
           <div className="pt-1 border-t border-slate-200 flex items-center justify-between text-[9px] text-slate-500">
-            <span className="truncate max-w-[50px]">{isOccupied ? slot.product_volume : 'Slot vuoto'}</span>
+            <span className="truncate max-w-[50px]">
+              {isOccupied ? slot.product_volume : "Slot vuoto"}
+            </span>
             <span className="font-bold text-norsan-700 flex items-center gap-0.5">
               Modifica <ArrowRight className="w-2.5 h-2.5" />
             </span>
@@ -183,17 +195,22 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
   const renderTierSection = (
     title: string,
     tierSlots: WarehouseSlotData[],
-    side: 'S' | 'D',
+    side: "S" | "D",
     tier: 1 | 2 | 3,
-    badgeColor: string
+    badgeColor: string,
   ) => {
     return (
       <div className="space-y-2">
         <div className="text-[11px] font-black text-slate-700 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span>{title} ({tierSlots.length} slot attivi)</span>
-            <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded font-bold ${badgeColor}`}>
-              {side}{tier}
+            <span>
+              {title} ({tierSlots.length} slot attivi)
+            </span>
+            <span
+              className={`font-mono text-[10px] px-1.5 py-0.5 rounded font-bold ${badgeColor}`}
+            >
+              {side}
+              {tier}
             </span>
           </div>
 
@@ -213,7 +230,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-          {tierSlots.map(s => renderSlotCard(s))}
+          {tierSlots.map((s) => renderSlotCard(s))}
 
           {/* Inline Quick Add Card */}
           <button
@@ -232,7 +249,8 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
               + Nuovo Slot
             </span>
             <span className="text-[9px] text-slate-400 font-mono mt-0.5">
-              (Piano {side}{tier})
+              (Piano {side}
+              {tier})
             </span>
           </button>
         </div>
@@ -251,21 +269,26 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-black text-slate-900">
-                Gestione Mappa Scaffali Dinamica (Aggiungi / Rimuovi Slot Flessibili)
+                Gestione Mappa Scaffali Dinamica (Aggiungi / Rimuovi Slot
+                Flessibili)
               </h2>
               <span className="text-xs bg-emerald-100 text-emerald-900 border border-emerald-300 font-black px-2.5 py-0.5 rounded-full font-mono">
                 {slots.length} SLOT ATTIVI
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Puoi aggiungere nuovi slot o rimuoverli se un prodotto occupa più spazio (ad es. 8 o 9 slot più larghi per piano invece di 10).
+              Puoi aggiungere nuovi slot o rimuoverli se un prodotto occupa più
+              spazio (ad es. 8 o 9 slot più larghi per piano invece di 10).
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-300 text-xs text-slate-700">
           <Sparkles className="w-4 h-4 text-amber-600" />
-          <span>FlessibilitÃ  totale: assegna, elimina o crea nuove posizioni in tempo reale</span>
+          <span>
+            FlessibilitÃ  totale: assegna, elimina o crea nuove posizioni in
+            tempo reale
+          </span>
         </div>
       </div>
 
@@ -287,29 +310,29 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
 
           {/* Tier 3 */}
           {renderTierSection(
-            'Piano 3 (Alto - 1.7m)',
-            leftSlots.filter(s => s.tier === 3),
-            'S',
+            "Piano 3 (Alto - 1.7m)",
+            leftSlots.filter((s) => s.tier === 3),
+            "S",
             3,
-            'text-amber-800 bg-amber-100'
+            "text-amber-800 bg-amber-100",
           )}
 
           {/* Tier 2 (Golden Zone) */}
           {renderTierSection(
-            'Piano 2 (Medio - Golden Zone)',
-            leftSlots.filter(s => s.tier === 2),
-            'S',
+            "Piano 2 (Medio - Golden Zone)",
+            leftSlots.filter((s) => s.tier === 2),
+            "S",
             2,
-            'text-amber-800 bg-amber-100'
+            "text-amber-800 bg-amber-100",
           )}
 
           {/* Tier 1 */}
           {renderTierSection(
-            'Piano 1 (Basso - Terra)',
-            leftSlots.filter(s => s.tier === 1),
-            'S',
+            "Piano 1 (Basso - Terra)",
+            leftSlots.filter((s) => s.tier === 1),
+            "S",
             1,
-            'text-amber-800 bg-amber-100'
+            "text-amber-800 bg-amber-100",
           )}
         </div>
 
@@ -329,29 +352,29 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
 
           {/* Tier 3 */}
           {renderTierSection(
-            'Piano 3 (Alto - 1.7m)',
-            rightSlots.filter(s => s.tier === 3),
-            'D',
+            "Piano 3 (Alto - 1.7m)",
+            rightSlots.filter((s) => s.tier === 3),
+            "D",
             3,
-            'text-cyan-800 bg-cyan-100'
+            "text-cyan-800 bg-cyan-100",
           )}
 
           {/* Tier 2 (Golden Zone) */}
           {renderTierSection(
-            'Piano 2 (Medio - Golden Zone)',
-            rightSlots.filter(s => s.tier === 2),
-            'D',
+            "Piano 2 (Medio - Golden Zone)",
+            rightSlots.filter((s) => s.tier === 2),
+            "D",
             2,
-            'text-cyan-800 bg-cyan-100'
+            "text-cyan-800 bg-cyan-100",
           )}
 
           {/* Tier 1 */}
           {renderTierSection(
-            'Piano 1 (Basso - Terra)',
-            rightSlots.filter(s => s.tier === 1),
-            'D',
+            "Piano 1 (Basso - Terra)",
+            rightSlots.filter((s) => s.tier === 1),
+            "D",
             1,
-            'text-cyan-800 bg-cyan-100'
+            "text-cyan-800 bg-cyan-100",
           )}
         </div>
       </div>
@@ -370,7 +393,10 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                     Modifica Slot [{selectedSlot.slot_code}]
                   </h3>
                   <p className="text-xs text-slate-500">
-                    {selectedSlot.side === 'S' ? 'Scaffale Sinistro (S)' : 'Scaffale Destro (D)'} • Piano {selectedSlot.tier}
+                    {selectedSlot.side === "S"
+                      ? "Scaffale Sinistro (S)"
+                      : "Scaffale Destro (D)"}{" "}
+                    • Piano {selectedSlot.tier}
                   </p>
                 </div>
               </div>
@@ -392,20 +418,26 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                   onChange={(e) => setChosenProductId(e.target.value)}
                   className="w-full bg-white border-2 border-slate-300 rounded-xl p-3 text-sm font-bold text-slate-900 focus:outline-none focus:border-norsan-600 shadow-xs"
                 >
-                  <option value="">-- Nessun prodotto (Slot Libero / Vuoto) --</option>
+                  <option value="">
+                    -- Nessun prodotto (Slot Libero / Vuoto) --
+                  </option>
                   <optgroup label="--- CATALOGO NORSAN (Omega-3) ---">
-                    {products.filter(p => p.brand === 'NORSAN').map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.volume}) - EAN: {p.ean}
-                      </option>
-                    ))}
+                    {products
+                      .filter((p) => p.brand === "NORSAN")
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.volume}) - EAN: {p.ean}
+                        </option>
+                      ))}
                   </optgroup>
                   <optgroup label="--- CATALOGO ZREEN (Nutraceutica) ---">
-                    {products.filter(p => p.brand === 'ZREEN').map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.volume}) - EAN: {p.ean}
-                      </option>
-                    ))}
+                    {products
+                      .filter((p) => p.brand === "ZREEN")
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.volume}) - EAN: {p.ean}
+                        </option>
+                      ))}
                   </optgroup>
                 </select>
               </div>
@@ -415,10 +447,13 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                   <Package className="w-8 h-8 text-norsan-600 flex-shrink-0" />
                   <div className="text-xs">
                     <div className="font-black text-slate-900">
-                      {products.find(p => p.id === chosenProductId)?.name}
+                      {products.find((p) => p.id === chosenProductId)?.name}
                     </div>
                     <div className="text-slate-500 font-mono mt-0.5">
-                      {products.find(p => p.id === chosenProductId)?.italianName}
+                      {
+                        products.find((p) => p.id === chosenProductId)
+                          ?.italianName
+                      }
                     </div>
                   </div>
                 </div>
@@ -427,7 +462,9 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
               {saveSuccess && (
                 <div className="bg-emerald-50 text-emerald-800 border border-emerald-300 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Posizione aggiornata con successo nel database SQLite!</span>
+                  <span>
+                    Posizione aggiornata con successo nel database SQLite!
+                  </span>
                 </div>
               )}
             </div>
@@ -455,7 +492,9 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                   className="px-5 py-2.5 rounded-xl bg-norsan-600 hover:bg-norsan-700 active:scale-95 text-white text-xs font-black transition flex items-center gap-1.5 shadow-sm"
                 >
                   <Save className="w-4 h-4" />
-                  <span>{isSaving ? 'Salvataggio...' : 'Conferma Assegnazione'}</span>
+                  <span>
+                    {isSaving ? "Salvataggio..." : "Conferma Assegnazione"}
+                  </span>
                 </button>
               </div>
             </div>

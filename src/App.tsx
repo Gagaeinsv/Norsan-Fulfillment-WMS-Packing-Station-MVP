@@ -1,43 +1,74 @@
-import { OperatorAuthModal } from './components/auth/OperatorAuthModal';
-import { TerminalLockScreen } from './components/auth/TerminalLockScreen';
-import { BarcodeSimulator } from './components/dev/BarcodeSimulator';
-import { Header } from './components/layout/Header';
-import { OrderQueue } from './components/queue/OrderQueue';
-import { ActivePackingView } from './components/packing/ActivePackingView';
-import { StationRackGuide } from './components/rack/StationRackGuide';
-import { SupervisorPinModal } from './components/auth/SupervisorPinModal';
-import { SupervisorDashboard } from './components/supervisor/SupervisorDashboard';
-import { IssueReportModal } from './components/dev/IssueReportModal';
-import { ShippingLabelModal } from './components/shipping/ShippingLabelModal';
-import { useWarehouseState } from './hooks/useWarehouseState';
+import { OperatorAuthModal } from "./components/auth/OperatorAuthModal";
+import { TerminalLockScreen } from "./components/auth/TerminalLockScreen";
+import { BarcodeSimulator } from "./components/dev/BarcodeSimulator";
+import { Header } from "./components/layout/Header";
+import { OrderQueue } from "./components/queue/OrderQueue";
+import { ActivePackingView } from "./components/packing/ActivePackingView";
+import { StationRackGuide } from "./components/rack/StationRackGuide";
+import { SupervisorPinModal } from "./components/auth/SupervisorPinModal";
+import { SupervisorDashboard } from "./components/supervisor/SupervisorDashboard";
+import { IssueReportModal } from "./components/dev/IssueReportModal";
+import { ShippingLabelModal } from "./components/shipping/ShippingLabelModal";
+import { useWarehouseState } from "./hooks/useWarehouseState";
 
 export function App() {
   const state = useWarehouseState();
   const {
     activeView,
-    operators, currentOperator, setCurrentOperator,
-    stations, stationConfigId, setStationConfigId,
-    orders, activeOrderId, setActiveOrderId,
-    lastScan, isMuted, setIsMuted,
-    productsList, slotsList,
-    issues, kpis,
-    isRackGuideOpen, setIsRackGuideOpen,
-    isSimulatorOpen, setIsSimulatorOpen,
-    isLabelModalOpen, setIsLabelModalOpen,
-    isIssueModalOpen, setIsIssueModalOpen,
-    isOperatorAuthOpen, setIsOperatorAuthOpen,
+    operators,
+    currentOperator,
+    setCurrentOperator,
+    stations,
+    stationConfigId,
+    setStationConfigId,
+    orders,
+    activeOrderId,
+    setActiveOrderId,
+    lastScan,
+    isMuted,
+    setIsMuted,
+    productsList,
+    slotsList,
+    issues,
+    kpis,
+    isRackGuideOpen,
+    setIsRackGuideOpen,
+    isSimulatorOpen,
+    setIsSimulatorOpen,
+    isLabelModalOpen,
+    setIsLabelModalOpen,
+    isIssueModalOpen,
+    setIsIssueModalOpen,
+    isOperatorAuthOpen,
+    setIsOperatorAuthOpen,
     isTerminalLocked,
-    isSupervisorPinModalOpen, setIsSupervisorPinModalOpen,
-    
-    handleAssignSlot, handleAddSlot, handleDeleteSlot,
-    handleAddOperator, handleUpdateOperator, handleDeleteOperator,
-    handleSubmitIssue, handleResolveIssue,
-    handleToggleFlyer, handleToggleGift, handleTogglePhysicalDocument,
+    isSupervisorPinModalOpen,
+    setIsSupervisorPinModalOpen,
+
+    handleAssignSlot,
+    handleAddSlot,
+    handleDeleteSlot,
+    handleAddOperator,
+    handleUpdateOperator,
+    handleDeleteOperator,
+    handleSubmitIssue,
+    handleResolveIssue,
+    handleToggleFlyer,
+    handleToggleGift,
+    handleTogglePhysicalDocument,
     handleSimulateIncomingWebOrder,
-    handleCompleteAndNext, handleResetData, handleChangeBoxType,
-    handleSwitchToStation, handleToggleView, handleSupervisorPinSuccess,
-    handleLockTerminal, handleLoginFromLockScreen, triggerManualScan,
-    leadOperators, isTeamLead, activeOrder
+    handleCompleteAndNext,
+    handleResetData,
+    handleChangeBoxType,
+    handleSwitchToStation,
+    handleToggleView,
+    handleSupervisorPinSuccess,
+    handleLockTerminal,
+    handleLoginFromLockScreen,
+    triggerManualScan,
+    leadOperators,
+    isTeamLead,
+    activeOrder,
   } = state;
 
   // If terminal is locked, display Kiosk Login Screen
@@ -82,7 +113,7 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      {activeView === 'packing' ? (
+      {activeView === "packing" ? (
         <main className="flex-1 p-3.5 grid grid-cols-1 lg:grid-cols-12 gap-3.5 max-w-[1920px] mx-auto w-full overflow-hidden">
           {/* Left Side: Order Queue (3 cols on desktop) */}
           <div className="lg:col-span-3 h-[calc(100vh-84px)] min-h-[500px]">
