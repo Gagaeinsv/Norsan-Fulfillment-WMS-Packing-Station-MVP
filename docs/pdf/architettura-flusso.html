@@ -100,7 +100,18 @@
 <li>Se il backend non è raggiungibile, la modifica viene salvata nel browser (modalità locale dell'MVP).</li>
 </ol>
 
-<h2>4. Interfacce API del backend</h2>
+<h2>4. Flusso previsto: ordini da SellyErp (Fase 2)</h2>
+<ol class="steps">
+<li>L'ordine viene registrato in SellyErp.</li>
+<li>Il backend lo acquisisce automaticamente (webhook oppure polling ogni 1–2 minuti).</li>
+<li>Controllo duplicati e filtro dei SKU di servizio.</li>
+<li>L'ordine è salvato nel database con stato "in coda" e compare subito sulla postazione.</li>
+<li>Il documento di spedizione viene preparato in anticipo, senza attendere il lotto.</li>
+<li>A fine imballaggio lo stato (ed eventualmente il tracking) torna a SellyErp.</li>
+</ol>
+<div class="note">Non ancora implementato: nell'MVP gli ordini sono simulati. Modalità, tempi e documento di spedizione saranno confermati dopo la verifica delle API SellyErp.</div>
+
+<h2>5. Interfacce API del backend</h2>
 <table>
 <tr><th style="width:12%">Metodo</th><th style="width:30%">Percorso</th><th>Funzione</th></tr>
 <tr><td>GET</td><td>/api/products</td><td>Catalogo prodotti Norsan e ZREEN</td></tr>
@@ -114,7 +125,7 @@
 <tr><td>POST</td><td>/api/p2l/light · scanned · error · clear</td><td>Comandi LED (verde, conferma, rosso, spegni)</td></tr>
 </table>
 
-<h2>5. Mappa dei file principali</h2>
+<h2>6. Mappa dei file principali</h2>
 <table>
 <tr><th style="width:30%">Percorso</th><th>Ruolo</th></tr>
 <tr><td>src/App.tsx</td><td>Orchestratore dell'interfaccia</td></tr>
@@ -128,7 +139,7 @@
 <tr><td>Dockerfile · docker-compose.yml</td><td>Distribuzione del backend</td></tr>
 </table>
 
-<h2>6. Distribuzione</h2>
+<h2>7. Distribuzione</h2>
 <table>
 <tr><th>Componente</th><th>Dove</th><th>Note</th></tr>
 <tr><td>Frontend</td><td>Vercel (da branch main)</td><td>Pubblicazione automatica ad ogni push</td></tr>
@@ -136,7 +147,7 @@
 <tr><td>Collegamento</td><td>Variabile VITE_API_BASE sul frontend</td><td>Es. https://server-bolzano/api</td></tr>
 </table>
 
-<h2>7. Qualità e test</h2>
+<h2>8. Qualità e test</h2>
 <p>Il backend ha 8 test di integrazione automatici (Vitest + Supertest, database in memoria) che coprono catalogo, slotting (aggiunta, assegnazione, eliminazione), registro audit e Pick-to-Light. Comando: <code>npm run test:backend</code>.</p>
 <div class="note"><b>Limiti attuali:</b> ordini simulati, nessuna integrazione SellyErp, LED e stampante non collegati, test di carico con due postazioni ancora da eseguire. Questi punti sono pianificati nella Fase 2.</div>
 

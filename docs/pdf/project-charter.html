@@ -52,7 +52,7 @@ Hub di Bolzano · Versione 1.0 · Fase: Project Initiation → MVP completato</d
 <tr><td>Bloccare la scansione di prodotti non presenti nell'ordine</td><td>100% dei casi testati</td><td>Realizzato nell'MVP</td></tr>
 <tr><td>Rendere affidabile il backend</td><td>Test automatici API (catalogo, slotting, audit, Pick-to-Light) superati</td><td>8 test su 8 superati</td></tr>
 <tr><td>Dimostrare il flusso completo ordine → scansione → etichetta</td><td>Demo end-to-end alla direzione</td><td>Pronto per la presentazione</td></tr>
-<tr><td>Integrare ordini reali da SellyErp</td><td>Da definire con il team IT</td><td>Fase 2</td></tr>
+<tr><td>Importazione automatica degli ordini da SellyErp: i nuovi ordini entrano in coda senza avvio manuale e senza attesa dell'elaborazione dell'intero lotto</td><td>Tempo di ingresso in coda da misurare nel pilota (vedi sezione 9); nessun ordine duplicato</td><td>Fase 2 – subordinato alla verifica delle API Selly</td></tr>
 <tr><td>Collegare i controller LED fisici (ESP32)</td><td>Da definire dopo approvazione</td><td>Fase 2</td></tr>
 </table>
 
@@ -90,6 +90,7 @@ Hub di Bolzano · Versione 1.0 · Fase: Project Initiation → MVP completato</d
 <tr><td>Codici a barre non presenti nel catalogo</td><td>Scansione rifiutata</td><td>Supporto alias/cartoni master; verifica del catalogo prima del go-live</td></tr>
 <tr><td>Backend non raggiungibile</td><td>Postazione ferma</td><td>Server locale a Bolzano; modalità locale di emergenza nel frontend</td></tr>
 <tr><td>Errori di scrittura nel database</td><td>Perdita storico scansioni</td><td>Volume persistente Docker e backup periodico</td></tr>
+<tr><td>API SellyErp non disponibili nel piano o con limiti</td><td>Importazione automatica ritardata</td><td>Verifica tecnica con SellyErp prima della Fase 2; ripiego su polling o aggiornamento manuale</td></tr>
 <tr><td>Adozione da parte del team</td><td>Uso parziale</td><td>Coinvolgere il Team Lead nei test, formazione breve, feedback giornaliero</td></tr>
 </table>
 
@@ -103,14 +104,35 @@ Hub di Bolzano · Versione 1.0 · Fase: Project Initiation → MVP completato</d
 </table>
 <p>Date e budget di Fase 2 saranno definiti insieme alla direzione dopo la demo.</p>
 
-<h2>9. Criteri di successo e decisione richiesta</h2>
+<h2>9. Fase 2 – Importazione automatica ordini da SellyErp</h2>
+<table>
+<tr><th style="width:28%">Processo attuale</th><td>Il Team Lead avvia manualmente l'elaborazione; il sistema lavora un lotto di ordini, lo trasforma in documento di spedizione e poi si stampa. Il ciclo si ripete più volte al giorno e il reparto attende la fine di ogni lotto.</td></tr>
+<tr><th>Processo obiettivo</th><td>Ogni ordine, appena registrato in SellyErp, entra nella coda della postazione in modo automatico. Gli ordini sono elaborati singolarmente in background e il documento di spedizione è preparato in anticipo.</td></tr>
+<tr><th>Modalità di acquisizione (da scegliere)</th><td>
+<ul>
+<li><b>Webhook:</b> SellyErp invia il nuovo ordine al nostro backend (latenza minima; richiede un indirizzo raggiungibile da internet).</li>
+<li><b>Polling:</b> il backend interroga SellyErp ogni 1–2 minuti (più semplice, latenza di pochi minuti). Consigliato per il pilota.</li>
+<li><b>Aggiornamento manuale:</b> pulsante per il Team Lead, solo come fase transitoria.</li>
+</ul></td></tr>
+<tr><th>Lavoro tecnico previsto</th><td>Tabella ordini nel database · importazione in background · filtro dei SKU di servizio · protezione dai duplicati · stati dell'ordine (nuovo, in coda, in imballaggio, completato, spedito) · invio dello stato a SellyErp se l'API lo consente · test automatici per ogni punto.</td></tr>
+<tr><th>Condizioni (da verificare)</th><td>
+<ul>
+<li>Il piano SellyErp include l'accesso API e viene generata una chiave.</li>
+<li>Definire quale documento serve (DDT, etichetta corriere, lista di imballaggio) e se può essere sostituito.</li>
+<li>Volume di ordini per lotto e orari di punta.</li>
+<li>Disponibilità dei webhook e raggiungibilità del server.</li>
+</ul></td></tr>
+</table>
+<div class="box"><b>Nota:</b> il tempo effettivo di ingresso in coda non è garantito oggi: dipende dalla modalità scelta e dalle API di SellyErp. Sarà misurato durante il pilota. Questa funzione non fa parte dell'MVP presentato.</div>
+
+<h2>10. Criteri di successo e decisione richiesta</h2>
 <ul>
 <li>Demo completata senza blocchi tecnici.</li>
 <li>Feedback positivo del Team Lead sul flusso operativo.</li>
 <li>Approvazione della direzione per il pilota e per la Fase 2.</li>
 </ul>
 
-<h2>10. Approvazioni</h2>
+<h2>11. Approvazioni</h2>
 <table>
 <tr><th>Ruolo</th><th>Nome</th><th>Firma / Data</th></tr>
 <tr><td>Project Manager / Product Owner</td><td>Serhii Haharin</td><td>&nbsp;</td></tr>
