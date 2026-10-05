@@ -286,7 +286,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
         <div className="flex items-center gap-2 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-300 text-xs text-slate-700">
           <Sparkles className="w-4 h-4 text-amber-600" />
           <span>
-            FlessibilitÃ  totale: assegna, elimina o crea nuove posizioni in
+            Flessibilità totale: assegna, elimina o crea nuove posizioni in
             tempo reale
           </span>
         </div>

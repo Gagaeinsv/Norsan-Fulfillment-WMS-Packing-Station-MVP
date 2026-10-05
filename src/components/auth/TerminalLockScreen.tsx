@@ -196,7 +196,7 @@ export const TerminalLockScreen: React.FC<TerminalLockScreenProps> = ({
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-cyan-400" />
           <span>
-            Lettore Barcode USB / Bluetooth sempre attivo in modalitÃ  Keyboard
+            Lettore Barcode USB / Bluetooth sempre attivo in modalità Keyboard
             Wedge
           </span>
         </div>

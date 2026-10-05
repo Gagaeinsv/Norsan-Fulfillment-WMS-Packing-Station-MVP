@@ -248,7 +248,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               </div>
               <p className="text-xs text-slate-500 mt-0.5 font-medium">
                 Controllo in tempo reale di postazioni di imballaggio, flussi
-                online norsan.it e produttivitÃ  operatori
+                online norsan.it e produttività operatori
               </p>
             </div>
           </div>
@@ -317,7 +317,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3">
             <div className="text-[11px] font-bold text-slate-500 uppercase">
-              VelocitÃ  Media
+              Velocità Media
             </div>
             <div className="text-2xl font-black font-mono text-slate-900 mt-1">
               46.5
@@ -934,7 +934,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-slate-600">
-                        ConformitÃ  Takt Time:
+                        Conformità Takt Time:
                       </span>
                       <strong className="text-emerald-700">
                         96.4% in ritmo
@@ -1492,7 +1492,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               <strong className="font-mono text-slate-800">
                 [{operatorToDelete.operatorCode}]
               </strong>{" "}
-              verrÃ  revocato e l'operatore non potrÃ  più accedere alle
+              verrà  revocato e l'operatore non potrà  più accedere alle
               postazioni di magazzino.
             </p>
 

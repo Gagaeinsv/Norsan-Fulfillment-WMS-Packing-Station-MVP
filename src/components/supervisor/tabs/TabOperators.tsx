@@ -823,7 +823,7 @@ export const TabOperators: React.FC<TabOperatorsProps> = ({
               <strong className="font-mono text-slate-800">
                 [{operatorToDelete.operatorCode}]
               </strong>{" "}
-              verrÃ  revocato e l'operatore non potrÃ  più accedere alle
+              verrà  revocato e l'operatore non potrà  più accedere alle
               postazioni di magazzino.
             </p>
 

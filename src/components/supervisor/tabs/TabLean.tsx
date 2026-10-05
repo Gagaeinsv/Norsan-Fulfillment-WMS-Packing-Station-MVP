@@ -137,7 +137,7 @@ export const TabLean: React.FC<{
                 </strong>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-600">ConformitÃ  Takt Time:</span>
+                <span className="text-slate-600">Conformità Takt Time:</span>
                 <strong className="text-emerald-700">96.4% in ritmo</strong>
               </div>
               <div className="flex items-center justify-between">

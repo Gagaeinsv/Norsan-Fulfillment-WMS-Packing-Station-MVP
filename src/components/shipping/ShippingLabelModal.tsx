@@ -124,7 +124,7 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
                   NORSAN S.r.l.
                 </div>
                 <div className="text-[10px] text-gray-700 leading-tight">
-                  Via Macello 30 / SchlachthofstraÃŸe
+                  Via Macello 30 / Schlachthofstraße
                   <br />
                   39100 Bolzano (BZ) - ITALY
                   <br />
