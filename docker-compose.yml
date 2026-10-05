@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  wms-backend:
+    build: .
+    container_name: norsan-wms-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+    volumes:
+      # Зберігаємо базу даних на хост-машині, щоб дані не втрачалися при перезапуску контейнера
+      - ./server/data:/app/server/data
+    restart: unless-stopped
