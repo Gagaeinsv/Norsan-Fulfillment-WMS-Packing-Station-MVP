@@ -53,6 +53,7 @@ Hub di Bolzano · Versione 1.0 · Fase: Project Initiation → MVP completato</d
 <tr><td>Rendere affidabile il backend</td><td>Test automatici API (catalogo, slotting, audit, Pick-to-Light) superati</td><td>8 test su 8 superati</td></tr>
 <tr><td>Dimostrare il flusso completo ordine → scansione → etichetta</td><td>Demo end-to-end alla direzione</td><td>Pronto per la presentazione</td></tr>
 <tr><td>Importazione automatica degli ordini da SellyErp: i nuovi ordini entrano in coda senza avvio manuale e senza attesa dell'elaborazione dell'intero lotto</td><td>Tempo di ingresso in coda da misurare nel pilota (vedi sezione 9); nessun ordine duplicato</td><td>Fase 2 – subordinato alla verifica delle API Selly</td></tr>
+<tr><td>Abbandonare le bolle/liste di imballaggio cartacee per l'imballatore; stampa solo su richiesta (etichetta corriere al momento dell'imballaggio, documenti su richiesta)</td><td>Fogli stampati per giorno prima e dopo il pilota</td><td>Parzialmente nell'MVP (schermata digitale); stampa su richiesta in Fase 2</td></tr>
 <tr><td>Collegare i controller LED fisici (ESP32)</td><td>Da definire dopo approvazione</td><td>Fase 2</td></tr>
 </table>
 
@@ -91,6 +92,7 @@ Hub di Bolzano · Versione 1.0 · Fase: Project Initiation → MVP completato</d
 <tr><td>Backend non raggiungibile</td><td>Postazione ferma</td><td>Server locale a Bolzano; modalità locale di emergenza nel frontend</td></tr>
 <tr><td>Errori di scrittura nel database</td><td>Perdita storico scansioni</td><td>Volume persistente Docker e backup periodico</td></tr>
 <tr><td>API SellyErp non disponibili nel piano o con limiti</td><td>Importazione automatica ritardata</td><td>Verifica tecnica con SellyErp prima della Fase 2; ripiego su polling o aggiornamento manuale</td></tr>
+<tr><td>Alcuni documenti richiesti su carta (es. DDT, requisiti fiscali o del cliente)</td><td>Stampa ancora necessaria</td><td>Confermare con contabilità/consulente quali documenti possono essere digitali prima della Fase 2</td></tr>
 <tr><td>Adozione da parte del team</td><td>Uso parziale</td><td>Coinvolgere il Team Lead nei test, formazione breve, feedback giornaliero</td></tr>
 </table>
 
@@ -107,13 +109,14 @@ Hub di Bolzano · Versione 1.0 · Fase: Project Initiation → MVP completato</d
 <h2>9. Fase 2 – Importazione automatica ordini da SellyErp</h2>
 <table>
 <tr><th style="width:28%">Processo attuale</th><td>Il Team Lead avvia manualmente l'elaborazione; il sistema lavora un lotto di ordini, lo trasforma in documento di spedizione e poi si stampa. Il ciclo si ripete più volte al giorno e il reparto attende la fine di ogni lotto.</td></tr>
-<tr><th>Processo obiettivo</th><td>Ogni ordine, appena registrato in SellyErp, entra nella coda della postazione in modo automatico. Gli ordini sono elaborati singolarmente in background e il documento di spedizione è preparato in anticipo.</td></tr>
+<tr><th>Processo obiettivo</th><td>Ogni ordine, appena registrato in SellyErp, entra nella coda della postazione in modo automatico. Gli ordini sono elaborati singolarmente in background e l'imballatore lavora dallo schermo, senza documento di spedizione cartaceo.</td></tr>
 <tr><th>Modalità di acquisizione (da scegliere)</th><td>
 <ul>
 <li><b>Webhook:</b> SellyErp invia il nuovo ordine al nostro backend (latenza minima; richiede un indirizzo raggiungibile da internet).</li>
 <li><b>Polling:</b> il backend interroga SellyErp ogni 1–2 minuti (più semplice, latenza di pochi minuti). Consigliato per il pilota.</li>
 <li><b>Aggiornamento manuale:</b> pulsante per il Team Lead, solo come fase transitoria.</li>
 </ul></td></tr>
+<tr><th>Stampa su richiesta</th><td>L'imballatore non riceve più bolle o liste cartacee: lavora dallo schermo. Si stampa solo ciò che serve: l'etichetta del corriere al momento dell'imballaggio e, su richiesta, un singolo documento per ordine (cliente, contabilità, verifica). Il pulsante "Stampa" per ordine è previsto in Fase 2; oggi l'etichetta ZPL è solo simulata.</td></tr>
 <tr><th>Lavoro tecnico previsto</th><td>Tabella ordini nel database · importazione in background · filtro dei SKU di servizio · protezione dai duplicati · stati dell'ordine (nuovo, in coda, in imballaggio, completato, spedito) · invio dello stato a SellyErp se l'API lo consente · test automatici per ogni punto.</td></tr>
 <tr><th>Condizioni (da verificare)</th><td>
 <ul>
