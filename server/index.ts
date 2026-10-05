@@ -9,7 +9,7 @@ import {
   getP2lStatus,
 } from "./services/p2lService";
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
@@ -230,6 +230,8 @@ app.post("/api/p2l/clear", async (req, res) => {
   res.json({ success: true });
 });
 
-app.listen(PORT, () => {
-  console.log(`⚡ WMS Backend Server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    console.log(`⚡ WMS Backend Server running on http://localhost:${PORT}`);
+  });
+}

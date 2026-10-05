@@ -7,7 +7,8 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const dbPath = path.join(dbDir, "wms.sqlite");
+const isTest = process.env.NODE_ENV === "test";
+const dbPath = isTest ? ":memory:" : path.join(dbDir, "wms.sqlite");
 export const db = new Database(dbPath);
 
 // Initialize Tables
