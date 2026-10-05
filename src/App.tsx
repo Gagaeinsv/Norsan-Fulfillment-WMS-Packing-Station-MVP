@@ -114,9 +114,9 @@ export function App() {
 
       {/* Main Content Area */}
       {activeView === "packing" ? (
-        <main className="flex-1 p-3.5 grid grid-cols-1 lg:grid-cols-12 gap-3.5 max-w-[1920px] mx-auto w-full overflow-hidden">
+        <main className="flex-1 p-2 grid grid-cols-1 lg:grid-cols-12 gap-2 max-w-[1920px] mx-auto w-full overflow-hidden min-h-0">
           {/* Left Side: Order Queue (3 cols on desktop) */}
-          <div className="lg:col-span-3 h-[calc(100vh-84px)] min-h-[500px]">
+          <div className="lg:col-span-3 h-full min-h-0 flex flex-col">
             <OrderQueue
               orders={orders}
               activeOrderId={activeOrderId}
@@ -125,7 +125,7 @@ export function App() {
           </div>
 
           {/* Right Side: Active Order Terminal with Full Vertical Height (9 cols on desktop) */}
-          <div className="lg:col-span-9 flex flex-col h-[calc(100vh-84px)] min-h-[500px]">
+          <div className="lg:col-span-9 flex flex-col h-full min-h-0 relative">
             <ActivePackingView
               order={activeOrder as any}
               onSimulateScan={triggerManualScan}

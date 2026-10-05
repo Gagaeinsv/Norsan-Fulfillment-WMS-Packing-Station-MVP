@@ -116,7 +116,7 @@ export const Header: React.FC<HeaderProps> = ({
     currentOperator.role === "supervisor";
 
   return (
-    <header className="bg-white border-b-2 border-slate-300 px-4 py-2.5 flex items-center justify-between gap-3 select-none shadow-sm min-h-[64px]">
+    <header className="bg-white border-b border-slate-300 px-3 py-1.5 flex items-center justify-between gap-3 select-none shadow-sm min-h-[48px]">
       {/* 1. Left: Brand & Operator Profile */}
       <div className="flex items-center gap-3 flex-shrink-0">
         <div className="bg-norsan-600 text-white p-2 rounded-xl flex items-center justify-center shadow-xs">
@@ -242,7 +242,7 @@ export const Header: React.FC<HeaderProps> = ({
               ? "â† Postazione"
               : isLead
                 ? "ðŸ‘” Dashboard Lead"
-                : "ðŸ”’ Lead (PIN)"}
+                : "🔒 Lead (PIN)"}
           </span>
         </button>
 

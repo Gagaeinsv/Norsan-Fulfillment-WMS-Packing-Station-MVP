@@ -41,14 +41,14 @@ export const PackingBanners: React.FC<PackingBannersProps> = ({
     {/* Physical Document — B2B / Print-on-Demand */}
     {order.requiresPhysicalDocument && (
       <div
-        className={`p-3 rounded-xl border-2 flex items-center justify-between shadow-sm ${
+        className={`p-2 rounded-lg border-2 flex items-center justify-between shadow-sm ${
           order.physicalDocumentConfirmed
             ? "bg-emerald-50 border-emerald-400"
             : "bg-rose-50 border-rose-500 ring-2 ring-rose-500/20"
         }`}
       >
         <div className="flex items-center gap-3">
-          <div className="text-2xl">📄</div>
+          <div className="text-xl">📄</div>
           <div>
             <div
               className={`font-black text-sm ${order.physicalDocumentConfirmed ? "text-emerald-800" : "text-rose-900"}`}
@@ -62,7 +62,7 @@ export const PackingBanners: React.FC<PackingBannersProps> = ({
         </div>
         <button
           onClick={onTogglePhysicalDocument}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all active:scale-95 ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded font-bold transition-all active:scale-95 ${
             order.physicalDocumentConfirmed
               ? "bg-emerald-600 text-white shadow-md"
               : "bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400"
@@ -87,7 +87,7 @@ export const PackingBanners: React.FC<PackingBannersProps> = ({
     {/* Retention Gift */}
     {requiresGift && (
       <div
-        className={`p-3 rounded-xl border-2 flex items-center justify-between shadow-sm ${
+        className={`p-2 rounded-lg border-2 flex items-center justify-between shadow-sm ${
           order.giftConfirmed
             ? "bg-emerald-50 border-emerald-400"
             : order.retentionGift === "card_discount_15"
@@ -96,7 +96,7 @@ export const PackingBanners: React.FC<PackingBannersProps> = ({
         }`}
       >
         <div className="flex items-center gap-3">
-          <div className="text-2xl">
+          <div className="text-xl">
             {order.retentionGift === "card_discount_15"
               ? "🎁"
               : order.retentionGift === "branded_spoon"
@@ -118,7 +118,7 @@ export const PackingBanners: React.FC<PackingBannersProps> = ({
         </div>
         <button
           onClick={onToggleGift}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all active:scale-95 ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded font-bold transition-all active:scale-95 ${
             order.giftConfirmed
               ? "bg-emerald-600 text-white shadow-md"
               : "bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400"

@@ -96,9 +96,9 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full space-y-3 select-none">
+    <div className="flex flex-col h-full gap-2 select-none min-h-0">
       {/* ── Order Header ──────────────────────────────────────────────────── */}
-      <div className="bg-white border-2 border-slate-300 rounded-2xl p-3 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="bg-white border border-slate-300 rounded-xl p-2 shadow-xs flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2.5 flex-wrap">
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-slate-500" />
@@ -189,7 +189,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
 
       {/* ── Flyer checklist ───────────────────────────────────────────────── */}
       {order.marketingFlyers.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 flex-wrap shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 flex items-center gap-2 flex-wrap shadow-xs shrink-0">
           <BookmarkIcon className="w-4 h-4 text-slate-400 flex-shrink-0" />
           <span className="text-xs font-black text-slate-500 uppercase tracking-wide mr-1">
             Volantini:
@@ -233,7 +233,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
       />
 
       {/* ── Item cards grid ──────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto pr-1">
+      <div className="flex-1 overflow-y-auto min-h-0 pr-1">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {order.items.map((item, index) => (
             <PackingItemCard
@@ -250,10 +250,10 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
       </div>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <div className="bg-white border-2 border-slate-300 rounded-2xl p-4 shadow-md flex flex-col md:flex-row items-center justify-between gap-3">
+      <div className="bg-white border-t border-slate-300 rounded-xl p-2 shadow-sm flex flex-col xl:flex-row items-center justify-between gap-2 shrink-0 mt-auto">
         <div className="flex items-center gap-3">
           <div
-            className={`p-2.5 rounded-xl border flex items-center justify-center ${
+            className={`p-1.5 rounded-lg border flex items-center justify-center ${
               isOrderFullyReady
                 ? "bg-emerald-100 border-emerald-300 text-emerald-700"
                 : "bg-slate-100 border-slate-300 text-slate-600"
@@ -295,7 +295,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
         <div className="flex items-center gap-3 w-full md:w-auto justify-end">
           <button
             onClick={onOpenIssueModal}
-            className="px-4 py-3 rounded-xl bg-slate-100 hover:bg-rose-50 active:scale-95 text-rose-700 hover:text-rose-900 text-xs font-bold border border-slate-300 hover:border-rose-300 transition flex items-center gap-1.5 shadow-xs"
+            className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-rose-50 active:scale-95 text-rose-700 hover:text-rose-900 text-xs font-bold border border-slate-300 hover:border-rose-300 transition flex items-center gap-1.5 shadow-xs"
           >
             <AlertOctagon className="w-4 h-4" />
             <span>Segnala Anomalia</span>
@@ -303,7 +303,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
           {isOrderFullyReady ? (
             <button
               onClick={onOpenLabelModal}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-base font-black tracking-wide shadow-lg transition-all animate-pulse cursor-pointer"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-base font-black tracking-wide shadow-lg transition-all animate-pulse cursor-pointer"
             >
               <Printer className="w-5 h-5 text-white" />
               <span>STAMPA ETICHETTA {order.courier.toUpperCase()}</span>
@@ -312,7 +312,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
           ) : (
             <button
               disabled
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold border border-slate-300 cursor-not-allowed"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-100 text-slate-400 text-xs font-bold border border-slate-300 cursor-not-allowed"
             >
               <Printer className="w-4 h-4 text-slate-400" />
               <span>
