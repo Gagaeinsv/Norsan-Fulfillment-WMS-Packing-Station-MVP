@@ -142,7 +142,7 @@ export const TabLean: React.FC<{
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-600">Audit 5S Postazione:</span>
-                <strong className="text-cyan-800">5S Conforme âœ“</strong>
+                <strong className="text-cyan-800">5S Conforme ✓</strong>
               </div>
             </div>
           </div>

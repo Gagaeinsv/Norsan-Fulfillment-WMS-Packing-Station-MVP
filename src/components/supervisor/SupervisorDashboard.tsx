@@ -376,7 +376,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           }`}
         >
           <Users className="w-4 h-4 text-blue-500" />
-          <span>ðŸ‘¥ Operatori & Badge ({operators.length})</span>
+          <span>👥 Operatori & Badge ({operators.length})</span>
         </button>
 
         <button
@@ -403,7 +403,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           }`}
         >
           <Layers className="w-4 h-4 text-amber-500" />
-          <span>âš™ï¸ Gestione Scaffali & Slotting (5S)</span>
+          <span>⚙️ Gestione Scaffali & Slotting (5S)</span>
         </button>
 
         <button
@@ -415,7 +415,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           }`}
         >
           <TrendingUp className="w-4 h-4 text-emerald-400" />
-          <span>ðŸ“ˆ Metriche Lean & 5S Kaizen</span>
+          <span>📈 Metriche Lean & 5S Kaizen</span>
         </button>
       </div>
 
@@ -944,7 +944,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                       <span className="text-slate-600">
                         Audit 5S Postazione:
                       </span>
-                      <strong className="text-cyan-800">5S Conforme âœ“</strong>
+                      <strong className="text-cyan-800">5S Conforme ✓</strong>
                     </div>
                   </div>
                 </div>
@@ -1090,7 +1090,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                       className="mt-2 px-3 py-1.5 bg-white hover:bg-slate-100 text-blue-700 font-bold text-xs rounded-xl border border-blue-300 transition active:scale-95 flex items-center gap-1.5 shadow-2xs cursor-pointer"
                     >
                       <Upload className="w-3.5 h-3.5 text-blue-600" />
-                      <span>ðŸ“ Carica Foto da File</span>
+                      <span>📸 Carica Foto da File</span>
                     </button>
                   </div>
                 </div>
@@ -1404,7 +1404,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                       className="mt-2 px-3 py-1.5 bg-white hover:bg-slate-100 text-purple-700 font-bold text-xs rounded-xl border border-purple-300 transition active:scale-95 flex items-center gap-1.5 shadow-2xs cursor-pointer"
                     >
                       <Upload className="w-3.5 h-3.5 text-purple-600" />
-                      <span>ðŸ“ Carica Nuova Foto</span>
+                      <span>📸 Carica Nuova Foto</span>
                     </button>
                   </div>
                 </div>

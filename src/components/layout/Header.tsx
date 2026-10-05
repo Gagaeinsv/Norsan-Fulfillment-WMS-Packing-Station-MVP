@@ -238,10 +238,9 @@ export const Header: React.FC<HeaderProps> = ({
           }
         >
           <span>
-            {activeView === "supervisor"
-              ? "â† Postazione"
+            {activeView === "supervisor" ? "← Postazione"
               : isLead
-                ? "ðŸ‘” Dashboard Lead"
+                ? "👔 Dashboard Lead"
                 : "🔒 Lead (PIN)"}
           </span>
         </button>

@@ -532,7 +532,7 @@ export function useWarehouseState() {
           rawCode,
           resultType: "flyer_match",
           status: "success",
-          title: "Volantino Inserito âœ“",
+          title: "Volantino Inserito ✓",
           message: `Confermato inserimento ${matchedFlyer.title} nella scatola!`,
           timestamp: Date.now(),
         });
@@ -698,7 +698,7 @@ export function useWarehouseState() {
           status: "success",
           title:
             actualAdd > 1
-              ? `CARTONE MASTER (+${actualAdd} PZ) âœ“`
+              ? `CARTONE MASTER (+${actualAdd} PZ) ✓`
               : "Posizione Completata",
           message: `${matchedProduct.name} completato (${newScannedQty}/${currentItem.quantityRequired} pz). Posizione: [${matchedProduct.shelfLocation}]`,
           timestamp: Date.now(),

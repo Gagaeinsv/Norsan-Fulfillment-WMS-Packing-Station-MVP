@@ -421,7 +421,7 @@ export const TabOperators: React.FC<TabOperatorsProps> = ({
                       className="mt-2 px-3 py-1.5 bg-white hover:bg-slate-100 text-blue-700 font-bold text-xs rounded-xl border border-blue-300 transition active:scale-95 flex items-center gap-1.5 shadow-2xs cursor-pointer"
                     >
                       <Upload className="w-3.5 h-3.5 text-blue-600" />
-                      <span>ðŸ“ Carica Foto da File</span>
+                      <span>📸 Carica Foto da File</span>
                     </button>
                   </div>
                 </div>
@@ -735,7 +735,7 @@ export const TabOperators: React.FC<TabOperatorsProps> = ({
                       className="mt-2 px-3 py-1.5 bg-white hover:bg-slate-100 text-purple-700 font-bold text-xs rounded-xl border border-purple-300 transition active:scale-95 flex items-center gap-1.5 shadow-2xs cursor-pointer"
                     >
                       <Upload className="w-3.5 h-3.5 text-purple-600" />
-                      <span>ðŸ“ Carica Nuova Foto</span>
+                      <span>📸 Carica Nuova Foto</span>
                     </button>
                   </div>
                 </div>
