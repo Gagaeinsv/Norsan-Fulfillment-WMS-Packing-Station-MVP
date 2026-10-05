@@ -576,10 +576,10 @@ export function useWarehouseState() {
       // 5. Check if it's a Product EAN / SKU (from live database, with static fallback)
       const matchedProduct =
         productsList.find(
-          (p) => p.ean === rawCode || p.sku.toUpperCase() === rawCode,
+          (p) => p.ean === rawCode || p.sku.toUpperCase() === rawCode || (p.aliases && p.aliases.includes(rawCode)),
         ) ||
         NORSAN_PRODUCTS.find(
-          (p) => p.ean === rawCode || p.sku.toUpperCase() === rawCode,
+          (p) => p.ean === rawCode || p.sku.toUpperCase() === rawCode || (p.aliases && p.aliases.includes(rawCode)),
         );
 
       if (!matchedProduct) {
