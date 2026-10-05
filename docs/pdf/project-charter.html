@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Project Charter - Norsan WMS Packing Station</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1e293b; font-size: 11pt; line-height: 1.45; }
+  h1 { color: #0f4c5c; font-size: 24pt; margin: 0 0 4px; }
+  h2 { color: #0f4c5c; border-bottom: 2px solid #0f4c5c; padding-bottom: 3px; margin-top: 22px; font-size: 14pt; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; margin: 12px 0 4px; }
+  .sub { color: #64748b; margin-bottom: 14px; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; page-break-inside: avoid; }
+  th, td { border: 1px solid #cbd5e1; padding: 5px 8px; text-align: left; vertical-align: top; font-size: 10pt; }
+  th { background: #e2f1f4; }
+  .box { background: #f1f5f9; border-left: 4px solid #0f4c5c; padding: 8px 12px; margin: 8px 0; }
+  ul { margin: 4px 0 4px 18px; padding: 0; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .swot div { border: 1px solid #cbd5e1; padding: 6px 10px; font-size: 10pt; }
+  .swot h3 { margin-top: 0; }
+  .s { background: #ecfdf5; } .w { background: #fff7ed; } .o { background: #eff6ff; } .t { background: #fef2f2; }
+  .foot { margin-top: 24px; font-size: 9pt; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 6px; }
+</style>
+</head>
+<body>
+
+<h1>Project Charter</h1>
+<div class="sub">Norsan &amp; ZREEN – Fulfillment WMS: Postazione di Imballaggio con Pick-to-Light<br>
+Hub di Bolzano · Versione 1.0 · Fase: Project Initiation → MVP completato</div>
+
+<h2>1. Sintesi del progetto</h2>
+<p>Il progetto introduce una postazione di imballaggio digitale e senza carta (paperless) per l'hub logistico di Bolzano. L'operatore scansiona i prodotti con lo scanner, il sistema verifica in tempo reale che ogni articolo appartenga all'ordine (Poka-Yoke) e guida il prelievo tramite lo scaffale visuale e, in prospettiva, tramite luci LED Pick-to-Light.</p>
+<div class="box"><b>Obiettivo di business:</b> ridurre gli errori di spedizione, aumentare la velocità di imballaggio (Velocity) e rendere il processo misurabile (KPI Lean) senza stampare ordini su A4.</div>
+
+<h2>2. Business Case</h2>
+<table>
+<tr><th style="width:28%">Problema attuale</th><td>Imballaggio con documenti cartacei, controllo manuale degli articoli, nessuna tracciabilità delle scansioni, rischio di prodotti errati o volantini mancanti nel pacco.</td></tr>
+<tr><th>Soluzione proposta</th><td>Applicazione web per postazione di imballaggio con scansione obbligatoria, blocco automatico degli errori, gestione volantini/gadget, dashboard per il Team Lead e log di audit.</td></tr>
+<tr><th>Benefici attesi</th><td>
+<ul>
+<li>Meno resi e reclami per prodotto errato (Zero-Error).</li>
+<li>Tempo di formazione ridotto: l'interfaccia guida l'operatore passo per passo.</li>
+<li>Dati oggettivi su produttività e anomalie per il miglioramento continuo (PDCA, 5S).</li>
+<li>Eliminazione della stampa degli ordini.</li>
+</ul></td></tr>
+<tr><th>Alternative considerate</th><td>Mantenere il processo manuale (nessun investimento, nessun miglioramento) oppure acquistare un WMS commerciale (costo e tempi più alti, meno adattabile ai tavoli speculari Norsan/ZREEN).</td></tr>
+</table>
+
+<h2>3. Obiettivi SMART</h2>
+<table>
+<tr><th>Obiettivo</th><th>Misura</th><th>Stato</th></tr>
+<tr><td>Bloccare la scansione di prodotti non presenti nell'ordine</td><td>100% dei casi testati</td><td>Realizzato nell'MVP</td></tr>
+<tr><td>Rendere affidabile il backend</td><td>Test automatici API (catalogo, slotting, audit, Pick-to-Light) superati</td><td>8 test su 8 superati</td></tr>
+<tr><td>Dimostrare il flusso completo ordine → scansione → etichetta</td><td>Demo end-to-end alla direzione</td><td>Pronto per la presentazione</td></tr>
+<tr><td>Integrare ordini reali da SellyErp</td><td>Da definire con il team IT</td><td>Fase 2</td></tr>
+<tr><td>Collegare i controller LED fisici (ESP32)</td><td>Da definire dopo approvazione</td><td>Fase 2</td></tr>
+</table>
+
+<h2>4. Ambito (MoSCoW)</h2>
+<table>
+<tr><th style="width:18%">Priorità</th><th>Funzionalità</th></tr>
+<tr><td><b>Must have</b></td><td>Login operatore con badge · coda ordini · scansione EAN con alias (cartoni master) · blocco prodotto errato · conteggio quantità · gestione volantini · completamento ordine ed etichetta (simulata)</td></tr>
+<tr><td><b>Should have</b></td><td>Dashboard Team Lead · gestione scaffali (slotting 5S) · KPI Lean · segnalazione anomalie · tavoli speculari Norsan/ZREEN</td></tr>
+<tr><td><b>Could have</b></td><td>Feedback audio · simulatore scanner per demo · salvataggio locale quando il backend non è disponibile</td></tr>
+<tr><td><b>Won't have (ora)</b></td><td>Integrazione live SellyErp · stampa reale ZPL su Zebra ZT411 · LED fisici · autenticazione enterprise (SSO)</td></tr>
+</table>
+
+<h2>5. Stakeholder e ruoli (RACI)</h2>
+<table>
+<tr><th>Attività</th><th>Project Manager / PO</th><th>Direzione</th><th>Team Lead</th><th>Sviluppo</th><th>Operatori</th></tr>
+<tr><td>Requisiti e priorità</td><td>A/R</td><td>C</td><td>C</td><td>C</td><td>I</td></tr>
+<tr><td>Sviluppo e test</td><td>A</td><td>I</td><td>I</td><td>R</td><td>I</td></tr>
+<tr><td>Test sul campo (UAT)</td><td>A</td><td>I</td><td>R</td><td>C</td><td>R</td></tr>
+<tr><td>Approvazione Fase 2</td><td>R</td><td>A</td><td>C</td><td>C</td><td>I</td></tr>
+<tr><td>Integrazione ERP/hardware</td><td>A</td><td>C</td><td>C</td><td>R</td><td>I</td></tr>
+</table>
+<p style="font-size:9pt;color:#64748b">R = Responsabile · A = Approva · C = Consultato · I = Informato. Nomi e firme da completare dalla direzione.</p>
+
+<h2>6. Analisi SWOT</h2>
+<div class="grid swot">
+<div class="s"><h3>Punti di forza</h3><ul><li>Interfaccia semplice e blocco errori</li><li>Su misura per l'hub di Bolzano</li><li>Backend testato e pronto per Docker</li></ul></div>
+<div class="w"><h3>Debolezze</h3><ul><li>Ordini ancora simulati</li><li>LED non ancora collegati</li><li>Un solo ambiente di prova finora</li></ul></div>
+<div class="o"><h3>Opportunità</h3><ul><li>Dati per KPI e miglioramento continuo</li><li>Estensione ad altre postazioni</li><li>Integrazione con SellyErp</li></ul></div>
+<div class="t"><h3>Minacce</h3><ul><li>Dipendenza dalla qualità dei dati ERP</li><li>Resistenza al cambiamento degli operatori</li><li>Rete Wi-Fi del magazzino</li></ul></div>
+</div>
+
+<h2>7. Rischi principali</h2>
+<table>
+<tr><th>Rischio</th><th>Impatto</th><th>Mitigazione</th></tr>
+<tr><td>Codici a barre non presenti nel catalogo</td><td>Scansione rifiutata</td><td>Supporto alias/cartoni master; verifica del catalogo prima del go-live</td></tr>
+<tr><td>Backend non raggiungibile</td><td>Postazione ferma</td><td>Server locale a Bolzano; modalità locale di emergenza nel frontend</td></tr>
+<tr><td>Errori di scrittura nel database</td><td>Perdita storico scansioni</td><td>Volume persistente Docker e backup periodico</td></tr>
+<tr><td>Adozione da parte del team</td><td>Uso parziale</td><td>Coinvolgere il Team Lead nei test, formazione breve, feedback giornaliero</td></tr>
+</table>
+
+<h2>8. Piano di massima</h2>
+<table>
+<tr><th>Fase</th><th>Contenuto</th><th>Stato</th></tr>
+<tr><td>Fase 1 – MVP</td><td>Applicazione di imballaggio, dashboard Team Lead, backend con test</td><td>Completata</td></tr>
+<tr><td>Fase 1b – Pilota</td><td>Test con operatori reali sulla postazione, raccolta feedback</td><td>Da pianificare</td></tr>
+<tr><td>Fase 2 – Integrazioni</td><td>SellyErp, stampante Zebra ZPL, controller LED ESP32, server in produzione</td><td>In attesa di approvazione</td></tr>
+<tr><td>Fase 3 – Scala</td><td>Altre postazioni, report avanzati</td><td>Da valutare</td></tr>
+</table>
+<p>Date e budget di Fase 2 saranno definiti insieme alla direzione dopo la demo.</p>
+
+<h2>9. Criteri di successo e decisione richiesta</h2>
+<ul>
+<li>Demo completata senza blocchi tecnici.</li>
+<li>Feedback positivo del Team Lead sul flusso operativo.</li>
+<li>Approvazione della direzione per il pilota e per la Fase 2.</li>
+</ul>
+
+<h2>10. Approvazioni</h2>
+<table>
+<tr><th>Ruolo</th><th>Nome</th><th>Firma / Data</th></tr>
+<tr><td>Project Manager / Product Owner</td><td>Serhii Haharin</td><td>&nbsp;</td></tr>
+<tr><td>Sponsor / Direzione</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr><td>Team Lead Logistica</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+</table>
+
+<div class="foot">Norsan &amp; ZREEN WMS · Project Charter v1.0 · Documento interno</div>
+</body>
+</html>

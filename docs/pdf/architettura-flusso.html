@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Architettura e Flusso - Norsan WMS</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1e293b; font-size: 10.5pt; line-height: 1.45; }
+  h1 { color: #0f4c5c; font-size: 22pt; margin: 0 0 4px; }
+  h2 { color: #0f4c5c; border-bottom: 2px solid #0f4c5c; padding-bottom: 3px; margin-top: 20px; font-size: 13.5pt; page-break-after: avoid; }
+  .sub { color: #64748b; margin-bottom: 12px; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; page-break-inside: avoid; }
+  th, td { border: 1px solid #cbd5e1; padding: 5px 8px; text-align: left; vertical-align: top; font-size: 9.5pt; }
+  th { background: #e2f1f4; }
+  .layer { border: 2px solid #0f4c5c; border-radius: 8px; padding: 8px 10px; margin: 6px 0; background: #f8fafc; page-break-inside: avoid; }
+  .layer > b { color: #0f4c5c; }
+  .row { display: flex; gap: 8px; margin-top: 6px; }
+  .node { flex: 1; border: 1px solid #94a3b8; border-radius: 6px; background: #fff; padding: 5px 7px; font-size: 9pt; text-align: center; }
+  .arrow { text-align: center; font-size: 15pt; color: #0f4c5c; margin: 0; line-height: 1; }
+  .ph2 { border-style: dashed; background: #fffbeb; }
+  .steps { counter-reset: s; list-style: none; padding: 0; }
+  .steps li { counter-increment: s; margin: 5px 0; padding-left: 30px; position: relative; }
+  .steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%; background: #0f4c5c; color: #fff; text-align: center; font-size: 9pt; line-height: 22px; font-weight: bold; }
+  .note { background: #f1f5f9; border-left: 4px solid #0f4c5c; padding: 6px 10px; margin: 8px 0; font-size: 9.5pt; }
+  .legend { font-size: 9pt; color: #64748b; }
+</style>
+</head>
+<body>
+
+<h1>Architettura e Flusso del Sistema</h1>
+<div class="sub">Norsan &amp; ZREEN – Fulfillment WMS · Postazione di imballaggio · Hub di Bolzano · Versione 1.0</div>
+
+<h2>1. Visione d'insieme</h2>
+<p>Il sistema è composto da un'applicazione web (frontend React) usata sulla postazione e da un servizio backend (Node.js + SQLite) che conserva catalogo, scaffali e log delle scansioni. Il backend può girare in Docker su un server locale a Bolzano o nel cloud.</p>
+
+<div class="layer"><b>Utenti e dispositivi</b>
+  <div class="row">
+    <div class="node">Operatore<br>(badge + scanner)</div>
+    <div class="node">Team Lead<br>(PIN supervisore)</div>
+    <div class="node">Stampante Zebra ZT411<br>(Fase 2)</div>
+  </div>
+</div>
+<p class="arrow">▼</p>
+<div class="layer"><b>Frontend – React + Vite + TypeScript (ospitato su Vercel)</b>
+  <div class="row">
+    <div class="node">Vista imballaggio<br>(ordine attivo)</div>
+    <div class="node">Coda ordini<br>e Takt time</div>
+    <div class="node">Guida scaffale<br>Pick-to-Light visuale</div>
+    <div class="node">Dashboard<br>Team Lead</div>
+  </div>
+  <div class="row">
+    <div class="node">Stato globale: useWarehouseState</div>
+    <div class="node">Scanner: useBarcodeScanner</div>
+    <div class="node">Audio: useSoundEffects</div>
+  </div>
+</div>
+<p class="arrow">▼ HTTP / JSON (/api/...)</p>
+<div class="layer"><b>Backend – Node.js + Express (Docker)</b>
+  <div class="row">
+    <div class="node">Catalogo<br>prodotti, scatole, volantini</div>
+    <div class="node">Slotting<br>scaffali</div>
+    <div class="node">Audit<br>scansioni</div>
+    <div class="node">Pick-to-Light<br>stato e comandi LED</div>
+  </div>
+</div>
+<p class="arrow">▼</p>
+<div class="layer"><b>Dati e hardware</b>
+  <div class="row">
+    <div class="node">Database SQLite<br>(volume persistente)</div>
+    <div class="node ph2">Controller LED ESP32<br>(Fase 2)</div>
+    <div class="node ph2">SellyErp – ordini reali<br>(Fase 2)</div>
+  </div>
+</div>
+<p class="legend">Riquadri tratteggiati = componenti previsti nella Fase 2, non ancora collegati. Nell'MVP gli ordini sono simulati.</p>
+
+<h2>2. Flusso operativo di un ordine</h2>
+<ol class="steps">
+<li><b>Accesso:</b> l'operatore scansiona il badge e sblocca la postazione.</li>
+<li><b>Selezione ordine:</b> dalla coda sceglie l'ordine; il sistema mostra articoli, quantità, volantini e tipo di scatola.</li>
+<li><b>Scansione prodotto:</b> lo scanner legge l'EAN, il SKU o un codice alias (cartone master).</li>
+<li><b>Controllo Poka-Yoke:</b>
+  <ul>
+    <li>Prodotto nell'ordine e quantità corretta → +1 e segnale acustico di successo.</li>
+    <li>Prodotto non nell'ordine → errore rosso, il sistema indica dove riporlo.</li>
+    <li>Quantità già raggiunta → avviso.</li>
+    <li>Codice sconosciuto → errore "Codice sconosciuto".</li>
+  </ul></li>
+<li><b>Volantini e gadget:</b> l'operatore conferma l'inserimento dei materiali richiesti.</li>
+<li><b>Completamento:</b> a ordine verificato al 100% si apre la finestra etichetta (ZPL simulato).</li>
+<li><b>Registrazione:</b> ogni scansione viene scritta nel log di audit (operatore, codice, esito, ordine, ora).</li>
+<li><b>Avanzamento:</b> il sistema passa all'ordine successivo e aggiorna i KPI.</li>
+</ol>
+
+<h2>3. Flusso del Team Lead (Slotting 5S)</h2>
+<ol class="steps">
+<li>Accesso con PIN supervisore.</li>
+<li>Apertura di "Gestione Scaffali &amp; Slotting".</li>
+<li>Aggiunta, assegnazione o rimozione di una posizione (lato S/D, piano 1–3).</li>
+<li>Il backend salva la modifica; gli ordini attivi ricevono le nuove coordinate di prelievo.</li>
+<li>Se il backend non è raggiungibile, la modifica viene salvata nel browser (modalità locale dell'MVP).</li>
+</ol>
+
+<h2>4. Interfacce API del backend</h2>
+<table>
+<tr><th style="width:12%">Metodo</th><th style="width:30%">Percorso</th><th>Funzione</th></tr>
+<tr><td>GET</td><td>/api/products</td><td>Catalogo prodotti Norsan e ZREEN</td></tr>
+<tr><td>GET</td><td>/api/boxes · /api/flyers</td><td>Scatole e volantini</td></tr>
+<tr><td>GET</td><td>/api/slots</td><td>Elenco posizioni scaffale</td></tr>
+<tr><td>POST</td><td>/api/slotting/assign</td><td>Assegna un prodotto a una posizione</td></tr>
+<tr><td>POST</td><td>/api/slots/add</td><td>Crea una nuova posizione</td></tr>
+<tr><td>DELETE</td><td>/api/slots/:slotCode</td><td>Elimina una posizione</td></tr>
+<tr><td>POST</td><td>/api/audit/scan</td><td>Registra una scansione</td></tr>
+<tr><td>GET</td><td>/api/p2l/status</td><td>Stato del controller Pick-to-Light</td></tr>
+<tr><td>POST</td><td>/api/p2l/light · scanned · error · clear</td><td>Comandi LED (verde, conferma, rosso, spegni)</td></tr>
+</table>
+
+<h2>5. Mappa dei file principali</h2>
+<table>
+<tr><th style="width:30%">Percorso</th><th>Ruolo</th></tr>
+<tr><td>src/App.tsx</td><td>Orchestratore dell'interfaccia</td></tr>
+<tr><td>src/hooks/useWarehouseState.ts</td><td>Logica di business e stato globale (scansioni, ordini, KPI)</td></tr>
+<tr><td>src/hooks/useBarcodeScanner.ts</td><td>Lettura dello scanner in modalità tastiera</td></tr>
+<tr><td>src/components/packing, queue, rack, supervisor</td><td>Schermate operative e dashboard</td></tr>
+<tr><td>src/services/api.ts</td><td>Chiamate al backend con fallback locale</td></tr>
+<tr><td>src/data/</td><td>Catalogo prodotti, ordini e operatori di esempio</td></tr>
+<tr><td>server/index.ts · server/db.ts</td><td>API REST e database SQLite</td></tr>
+<tr><td>server/tests/api.test.ts</td><td>Test automatici del backend</td></tr>
+<tr><td>Dockerfile · docker-compose.yml</td><td>Distribuzione del backend</td></tr>
+</table>
+
+<h2>6. Distribuzione</h2>
+<table>
+<tr><th>Componente</th><th>Dove</th><th>Note</th></tr>
+<tr><td>Frontend</td><td>Vercel (da branch main)</td><td>Pubblicazione automatica ad ogni push</td></tr>
+<tr><td>Backend + SQLite</td><td>Docker su server locale a Bolzano o PaaS con disco persistente</td><td>Vercel non è adatto a SQLite (ambiente serverless senza disco permanente)</td></tr>
+<tr><td>Collegamento</td><td>Variabile VITE_API_BASE sul frontend</td><td>Es. https://server-bolzano/api</td></tr>
+</table>
+
+<h2>7. Qualità e test</h2>
+<p>Il backend ha 8 test di integrazione automatici (Vitest + Supertest, database in memoria) che coprono catalogo, slotting (aggiunta, assegnazione, eliminazione), registro audit e Pick-to-Light. Comando: <code>npm run test:backend</code>.</p>
+<div class="note"><b>Limiti attuali:</b> ordini simulati, nessuna integrazione SellyErp, LED e stampante non collegati, test di carico con due postazioni ancora da eseguire. Questi punti sono pianificati nella Fase 2.</div>
+
+</body>
+</html>
