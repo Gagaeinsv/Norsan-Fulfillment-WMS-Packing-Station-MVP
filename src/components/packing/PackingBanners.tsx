@@ -25,7 +25,7 @@ export const PackingBanners: React.FC<PackingBannersProps> = ({
   onTogglePhysicalDocument,
 }) => (
   <>
-    {/* Amazon Marketplace — Obbligo Scatola Neutra Senza Logo */}
+    {/* Amazon Marketplace — Obbligo Scatola Neutra Senza Logo & Esclusiva NORSAN */}
     {(order.source === "Amazon Marketplace" ||
       order.boxBranding === "neutral_unbranded" ||
       order.boxRecommendation?.startsWith("BOX-AMZ")) && (
@@ -35,14 +35,17 @@ export const PackingBanners: React.FC<PackingBannersProps> = ({
             📦 AMZ
           </div>
           <div>
-            <div className="font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
-              <span>ORDINE AMAZON — OBBLIGO SCATOLA NEUTRA</span>
+            <div className="font-black text-xs uppercase tracking-wider flex items-center gap-1.5 flex-wrap">
+              <span>ORDINE AMAZON — SCATOLA NEUTRA OBBLIGATORIA</span>
               <span className="text-[10px] px-1.5 py-0.2 bg-slate-950 text-amber-300 rounded font-mono font-bold">
                 NO LOGO
               </span>
+              <span className="text-[10px] px-1.5 py-0.2 bg-blue-900 text-white rounded font-bold">
+                SOLO PRODOTTI NORSAN
+              </span>
             </div>
             <div className="text-xs font-semibold text-slate-900 mt-0.5">
-              Utilizzare <strong>SOLO</strong> cartone marrone neutro (senza loghi NORSAN / ZREEN) e nastro neutro.
+              Canale Amazon FBM: consentiti <strong>solo prodotti NORSAN</strong>. Utilizzare esclusivamente <strong>cartone marrone neutro</strong> (BOX-AMZ) senza loghi e nastro neutro.
             </div>
           </div>
         </div>

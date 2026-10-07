@@ -188,9 +188,14 @@ export const OrderQueue: React.FC<OrderQueueProps> = ({
             </button>
           </div>
         ) : (
-          <div className="bg-amber-50 border border-amber-300 text-amber-900 text-[10px] px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-bold animate-fadeIn">
-            <span className="text-base leading-none">⚠️</span>
-            <span>Usa <strong>SOLO scatole neutre</strong> (BOX-AMZ) senza loghi NORSAN / ZREEN!</span>
+          <div className="bg-amber-50 border border-amber-300 text-amber-900 text-[10px] px-2.5 py-1.5 rounded-lg flex flex-col gap-0.5 font-bold animate-fadeIn">
+            <div className="flex items-center gap-1.5">
+              <span className="text-base leading-none">⚠️</span>
+              <span>Canale Amazon: <strong>Solo prodotti NORSAN</strong></span>
+            </div>
+            <div className="text-[9px] text-amber-800 font-normal pl-5">
+              Imballare esclusivamente in <strong>scatole neutre</strong> (BOX-AMZ) senza loghi né volantini NORSAN/ZREEN.
+            </div>
           </div>
         )}
       </div>
