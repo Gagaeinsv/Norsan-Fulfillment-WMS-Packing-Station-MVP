@@ -188,7 +188,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
       // Tier filter
       if (selectedTierFilter !== "all") {
         if (selectedTierFilter === "NORSAN") {
-          if (!slot.slot_code.startsWith("N-A") && !slot.slot_code.startsWith("N-B")) {
+          if (!slot.slot_code.startsWith("N-A")) {
             return false;
           }
         } else if (selectedTierFilter === "A") {
@@ -222,9 +222,9 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
   }, [slots, selectedTierFilter, occupancyFilter, searchQuery]);
 
   // Categorize slots by real physical groups:
-  // Norsan Shelf: N-A (Oli) and N-B (Tavolo buffer)
+  // Norsan Shelf: N-A (Oli, flaconi, capsule, gocce)
   const norsanSlots = filteredSlots.filter(
-    (s) => s.slot_code.startsWith("N-A") || s.slot_code.startsWith("N-B"),
+    (s) => s.slot_code.startsWith("N-A"),
   );
   // Zreen Shelves: Tiers A, B, C, D
   const zreenTierASlots = filteredSlots.filter((s) => s.slot_code.startsWith("A-"));
@@ -237,7 +237,6 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
     (s) =>
       s.side === "S" &&
       !s.slot_code.startsWith("N-A") &&
-      !s.slot_code.startsWith("N-B") &&
       !s.slot_code.startsWith("A-") &&
       !s.slot_code.startsWith("B-") &&
       !s.slot_code.startsWith("C-") &&
@@ -247,7 +246,6 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
     (s) =>
       s.side === "D" &&
       !s.slot_code.startsWith("N-A") &&
-      !s.slot_code.startsWith("N-B") &&
       !s.slot_code.startsWith("A-") &&
       !s.slot_code.startsWith("B-") &&
       !s.slot_code.startsWith("C-") &&
@@ -266,7 +264,6 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
     const isZreen = slot.product_brand === "ZREEN" || slot.slot_code.startsWith("A-") || slot.slot_code.startsWith("B-") || slot.slot_code.startsWith("C-") || slot.slot_code.startsWith("D-");
     const isFlyerSlot = slot.slot_code === "N-A8" || slot.slot_code === "D3-J" || slot.slot_code === "D3-C";
     const isP2L = slot.slot_code.startsWith("D-");
-    const isFastBuffer = slot.slot_code.startsWith("N-B");
     const hasCustomPhoto = slot.product_id && customImagesMap[slot.product_id];
     const displayImg = slot.product_id && customImagesMap[slot.product_id]
       ? customImagesMap[slot.product_id]
@@ -293,11 +290,6 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
             {isP2L && (
               <span className="text-[8px] font-black bg-amber-400 text-slate-950 px-1 py-0.5 rounded flex items-center gap-0.5" title="Pick-to-Light LED strip">
                 <Zap className="w-2.5 h-2.5 text-amber-900 fill-amber-900" /> P2L
-              </span>
-            )}
-            {isFastBuffer && (
-              <span className="text-[8px] font-black bg-violet-600 text-white px-1.5 py-0.5 rounded">
-                TAVOLO
               </span>
             )}
           </div>
@@ -470,37 +462,28 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
       </div>
 
       {/* Tier N-A (Oli & Flaconi) */}
+      {/* Tier N-A (Oli, Flaconi, Capsule & Gocce) */}
       {renderTierSection(
-        "Piano N-A (Slot N-A1..N-A8)",
-        "Oli di Pesce e Algali Omega-3 (Bottiglie vetro scuro)",
+        "Piano N-A (Slot N-A1..N-A11)",
+        "Scaffale NORSAN: Oli di Pesce/Algali, Flaconi, Capsule & Gocce",
         norsanSlots.filter((s) => s.slot_code.startsWith("N-A")),
-        "N-A",
+        "N-A (1..11)",
         "bg-cyan-100 text-cyan-900 border border-cyan-300",
         () => onAddSlot("S", 2),
       )}
 
-      {/* Tier N-B (Tavolo Fast-Pick Buffer) */}
-      {renderTierSection(
-        "Piano N-B • TAVOLO (Slot N-B1..N-B3)",
-        "Fast-Pick Buffer: scatole aperte direttamente sul banco imballaggio",
-        norsanSlots.filter((s) => s.slot_code.startsWith("N-B")),
-        "N-B TAVOLO",
-        "bg-violet-100 text-violet-900 border border-violet-300",
-        () => onAddSlot("S", 2),
-      )}
-
-      {/* Volantini & Marketing Flyers */}
+      {/* Volantini & Marketing Flyers (Sul Banco Imballaggio) */}
       <div className="bg-cyan-50/70 border-2 border-dashed border-cyan-300 rounded-2xl p-3">
         <div className="flex items-center justify-between mb-2">
           <span className="font-black text-xs text-cyan-950 flex items-center gap-1.5">
-            <span>📄</span> Volantini Promozionali & Cataloghi (N-A8)
+            <span>📄</span> Volantini & Pubblicità (Sul Banco Imballaggio)
           </span>
           <span className="text-[10px] text-cyan-800 font-bold bg-white px-2 py-0.5 rounded-full border border-cyan-200">
-            Poka-Yoke Automatico
+            Solo Pubblicità sul Banco
           </span>
         </div>
         <p className="text-[10px] text-cyan-800">
-          Gli opuscoli promozionali (FLY-NOR-ITA, FLY-ZRE-NUTRA) si inseriscono nel pacco in base al canale ordine e abbonamento.
+          Sul banco imballaggio è posizionato <strong>esclusivamente materiale pubblicitario</strong> (FLY-NOR-ITA, FLY-ZRE-NUTRA, cartoline sconto). Nessun prodotto è stoccato sul banco.
         </p>
       </div>
     </div>
@@ -675,7 +658,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
         <div className="flex flex-wrap items-center gap-1.5">
           {[
             { id: "all", label: "Tutti i Piani" },
-            { id: "NORSAN", label: "NORSAN (N-A & N-B)" },
+            { id: "NORSAN", label: "Scaffale NORSAN (N-A)" },
             { id: "A", label: "ZREEN Tier A" },
             { id: "B", label: "ZREEN Tier B" },
             { id: "C", label: "ZREEN Tier C" },
@@ -749,7 +732,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
           </div>
           <div className="flex items-center gap-2 bg-slate-800 px-3 py-1 rounded-xl border border-slate-700">
             <ArrowLeftRight className="w-3.5 h-3.5 text-amber-400" />
-            <span>BANCO IMBALLAGGIO ({activeStation}) — PC + SCANNER ZEBRA</span>
+            <span>BANCO IMBALLAGGIO ({activeStation}) — PC + SCANNER + SOLO PUBBLICITÀ/VOLANTINI</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-emerald-300">

@@ -14,7 +14,7 @@ export interface SlotOverride {
 }
 
 export interface TierDef {
-  id: "NA" | "NB" | "A" | "B" | "C" | "D" | "E";
+  id: "NA" | "A" | "B" | "C" | "D" | "E";
   label: string;
   sublabel: string;
   color: string;
@@ -48,24 +48,13 @@ export function buildSlotCoordinate(tier: TierDef, index: number): string {
 export const TIERS: TierDef[] = [
   {
     id: "NA",
-    label: "N-A (1..8)",
-    sublabel: "Polica NORSAN — Oli & Flaconi vetro",
+    label: "N-A (1..11)",
+    sublabel: "Scaffale NORSAN — Oli, Flaconi vetro, Capsule & Gocce",
     color: "ring-cyan-400",
     headerBg: "bg-cyan-50 border-cyan-300",
-    count: 8,
+    count: 11,
     prefix: "N-A",
     isNorsan: true,
-  },
-  {
-    id: "NB",
-    label: "N-B (1..3) — TAVOLO",
-    sublabel: "Fast-Pick Buffer: scatole aperte sul tavolo davanti",
-    color: "ring-violet-400",
-    headerBg: "bg-violet-50 border-violet-300",
-    count: 3,
-    prefix: "N-B",
-    isNorsan: true,
-    isFastBuffer: true,
   },
   {
     id: "A",
@@ -122,7 +111,7 @@ export interface WarehouseSlotData {
   slot_code: string;
   side: "S" | "D";
   tier: 1 | 2 | 3;
-  tier_id?: "NA" | "NB" | "A" | "B" | "C" | "D" | "E";
+  tier_id?: "NA" | "A" | "B" | "C" | "D" | "E";
   description: string;
   product_id?: string | null;
   product_name?: string | null;
@@ -136,7 +125,7 @@ export interface WarehouseSlotData {
 }
 
 /**
- * Generates the complete 5-tier Bolzano Hub warehouse slots (NORSAN N-A/N-B + ZREEN Tiers A/B/C/D).
+ * Generates the complete 5-tier Bolzano Hub warehouse slots (NORSAN N-A + ZREEN Tiers A/B/C/D).
  * Automatically maps products according to shelfCoordinate or shelfLocation.
  */
 export function generateBolzanoDefaultSlots(products: Product[]): WarehouseSlotData[] {
@@ -158,7 +147,7 @@ export function generateBolzanoDefaultSlots(products: Product[]): WarehouseSlotD
       const numericTier: 1 | 2 | 3 =
         tier.id === "D"
           ? 1
-          : tier.id === "NA" || tier.id === "NB" || tier.id === "C"
+          : tier.id === "NA" || tier.id === "C"
             ? 2
             : 3;
 

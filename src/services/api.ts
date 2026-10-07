@@ -57,14 +57,17 @@ function getLocalSlots(): WarehouseSlotData[] {
   if (saved) {
     try {
       const parsed: WarehouseSlotData[] = JSON.parse(saved);
-      // Migration check: ensure slots reflect the real 5-tier Bolzano topology
+      // Migration check: ensure slots reflect the real 5-tier Bolzano topology and NO N-B table slots
       const hasRealSlots = parsed.some(
         (s) =>
           s.slot_code.startsWith("N-A") ||
           s.slot_code.startsWith("A-") ||
           s.slot_code.startsWith("D-"),
       );
-      if (hasRealSlots && parsed.length >= 20) {
+      const hasTableProductSlots = parsed.some((s) =>
+        s.slot_code.startsWith("N-B"),
+      );
+      if (hasRealSlots && !hasTableProductSlots && parsed.length >= 20) {
         return parsed;
       }
     } catch {

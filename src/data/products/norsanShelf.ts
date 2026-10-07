@@ -1,13 +1,9 @@
-﻿import { Product } from "../../types/wms";
+import { Product } from "../../types/wms";
 
-// â”€â”€â”€ NORSAN Personal Side Shelf â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Slots N-A1..N-A8 (glass bottles) and N-B1..N-B3 (fast-pick buffer on table)
+// Scaffale NORSAN Laterale (N-A1..N-A11) — Oli, Flaconi Vetro, Capsule e Gocce
+// Sul banco/tavolo imballaggio è presente ESCLUSIVAMENTE materiale pubblicitario (volantini/cartoline), nessun prodotto.
 
 export const NORSAN_SHELF_PRODUCTS: Product[] = [
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // LINEA NORSAN â€” POLLIÃ‡A LATERALE PERSONALE (N-A1..N-A8)
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
   {
     id: "nor-01",
     sku: "NOR-TOT-200-LEM",
@@ -222,14 +218,12 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
       "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=300&auto=format&fit=crop&q=80",
     barcodeText: "4260368140162",
     fragile: false,
-    instructions: "Kids capsule. Verificare etÃ  minima.",
+    instructions: "Kids capsule. Verificare età minima.",
   },
-
-  // â”€â”€â”€ FAST-PICK BUFFER (N-B1..N-B3) â€” Open boxes on table surface â”€â”€â”€
   {
     id: "nor-b1",
     sku: "NOR-KID-JEL-45",
-    name: "NORSAN Kids Jelly (Buffer)",
+    name: "NORSAN Kids Jelly",
     italianName: "Omega-3 KIDS 45 Caramelle Gommose Gusto Fragola",
     ean: "4260368140094",
     aliases: ["0781490329931", "781490329931", "4260368140094"],
@@ -238,8 +232,8 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
     storageZone: "norsan_side_shelf",
     volume: "45 jelly drops",
     packageType: "blister_box",
-    shelfLocation: "N-B1",
-    shelfCoordinate: "N-B1",
+    shelfLocation: "N-A9",
+    shelfCoordinate: "N-A9",
     rackSide: "S",
     tier: 1,
     weightGrams: 160,
@@ -247,14 +241,12 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
       "https://images.unsplash.com/photo-1577401239170-897942555fb3?w=300&auto=format&fit=crop&q=80",
     barcodeText: "4260368140094",
     fragile: false,
-    isFastBuffer: true,
-    instructions:
-      "ðŸ“ TAVOLO â€” Scatola aperta sul tavolo. Evitare fonti di calore.",
+    instructions: "Scaffale NORSAN N-A9. Caramelle gommose senza zuccheri.",
   },
   {
     id: "nor-b2",
     sku: "NOR-VIT-D3K2-20",
-    name: "NORSAN Vitamina D3+K2 (Buffer)",
+    name: "NORSAN Vitamina D3+K2",
     italianName: "Vitamina D3+K2 Gocce in Olio di Cocco MCT 20ml",
     ean: "4260368140100",
     aliases: ["0781490329948", "781490329948", "4260368140100"],
@@ -263,8 +255,8 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
     storageZone: "norsan_side_shelf",
     volume: "20 ml (600 gocce)",
     packageType: "dropper",
-    shelfLocation: "N-B2",
-    shelfCoordinate: "N-B2",
+    shelfLocation: "N-A10",
+    shelfCoordinate: "N-A10",
     rackSide: "S",
     tier: 2,
     weightGrams: 90,
@@ -272,13 +264,12 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
       "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=300&auto=format&fit=crop&q=80",
     barcodeText: "4260368140100",
     fragile: true,
-    isFastBuffer: true,
-    instructions: "ðŸ“ TAVOLO â€” Flaconcino contagocce in vetro sul tavolo.",
+    instructions: "Scaffale NORSAN N-A10. Flaconcino contagocce in vetro.",
   },
   {
     id: "nor-b3",
     sku: "NOR-TOT-CAP-120",
-    name: "NORSAN Total Capsule (Buffer)",
+    name: "NORSAN Total Capsule",
     italianName: "Omega-3 Total 120 Capsule Olio di Pesce",
     ean: "4260368140063",
     aliases: [
@@ -294,8 +285,8 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
     storageZone: "norsan_side_shelf",
     volume: "120 capsule",
     packageType: "blister_box",
-    shelfLocation: "N-B3",
-    shelfCoordinate: "N-B3",
+    shelfLocation: "N-A11",
+    shelfCoordinate: "N-A11",
     rackSide: "S",
     tier: 2,
     weightGrams: 195,
@@ -303,11 +294,6 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
       "https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=300&auto=format&fit=crop&q=80",
     barcodeText: "4260368140063",
     fragile: false,
-    isFastBuffer: true,
-    instructions: "ðŸ“ TAVOLO â€” Scatola aperta fast-pick sul tavolo.",
+    instructions: "Scaffale NORSAN N-A11. Scatola capsule softgel.",
   },
-
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // LINEA ZREEN â€” STECCA ZREEN 5 LIVELLI (Aâ†’E, dall'alto verso il basso)
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 ];

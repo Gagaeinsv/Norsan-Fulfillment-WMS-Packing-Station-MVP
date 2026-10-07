@@ -51,7 +51,7 @@ export const StationRackGuide: React.FC<StationRackGuideProps> = ({
     useState<Record<string, SlotOverride>>(loadOverrides);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [expandedTiers, setExpandedTiers] = useState<Set<string>>(
-    new Set(["NA", "NB", "A", "B", "C", "D"]),
+    new Set(["NA", "A", "B", "C", "D"]),
   );
 
   const isStation1 = stationConfigId === "STATION_01";
@@ -297,7 +297,7 @@ export const StationRackGuide: React.FC<StationRackGuideProps> = ({
               <div className="rounded-2xl border-2 border-dashed border-cyan-400 bg-cyan-50 p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="font-black text-[11px] text-cyan-900 uppercase tracking-wide">
-                    📄 Volantini & Marketing (N-A8)
+                    📄 Volantini & Marketing (Sul Tavolo: solo pubblicità, nessun prodotto)
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
