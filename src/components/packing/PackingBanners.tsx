@@ -25,6 +25,34 @@ export const PackingBanners: React.FC<PackingBannersProps> = ({
   onTogglePhysicalDocument,
 }) => (
   <>
+    {/* Amazon Marketplace — Obbligo Scatola Neutra Senza Logo */}
+    {(order.source === "Amazon Marketplace" ||
+      order.boxBranding === "neutral_unbranded" ||
+      order.boxRecommendation?.startsWith("BOX-AMZ")) && (
+      <div className="bg-amber-500 text-slate-950 p-2.5 rounded-xl border-2 border-amber-600 flex items-center justify-between gap-3 shadow-md animate-fadeIn">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-slate-950 text-amber-400 font-black text-sm shrink-0">
+            📦 AMZ
+          </div>
+          <div>
+            <div className="font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
+              <span>ORDINE AMAZON — OBBLIGO SCATOLA NEUTRA</span>
+              <span className="text-[10px] px-1.5 py-0.2 bg-slate-950 text-amber-300 rounded font-mono font-bold">
+                NO LOGO
+              </span>
+            </div>
+            <div className="text-xs font-semibold text-slate-900 mt-0.5">
+              Utilizzare <strong>SOLO</strong> cartone marrone neutro (senza loghi NORSAN / ZREEN) e nastro neutro.
+            </div>
+          </div>
+        </div>
+        <div className="hidden sm:flex flex-col items-end shrink-0">
+          <span className="text-[10px] uppercase font-mono font-black bg-white/70 px-2 py-0.5 rounded border border-amber-700/30 text-slate-900">
+            {order.boxRecommendation || "BOX-AMZ-M"}
+          </span>
+        </div>
+      </div>
+    )}
     {/* Special Notes — WhatsApp / Telefono */}
     {order.source === "WhatsApp / Telefono" && order.specialNotes && (
       <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-900 p-3 rounded-r flex items-start gap-3 shadow-sm">

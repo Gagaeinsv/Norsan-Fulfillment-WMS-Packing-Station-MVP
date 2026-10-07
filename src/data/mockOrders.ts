@@ -247,6 +247,41 @@ const RAW_ORDERS: Order[] = [
     retentionGift: "retest_flyer_kit",
     requiresPhysicalDocument: false,
   },
+  // ─────────────────────────────────────────────────────────────────────
+  // ORDINE 7: Amazon Prime / FBM — Scatola Neutra Senza Logo
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "ord-mvp-7",
+    orderNumber: "408-9921405-1124589",
+    barcode: "408-9921405-1124589",
+    source: "Amazon Marketplace",
+    createdAt: Date.now() - 1000 * 60 * 20,
+    customerName: "Marco Bellini",
+    customerAddress: "Corso Italia, 45",
+    customerCity: "Verona",
+    customerZip: "37121",
+    customerProvince: "VR",
+    customerCountry: "IT",
+    courier: "DHL Express",
+    trackingNumber: "DHL-AMZ-9921-002",
+    priority: "express",
+    boxBranding: "neutral_unbranded",
+    boxRecommendation: "BOX-AMZ-M",
+    items: [
+      {
+        product: p("NOR-TOT-200-LEM"),
+        quantityRequired: 2,
+        quantityScanned: 0,
+        status: "pending",
+      },
+    ],
+    marketingFlyers: [],
+    status: "ready_to_pack",
+    isSubscription: false,
+    customerOrderCount: 1,
+    retentionGift: "none",
+    requiresPhysicalDocument: false,
+  },
 ];
 
 export const INITIAL_ORDERS = RAW_ORDERS;
