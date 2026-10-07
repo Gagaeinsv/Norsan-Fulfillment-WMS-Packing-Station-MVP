@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from "react";
-import { FileText, CheckCircle2, Truck, Repeat } from "lucide-react";
+import { FileText, CheckCircle2, Truck, Repeat, FileSpreadsheet } from "lucide-react";
 import { Order } from "../../types/wms";
 
 interface OrderQueueProps {
   orders: Order[];
   activeOrderId: string;
   onSelectOrder: (orderId: string) => void;
+  onOpenSellyModal?: () => void;
 }
 
 type FilterType = "all" | "subscriptions" | "b2b";
@@ -14,6 +15,7 @@ export const OrderQueue: React.FC<OrderQueueProps> = ({
   orders,
   activeOrderId,
   onSelectOrder,
+  onOpenSellyModal,
 }) => {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
@@ -51,9 +53,21 @@ export const OrderQueue: React.FC<OrderQueueProps> = ({
             Coda Ordini ({displayedOrders.length})
           </h3>
         </div>
-        <span className="text-[10px] text-slate-600 font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-          Bolzano Hub
-        </span>
+        <div className="flex items-center gap-1.5">
+          {onOpenSellyModal && (
+            <button
+              onClick={onOpenSellyModal}
+              className="text-[10px] font-bold bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-300 px-2 py-0.5 rounded transition active:scale-95 flex items-center gap-1 cursor-pointer"
+              title="Importa ordini da file CSV di Selly ERP"
+            >
+              <FileSpreadsheet className="w-3 h-3 text-cyan-700" />
+              <span>+ Selly CSV</span>
+            </button>
+          )}
+          <span className="text-[10px] text-slate-600 font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+            Bolzano Hub
+          </span>
+        </div>
       </div>
 
       {/* Filter Toggles */}

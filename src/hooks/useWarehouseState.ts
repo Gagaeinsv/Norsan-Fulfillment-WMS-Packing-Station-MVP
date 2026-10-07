@@ -25,6 +25,68 @@ import { WarehouseSlotData } from "../components/supervisor/SlottingManager";
 import { useBarcodeScanner } from "./useBarcodeScanner";
 import { useSoundEffects } from "./useSoundEffects";
 
+function resolveProduct(
+  rawCode: string,
+  productsList: Product[]
+): Product | undefined {
+  const clean = rawCode.trim().toUpperCase();
+  const digitsOnly = clean.replace(/[^0-9A-Z]/g, "");
+  const noLeadingZero = digitsOnly.replace(/^0+/, "");
+
+  // 1. Check custom user bindings in localStorage
+  try {
+    const saved = localStorage.getItem("wms_custom_barcode_bindings");
+    if (saved) {
+      const bindings = JSON.parse(saved);
+      const boundSkuOrId =
+        bindings[clean] || bindings[digitsOnly] || bindings[noLeadingZero];
+      if (boundSkuOrId) {
+        const boundProd =
+          productsList.find(
+            (p) => p.sku === boundSkuOrId || p.id === boundSkuOrId
+          ) ||
+          NORSAN_PRODUCTS.find(
+            (p) => p.sku === boundSkuOrId || p.id === boundSkuOrId
+          );
+        if (boundProd) return boundProd;
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // 2. Direct catalog match
+  const allProds = [...productsList, ...NORSAN_PRODUCTS];
+  return allProds.find((p) => {
+    const pEan = (p.ean || "").toUpperCase();
+    const pSku = (p.sku || "").toUpperCase();
+    const pEanNoZero = pEan.replace(/^0+/, "");
+
+    if (
+      pEan === clean ||
+      pSku === clean ||
+      pEan === digitsOnly ||
+      pSku === digitsOnly
+    )
+      return true;
+    if (noLeadingZero && pEanNoZero && noLeadingZero === pEanNoZero) return true;
+
+    if (p.aliases && p.aliases.length > 0) {
+      return p.aliases.some((a) => {
+        const aClean = a.trim().toUpperCase();
+        const aNoZero = aClean.replace(/^0+/, "");
+        return (
+          aClean === clean ||
+          aClean === digitsOnly ||
+          (noLeadingZero && aNoZero && noLeadingZero === aNoZero)
+        );
+      });
+    }
+
+    return false;
+  });
+}
+
 export function useWarehouseState() {
   const [activeView, setActiveView] = useState<"packing" | "supervisor">(
     "packing",
@@ -35,10 +97,33 @@ export function useWarehouseState() {
   ); // Serhii Haharin
   const [stations, setStations] =
     useState<WarehouseStation[]>(INITIAL_STATIONS);
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
-  const [activeOrderId, setActiveOrderId] = useState<string>(
-    INITIAL_ORDERS[0].id,
-  );
+  const [orders, setOrders] = useState<Order[]>(() => {
+    try {
+      const saved = localStorage.getItem("wms_orders");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_ORDERS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("wms_orders", JSON.stringify(orders));
+  }, [orders]);
+
+  const [activeOrderId, setActiveOrderId] = useState<string>(() => {
+    const saved = localStorage.getItem("wms_active_order_id");
+    if (saved && orders.some((o) => o.id === saved)) return saved;
+    return orders[0]?.id || INITIAL_ORDERS[0].id;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("wms_active_order_id", activeOrderId);
+  }, [activeOrderId]);
+
   const [stationConfigId, setStationConfigId] = useState<string>(() => {
     return localStorage.getItem("stationConfigId") || "STATION_01";
   });
@@ -46,15 +131,34 @@ export function useWarehouseState() {
   useEffect(() => {
     localStorage.setItem("stationConfigId", stationConfigId);
   }, [stationConfigId]);
+
   const [lastScan, setLastScan] = useState<ScanEvent | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [productsList, setProductsList] = useState<Product[]>(NORSAN_PRODUCTS);
   const [slotsList, setSlotsList] = useState<WarehouseSlotData[]>([]);
 
+  // Modals for Selly ERP CSV import and Barcode Binding
+  const [isSellyModalOpen, setIsSellyModalOpen] = useState(false);
+  const [isBindModalOpen, setIsBindModalOpen] = useState(false);
+  const [unboundBarcode, setUnboundBarcode] = useState<string>("");
+
   // Load live DB data from SQLite backend on mount
   useEffect(() => {
     fetchProducts().then((prods) => {
-      if (prods && prods.length > 0) setProductsList(prods);
+      if (prods && prods.length > 0) {
+        const merged = prods.map((p) => {
+          const staticProd = NORSAN_PRODUCTS.find(
+            (sp) => sp.sku === p.sku || sp.id === p.id
+          );
+          return {
+            ...p,
+            aliases: Array.from(
+              new Set([...(staticProd?.aliases || []), ...(p.aliases || [])])
+            ),
+          };
+        });
+        setProductsList(merged);
+      }
     });
     fetchWarehouseSlots().then((slots) => {
       if (slots && slots.length > 0) setSlotsList(slots);
@@ -542,19 +646,21 @@ export function useWarehouseState() {
       // 4. Check if it's a Command Barcode (e.g. "CMD:PRINT-DHL", "CMD:COMPLETE")
       if (rawCode.startsWith("CMD:")) {
         if (rawCode === "CMD:PRINT-DHL" || rawCode === "CMD:COMPLETE") {
-          const totalReq = activeOrder.items.reduce(
-            (s, i) => s + i.quantityRequired,
-            0,
-          );
-          const totalScan = activeOrder.items.reduce(
-            (s, i) => s + i.quantityScanned,
-            0,
+          const itemsOk = activeOrder.items.every(
+            (i) => i.quantityScanned >= i.quantityRequired,
           );
           const flyersOk = activeOrder.marketingFlyers.every(
             (f) => f.isIncluded,
           );
+          const giftOk =
+            !activeOrder.retentionGift ||
+            activeOrder.retentionGift === "none" ||
+            !!activeOrder.giftConfirmed;
+          const docOk =
+            !activeOrder.requiresPhysicalDocument ||
+            !!activeOrder.physicalDocumentConfirmed;
 
-          if (totalScan >= totalReq && flyersOk) {
+          if (itemsOk && flyersOk && giftOk && docOk) {
             setIsLabelModalOpen(true);
             if (!isMuted) playOrderComplete();
           } else {
@@ -573,52 +679,78 @@ export function useWarehouseState() {
         }
       }
 
-      // 5. Check if it's a Product EAN / SKU (from live database, with static fallback)
-      const matchedProduct =
-        productsList.find(
-          (p) => p.ean === rawCode || p.sku.toUpperCase() === rawCode || (p.aliases && p.aliases.includes(rawCode)),
-        ) ||
-        NORSAN_PRODUCTS.find(
-          (p) => p.ean === rawCode || p.sku.toUpperCase() === rawCode || (p.aliases && p.aliases.includes(rawCode)),
-        );
+      // 5. Check if it's a Product EAN / SKU (with alias, UPC-12/EAN-13, and custom binding resolution)
+      const matchedProduct = resolveProduct(rawCode, productsList);
 
       if (!matchedProduct) {
         if (!isMuted) playScanError();
+        setUnboundBarcode(code);
         setLastScan({
           id: Math.random().toString(),
           rawCode: code,
           resultType: "unknown_code",
           status: "error",
           title: "Codice Sconosciuto",
-          message: `Nessun articolo, volantino o comando corrispondente nel catalogo WMS: [${code}]`,
+          message: `Nessun articolo corrispondente per [${code}]. Tocca per associarlo al catalogo.`,
           timestamp: Date.now(),
         });
         return;
       }
 
-      // Is this product part of the active order? (match by ID or EAN for full compatibility)
+      // Is this product part of the active order? (match by ID, SKU, EAN or alias)
       const itemIndex = activeOrder.items.findIndex(
         (it) =>
           it.product.id === matchedProduct.id ||
-          it.product.ean === matchedProduct.ean,
+          it.product.sku === matchedProduct.sku ||
+          it.product.ean === matchedProduct.ean ||
+          (matchedProduct.aliases &&
+            matchedProduct.aliases.includes(it.product.ean)),
       );
 
       if (itemIndex === -1) {
-        // WRONG PRODUCT SCANNED! Prevented error!
+        // Find if this product belongs to any other pending order in the queue
+        const otherOrder = orders.find(
+          (o) =>
+            o.id !== activeOrder.id &&
+            o.status !== "packed" &&
+            o.status !== "shipped" &&
+            o.items.some(
+              (it) =>
+                (it.product.id === matchedProduct.id ||
+                  it.product.sku === matchedProduct.sku ||
+                  it.product.ean === matchedProduct.ean ||
+                  (matchedProduct.aliases &&
+                    matchedProduct.aliases.includes(it.product.ean))) &&
+                it.quantityScanned < it.quantityRequired,
+            ),
+        );
+
         if (!isMuted) playScanError();
         setKpis((prev) => ({
           ...prev,
           errorsPrevented: prev.errorsPrevented + 1,
         }));
+
         setLastScan({
           id: Math.random().toString(),
           rawCode: code,
           resultType: "wrong_product",
-          status: "error",
-          title: "ERRORE PRODOTTO NON INCLUSO",
-          message: `Attenzione! ${matchedProduct.name} non appartiene a questo ordine. Riporre nello scaffale [${matchedProduct.shelfLocation}]`,
+          status: otherOrder ? "warning" : "error",
+          title: otherOrder
+            ? "PRODOTTO PER ALTRO ORDINE"
+            : "ERRORE PRODOTTO NON INCLUSO",
+          message: otherOrder
+            ? `${matchedProduct.name} non è in ${activeOrder.orderNumber}, ma è nell'ordine ${otherOrder.orderNumber} (${otherOrder.customerName})!`
+            : `Attenzione! ${matchedProduct.name} non appartiene a questo ordine. Riporre nello scaffale [${matchedProduct.shelfLocation}]`,
           timestamp: Date.now(),
           matchedProduct,
+          otherOrderCandidate: otherOrder
+            ? {
+                orderId: otherOrder.id,
+                orderNumber: otherOrder.orderNumber,
+                customerName: otherOrder.customerName,
+              }
+            : undefined,
         });
         return;
       }
@@ -674,7 +806,14 @@ export function useWarehouseState() {
         return scanned >= it.quantityRequired;
       });
       const flyersOk = activeOrder.marketingFlyers.every((f) => f.isIncluded);
-      const isOrderDone = itemsDone && flyersOk;
+      const giftOk =
+        !activeOrder.retentionGift ||
+        activeOrder.retentionGift === "none" ||
+        !!activeOrder.giftConfirmed;
+      const docOk =
+        !activeOrder.requiresPhysicalDocument ||
+        !!activeOrder.physicalDocumentConfirmed;
+      const isOrderDone = itemsDone && flyersOk && giftOk && docOk;
 
       if (isOrderDone) {
         if (!isMuted) playOrderComplete();
@@ -789,10 +928,147 @@ export function useWarehouseState() {
   };
 
   const handleResetData = () => {
+    localStorage.removeItem("wms_orders");
+    localStorage.removeItem("wms_active_order_id");
+    localStorage.removeItem("wms_custom_barcode_bindings");
     setOrders(INITIAL_ORDERS);
     setActiveOrderId(INITIAL_ORDERS[0].id);
     setLastScan(null);
   };
+
+  const [pendingAutoScan, setPendingAutoScan] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pendingAutoScan) return;
+    const code = pendingAutoScan;
+    setPendingAutoScan(null);
+    handleBarcodeScanned(code);
+  }, [pendingAutoScan, handleBarcodeScanned]);
+
+  const handleQuickSwitchOrder = useCallback(
+    (targetOrderId: string, autoScanBarcode?: string) => {
+      setActiveOrderId(targetOrderId);
+      if (!isMuted) playScanSuccess();
+      const targetOrder = orders.find((o) => o.id === targetOrderId);
+      setLastScan({
+        id: Math.random().toString(),
+        rawCode: targetOrder?.orderNumber || targetOrderId,
+        resultType: "order_switch",
+        status: "info",
+        title: "Passaggio Rapido Ordine",
+        message: `Aperto ordine ${targetOrder?.orderNumber || targetOrderId} (${targetOrder?.customerName})`,
+        timestamp: Date.now(),
+      });
+      if (autoScanBarcode) setPendingAutoScan(autoScanBarcode);
+    },
+    [orders, isMuted, playScanSuccess],
+  );
+
+  const handleForceAddProductToActiveOrder = useCallback(
+    (product: Product) => {
+      setOrders((prev) =>
+        prev.map((o) => {
+          if (o.id === activeOrderId) {
+            const existingItem = o.items.find(
+              (it) => it.product.id === product.id || it.product.sku === product.sku,
+            );
+            if (existingItem) {
+              return {
+                ...o,
+                items: o.items.map((it) =>
+                  it.product.id === product.id || it.product.sku === product.sku
+                    ? {
+                        ...it,
+                        quantityScanned: it.quantityScanned + 1,
+                        quantityRequired: Math.max(it.quantityRequired, it.quantityScanned + 1),
+                        status: "completed" as const,
+                      }
+                    : it,
+                ),
+              };
+            } else {
+              return {
+                ...o,
+                items: [
+                  ...o.items,
+                  {
+                    product,
+                    quantityRequired: 1,
+                    quantityScanned: 1,
+                    status: "completed" as const,
+                  },
+                ],
+              };
+            }
+          }
+          return o;
+        }),
+      );
+
+      if (!isMuted) playItemComplete();
+      setLastScan({
+        id: Math.random().toString(),
+        rawCode: product.ean,
+        resultType: "product_match",
+        status: "success",
+        title: "Articolo Aggiunto (Test MVP)",
+        message: `Aggiunto e convalidato: ${product.name} [${product.shelfLocation}]`,
+        timestamp: Date.now(),
+        matchedProduct: product,
+      });
+    },
+    [activeOrderId, isMuted, playItemComplete],
+  );
+
+  const handleBindBarcode = useCallback(
+    (barcode: string, targetSku: string) => {
+      const clean = barcode.trim();
+      try {
+        const saved = localStorage.getItem("wms_custom_barcode_bindings");
+        const bindings = saved ? JSON.parse(saved) : {};
+        bindings[clean] = targetSku;
+        localStorage.setItem("wms_custom_barcode_bindings", JSON.stringify(bindings));
+      } catch {
+        // fallback
+      }
+
+      setProductsList((prev) =>
+        prev.map((p) => {
+          if (p.sku === targetSku) {
+            const updatedAliases = Array.from(new Set([...(p.aliases || []), clean]));
+            return { ...p, aliases: updatedAliases };
+          }
+          return p;
+        }),
+      );
+
+      handleBarcodeScanned(clean);
+    },
+    [handleBarcodeScanned],
+  );
+
+  const handleImportSellyOrders = useCallback(
+    (newOrders: Order[], replaceExisting: boolean) => {
+      if (replaceExisting) {
+        setOrders(newOrders);
+        if (newOrders.length > 0) setActiveOrderId(newOrders[0].id);
+      } else {
+        setOrders((prev) => [...newOrders, ...prev]);
+        if (newOrders.length > 0) setActiveOrderId(newOrders[0].id);
+      }
+      if (!isMuted) playScanSuccess();
+      setLastScan({
+        id: Math.random().toString(),
+        rawCode: `SELLY-IMPORT-${newOrders.length}`,
+        resultType: "order_switch",
+        status: "info",
+        title: "Ordini Selly ERP Importati",
+        message: `Caricati ${newOrders.length} ordini pronti per il confezionamento!`,
+        timestamp: Date.now(),
+      });
+    },
+    [isMuted, playScanSuccess],
+  );
 
   const handleChangeBoxType = (boxType: BoxType) => {
     const matchedBox = BOX_TYPES.find((b) => b.id === boxType);
@@ -933,6 +1209,12 @@ export function useWarehouseState() {
     setIsTerminalLocked,
     isSupervisorPinModalOpen,
     setIsSupervisorPinModalOpen,
+    isSellyModalOpen,
+    setIsSellyModalOpen,
+    isBindModalOpen,
+    setIsBindModalOpen,
+    unboundBarcode,
+    setUnboundBarcode,
 
     handleAssignSlot,
     handleAddSlot,
@@ -955,6 +1237,10 @@ export function useWarehouseState() {
     handleSupervisorPinSuccess,
     handleLockTerminal,
     handleLoginFromLockScreen,
+    handleQuickSwitchOrder,
+    handleForceAddProductToActiveOrder,
+    handleBindBarcode,
+    handleImportSellyOrders,
     triggerManualScan,
     leadOperators,
     isTeamLead,

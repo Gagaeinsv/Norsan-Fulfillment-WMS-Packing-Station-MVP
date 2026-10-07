@@ -874,7 +874,7 @@ export const ZREEN_TIER_D: Product[] = [
     sku: "5000-019",
     name: "ZREEN 5-HTP 150",
     italianName: "ZREEN 5-HTP 150mg da Griffonia Simplicifolia con Vitamina B6",
-    ean: "4260368140275",
+    ean: "5000-019", // TODO: real EAN not yet in catalog — bind from the box via "Associa codice"
     category: "nutraceutical",
     brand: "ZREEN",
     storageZone: "zreen_rack_shared",
@@ -888,7 +888,7 @@ export const ZREEN_TIER_D: Product[] = [
     weightGrams: 110,
     imageUrl:
       "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=300&auto=format&fit=crop&q=80",
-    barcodeText: "4260368140275",
+    barcodeText: "5000-019", // TODO: real EAN not yet in catalog — bind from the box via "Associa codice"
     fragile: false,
     p2lTier: "D",
     p2lLedIndex: 38,

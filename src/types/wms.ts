@@ -63,7 +63,8 @@ export type OrderSource =
   | "B2B Farmacia EDI"
   | "WhatsApp / Telefono"
   | "SellyErp INT" // Internet orders: INT50953
-  | "SellyErp ORDVE"; // B2B orders: ORDVE2026121172
+  | "SellyErp ORDVE" // B2B orders: ORDVE2026121172
+  | "Selly ERP Import"; // Manual CSV export from Selly
 
 export type StorageZone = "norsan_side_shelf" | "zreen_rack_shared";
 export type PhysicalSide = "left" | "right";

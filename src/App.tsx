@@ -9,6 +9,8 @@ import { SupervisorPinModal } from "./components/auth/SupervisorPinModal";
 import { SupervisorDashboard } from "./components/supervisor/SupervisorDashboard";
 import { IssueReportModal } from "./components/dev/IssueReportModal";
 import { ShippingLabelModal } from "./components/shipping/ShippingLabelModal";
+import { SellyCsvModal } from "./components/shared/SellyCsvModal";
+import { BarcodeBindModal } from "./components/shared/BarcodeBindModal";
 import { useWarehouseState } from "./hooks/useWarehouseState";
 
 export function App() {
@@ -44,6 +46,12 @@ export function App() {
     isTerminalLocked,
     isSupervisorPinModalOpen,
     setIsSupervisorPinModalOpen,
+    isSellyModalOpen,
+    setIsSellyModalOpen,
+    isBindModalOpen,
+    setIsBindModalOpen,
+    unboundBarcode,
+    setUnboundBarcode,
 
     handleAssignSlot,
     handleAddSlot,
@@ -65,6 +73,10 @@ export function App() {
     handleSupervisorPinSuccess,
     handleLockTerminal,
     handleLoginFromLockScreen,
+    handleQuickSwitchOrder,
+    handleForceAddProductToActiveOrder,
+    handleBindBarcode,
+    handleImportSellyOrders,
     triggerManualScan,
     leadOperators,
     isTeamLead,
@@ -110,6 +122,13 @@ export function App() {
         onResetData={handleResetData}
         stationConfigId={stationConfigId}
         onChangeStationConfig={setStationConfigId}
+        onOpenSellyModal={() => setIsSellyModalOpen(true)}
+        onQuickSwitchOrder={handleQuickSwitchOrder}
+        onForceAddProduct={handleForceAddProductToActiveOrder}
+        onOpenBindModal={(code) => {
+          setUnboundBarcode(code);
+          setIsBindModalOpen(true);
+        }}
       />
 
       {/* Main Content Area */}
@@ -121,6 +140,7 @@ export function App() {
               orders={orders}
               activeOrderId={activeOrderId}
               onSelectOrder={setActiveOrderId}
+              onOpenSellyModal={() => setIsSellyModalOpen(true)}
             />
           </div>
 
@@ -136,6 +156,13 @@ export function App() {
               stationConfigId={stationConfigId}
               onToggleGift={handleToggleGift}
               onTogglePhysicalDocument={handleTogglePhysicalDocument}
+              lastScan={lastScan}
+              onQuickSwitchOrder={handleQuickSwitchOrder}
+              onForceAddProduct={handleForceAddProductToActiveOrder}
+              onOpenBindModal={(code) => {
+                setUnboundBarcode(code);
+                setIsBindModalOpen(true);
+              }}
             />
           </div>
         </main>
@@ -219,6 +246,29 @@ export function App() {
         onClose={() => setIsSupervisorPinModalOpen(false)}
         onSuccess={handleSupervisorPinSuccess}
         leadOperators={leadOperators}
+      />
+
+      {/* Selly ERP CSV Import */}
+      <SellyCsvModal
+        isOpen={isSellyModalOpen}
+        onClose={() => setIsSellyModalOpen(false)}
+        onImportOrders={(newOrders, replace) => {
+          handleImportSellyOrders(newOrders, replace);
+          setIsSellyModalOpen(false);
+        }}
+        catalog={productsList}
+      />
+
+      {/* Bind unknown physical barcode to catalog product */}
+      <BarcodeBindModal
+        isOpen={isBindModalOpen}
+        rawBarcode={unboundBarcode}
+        onClose={() => setIsBindModalOpen(false)}
+        onBind={(code, sku) => {
+          handleBindBarcode(code, sku);
+          setIsBindModalOpen(false);
+        }}
+        catalog={productsList}
       />
     </div>
   );

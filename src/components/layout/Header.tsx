@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ShieldCheck,
   Package,
@@ -16,8 +16,10 @@ import {
   AlertTriangle,
   MapPin,
   Lock,
+  FileSpreadsheet,
+  Link2,
 } from "lucide-react";
-import { StationKPIs, Operator, ScanEvent } from "../../types/wms";
+import { StationKPIs, Operator, ScanEvent, Product } from "../../types/wms";
 
 interface HeaderProps {
   currentOperator: Operator;
@@ -34,6 +36,10 @@ interface HeaderProps {
   onResetData: () => void;
   stationConfigId: string;
   onChangeStationConfig: (id: string) => void;
+  onOpenSellyModal?: () => void;
+  onQuickSwitchOrder?: (orderId: string, autoScanBarcode?: string) => void;
+  onForceAddProduct?: (product: Product) => void;
+  onOpenBindModal?: (barcode: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -51,6 +57,10 @@ export const Header: React.FC<HeaderProps> = ({
   onResetData,
   stationConfigId,
   onChangeStationConfig,
+  onOpenSellyModal,
+  onQuickSwitchOrder,
+  onForceAddProduct,
+  onOpenBindModal,
 }) => {
   const [seconds, setSeconds] = useState(0);
 
@@ -194,6 +204,48 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Quick action: Candidate order switch */}
+          {lastScan?.otherOrderCandidate && onQuickSwitchOrder && (
+            <button
+              onClick={() =>
+                onQuickSwitchOrder(
+                  lastScan.otherOrderCandidate!.orderId,
+                  lastScan.rawCode
+                )
+              }
+              className="bg-yellow-400 hover:bg-yellow-300 text-slate-950 px-2.5 py-1 rounded-lg font-black text-xs shadow-md transition active:scale-95 flex items-center gap-1 cursor-pointer animate-pulse"
+              title={`Apri l'ordine ${lastScan.otherOrderCandidate.orderNumber} e registra la scansione`}
+            >
+              <span>👉 Vai a {lastScan.otherOrderCandidate.orderNumber}</span>
+            </button>
+          )}
+
+          {/* Quick action: Force add to current order (Test Mode) */}
+          {!lastScan?.otherOrderCandidate &&
+            lastScan?.status === "error" &&
+            lastScan?.matchedProduct &&
+            onForceAddProduct && (
+              <button
+                onClick={() => onForceAddProduct(lastScan.matchedProduct!)}
+                className="bg-white/20 hover:bg-white/30 text-white px-2 py-0.5 rounded text-[11px] font-bold transition active:scale-95 border border-white/40 cursor-pointer"
+                title="Aggiungi comunque a questo ordine (Modalità Test MVP)"
+              >
+                + Aggiungi (Test)
+              </button>
+            )}
+
+          {/* Quick action: Bind unknown barcode */}
+          {lastScan?.resultType === "unknown_code" && onOpenBindModal && (
+            <button
+              onClick={() => onOpenBindModal(lastScan.rawCode)}
+              className="bg-amber-400 hover:bg-amber-300 text-slate-950 px-2.5 py-1 rounded-lg font-black text-xs transition active:scale-95 cursor-pointer flex items-center gap-1 shadow-sm"
+              title="Associa questo barcode a un prodotto del catalogo"
+            >
+              <Link2 className="w-3.5 h-3.5" />
+              <span>Associa</span>
+            </button>
+          )}
+
           {lastScan?.matchedProduct && (
             <div className="hidden sm:flex items-center gap-1 bg-black/20 px-2 py-0.5 rounded-lg font-mono text-xs font-black">
               <MapPin className="w-3.5 h-3.5" />
@@ -270,6 +322,18 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <LayoutGrid className="w-3.5 h-3.5 text-amber-700" />
             <span>Mappa (S/D)</span>
+          </button>
+        )}
+
+        {/* Selly ERP CSV Import */}
+        {onOpenSellyModal && (
+          <button
+            onClick={onOpenSellyModal}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-bold border border-cyan-800 transition active:scale-95 shadow-xs cursor-pointer"
+            title="Importa Ordini da Selly ERP (CSV 1-Click)"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>Selly CSV</span>
           </button>
         )}
 

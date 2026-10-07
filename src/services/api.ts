@@ -70,7 +70,25 @@ const DEFAULT_SLOTS: WarehouseSlotData[] = [
 // LocalStorage helpers for MVP frontend-only mode
 function getLocalProducts(): Product[] {
   const saved = localStorage.getItem("wms_products");
-  return saved ? JSON.parse(saved) : NORSAN_PRODUCTS;
+  if (!saved) return NORSAN_PRODUCTS;
+  try {
+    const parsed: Product[] = JSON.parse(saved);
+    return NORSAN_PRODUCTS.map((prod) => {
+      const savedProd = parsed.find(
+        (p) => p.id === prod.id || p.sku === prod.sku
+      );
+      if (!savedProd) return prod;
+      return {
+        ...prod,
+        ...savedProd,
+        aliases: Array.from(
+          new Set([...(prod.aliases || []), ...(savedProd.aliases || [])])
+        ),
+      };
+    });
+  } catch {
+    return NORSAN_PRODUCTS;
+  }
 }
 function setLocalProducts(products: Product[]) {
   localStorage.setItem("wms_products", JSON.stringify(products));

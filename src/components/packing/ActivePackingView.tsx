@@ -17,7 +17,7 @@ import {
   ShieldCheck,
   Repeat,
 } from "lucide-react";
-import { Order, BoxType } from "../../types/wms";
+import { Order, BoxType, ScanEvent, Product } from "../../types/wms";
 import { BOX_TYPES } from "../../data/norsanProducts";
 import { PackingBanners } from "./PackingBanners";
 import { PackingItemCard } from "./PackingItemCard";
@@ -32,6 +32,10 @@ interface ActivePackingViewProps {
   stationConfigId: string;
   onToggleGift?: () => void;
   onTogglePhysicalDocument?: () => void;
+  lastScan?: ScanEvent | null;
+  onQuickSwitchOrder?: (orderId: string, autoScanBarcode?: string) => void;
+  onForceAddProduct?: (product: Product) => void;
+  onOpenBindModal?: (barcode: string) => void;
 }
 
 export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
@@ -44,6 +48,10 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   stationConfigId,
   onToggleGift,
   onTogglePhysicalDocument,
+  lastScan,
+  onQuickSwitchOrder,
+  onForceAddProduct,
+  onOpenBindModal,
 }) => {
   const totalItemsRequired = order.items.reduce(
     (s, it) => s + it.quantityRequired,
@@ -98,22 +106,22 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   return (
     <div className="flex flex-col h-full gap-2 select-none min-h-0">
       {/* ── Order Header ──────────────────────────────────────────────────── */}
-      <div className="bg-white border border-slate-300 rounded-xl p-2 shadow-xs flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-2 shrink-0">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-slate-500" />
-            <span className="font-black text-slate-900 font-mono text-base">
+      <div className="bg-white border border-slate-300 rounded-xl p-3 shadow-xs flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-4 flex-wrap min-w-0">
+          <div className="flex items-center gap-2 shrink-0">
+            <FileText className="w-6 h-6 text-slate-500" />
+            <span className="font-black text-slate-900 font-mono text-3xl">
               {order.orderNumber}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 text-slate-600">
-            <MapPin className="w-4 h-4" />
-            <span className="font-semibold text-sm">{order.customerName}</span>
-            <span className="text-slate-400">·</span>
-            <span className="text-sm">{order.customerCity}</span>
+          <div className="flex items-center gap-2 text-slate-600 min-w-0">
+            <MapPin className="w-5 h-5 shrink-0" />
+            <span className="font-bold text-xl truncate">{order.customerName}</span>
+            <span className="text-slate-400 shrink-0">·</span>
+            <span className="text-base truncate">{order.customerCity}</span>
           </div>
           <span
-            className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
+            className={`text-sm font-bold px-3 py-1.5 rounded-lg border shrink-0 ${
               order.priority === "urgent"
                 ? "bg-red-100 text-red-800 border-red-300 animate-pulse"
                 : "bg-slate-100 text-slate-700 border-slate-300"
@@ -231,6 +239,70 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
         onToggleGift={onToggleGift}
         onTogglePhysicalDocument={onTogglePhysicalDocument}
       />
+
+      {/* ── Active Scan Error / Candidate Action Banner ─────────────────────── */}
+      {lastScan &&
+        (lastScan.resultType === "wrong_product" ||
+          lastScan.resultType === "unknown_code") && (
+          <div
+            className={`p-3 rounded-xl border-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-md shrink-0 transition-all ${
+              lastScan.otherOrderCandidate
+                ? "bg-amber-50 border-amber-400 text-amber-950 animate-pulse"
+                : "bg-rose-50 border-rose-400 text-rose-950"
+            }`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-2 rounded-lg bg-black/10 text-xl flex-shrink-0">
+                {lastScan.otherOrderCandidate ? "📦" : "⚠️"}
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-black uppercase tracking-wider">
+                  {lastScan.title}
+                </div>
+                <div className="text-sm font-semibold truncate">
+                  {lastScan.message}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap shrink-0">
+              {lastScan.otherOrderCandidate && onQuickSwitchOrder && (
+                <button
+                  onClick={() =>
+                    onQuickSwitchOrder(
+                      lastScan.otherOrderCandidate!.orderId,
+                      lastScan.rawCode
+                    )
+                  }
+                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1.5 rounded-lg font-black text-xs transition active:scale-95 shadow-md flex items-center gap-1 cursor-pointer"
+                >
+                  <span>
+                    👉 Passa all'ordine {lastScan.otherOrderCandidate.orderNumber}
+                  </span>
+                </button>
+              )}
+
+              {lastScan.matchedProduct && onForceAddProduct && (
+                <button
+                  onClick={() => onForceAddProduct(lastScan.matchedProduct!)}
+                  className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg font-bold text-xs transition active:scale-95 shadow-sm cursor-pointer"
+                  title="Aggiungi comunque a questo ordine per testare il flusso"
+                >
+                  + Aggiungi a questo ordine (Test MVP)
+                </button>
+              )}
+
+              {lastScan.resultType === "unknown_code" && onOpenBindModal && (
+                <button
+                  onClick={() => onOpenBindModal(lastScan.rawCode)}
+                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1.5 rounded-lg font-black text-xs transition active:scale-95 shadow-md flex items-center gap-1 cursor-pointer"
+                >
+                  <span>🔗 Associa codice [{lastScan.rawCode}]</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
       {/* ── Item cards grid ──────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto min-h-0 pr-1">

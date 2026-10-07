@@ -1,12 +1,12 @@
-import { Product } from "../../types/wms";
+﻿import { Product } from "../../types/wms";
 
-// ─── NORSAN Personal Side Shelf ──────────────────────────────────────────
+// â”€â”€â”€ NORSAN Personal Side Shelf â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Slots N-A1..N-A8 (glass bottles) and N-B1..N-B3 (fast-pick buffer on table)
 
 export const NORSAN_SHELF_PRODUCTS: Product[] = [
-  // ═══════════════════════════════════════════════════════════════════════
-  // LINEA NORSAN — POLLIÇA LATERALE PERSONALE (N-A1..N-A8)
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // LINEA NORSAN â€” POLLIÃ‡A LATERALE PERSONALE (N-A1..N-A8)
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   {
     id: "nor-01",
@@ -44,8 +44,6 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
     italianName: "Omega-3 Total Olio di Pesce Naturale senza aroma 200ml",
     ean: "4260368140025",
     aliases: [
-      "0781490329894",
-      "781490329894",
       "976294429",
       "14237209",
       "4260368140025",
@@ -106,7 +104,6 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
     aliases: [
       "0781490329870",
       "781490329870",
-      "976294405",
       "14237184",
       "4260368140148",
     ],
@@ -140,6 +137,7 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
       "976294431",
       "14237215",
       "4260368140049",
+      "976294405",
     ],
     category: "oil",
     brand: "NORSAN",
@@ -224,10 +222,10 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
       "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=300&auto=format&fit=crop&q=80",
     barcodeText: "4260368140162",
     fragile: false,
-    instructions: "Kids capsule. Verificare età minima.",
+    instructions: "Kids capsule. Verificare etÃ  minima.",
   },
 
-  // ─── FAST-PICK BUFFER (N-B1..N-B3) — Open boxes on table surface ───
+  // â”€â”€â”€ FAST-PICK BUFFER (N-B1..N-B3) â€” Open boxes on table surface â”€â”€â”€
   {
     id: "nor-b1",
     sku: "NOR-KID-JEL-45",
@@ -251,7 +249,7 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
     fragile: false,
     isFastBuffer: true,
     instructions:
-      "📍 TAVOLO — Scatola aperta sul tavolo. Evitare fonti di calore.",
+      "ðŸ“ TAVOLO â€” Scatola aperta sul tavolo. Evitare fonti di calore.",
   },
   {
     id: "nor-b2",
@@ -275,7 +273,7 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
     barcodeText: "4260368140100",
     fragile: true,
     isFastBuffer: true,
-    instructions: "📍 TAVOLO — Flaconcino contagocce in vetro sul tavolo.",
+    instructions: "ðŸ“ TAVOLO â€” Flaconcino contagocce in vetro sul tavolo.",
   },
   {
     id: "nor-b3",
@@ -289,6 +287,7 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
       "976294443",
       "14237221",
       "4260368140063",
+      "976294393",
     ],
     category: "capsules",
     brand: "NORSAN",
@@ -305,10 +304,10 @@ export const NORSAN_SHELF_PRODUCTS: Product[] = [
     barcodeText: "4260368140063",
     fragile: false,
     isFastBuffer: true,
-    instructions: "📍 TAVOLO — Scatola aperta fast-pick sul tavolo.",
+    instructions: "ðŸ“ TAVOLO â€” Scatola aperta fast-pick sul tavolo.",
   },
 
-  // ═══════════════════════════════════════════════════════════════════════
-  // LINEA ZREEN — STECCA ZREEN 5 LIVELLI (A→E, dall'alto verso il basso)
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // LINEA ZREEN â€” STECCA ZREEN 5 LIVELLI (Aâ†’E, dall'alto verso il basso)
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 ];
