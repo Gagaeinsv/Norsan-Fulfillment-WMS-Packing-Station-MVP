@@ -77,6 +77,8 @@ export function App() {
     handleForceAddProductToActiveOrder,
     handleBindBarcode,
     handleImportSellyOrders,
+    handleUpdateProductImage,
+    handleResetSlotsToDefault,
     triggerManualScan,
     leadOperators,
     isTeamLead,
@@ -185,11 +187,14 @@ export function App() {
             onUpdateOperator={handleUpdateOperator}
             onDeleteOperator={handleDeleteOperator}
             onSimulateScan={triggerManualScan}
+            stationConfigId={stationConfigId}
+            onUpdateProductImage={handleUpdateProductImage}
+            onResetSlotsToDefault={handleResetSlotsToDefault}
           />
         </main>
       )}
 
-      {/* Rack 3-tier Map Modal (S/D standardisation) */}
+      {/* Rack 5-tier Map Modal (Hub Bolzano) */}
       {isRackGuideOpen && (
         <StationRackGuide
           activeOrder={activeOrder as any}
@@ -197,6 +202,7 @@ export function App() {
           isTeamLead={isTeamLead}
           onClose={() => setIsRackGuideOpen(false)}
           onSimulateScan={triggerManualScan}
+          onUpdateProductImage={handleUpdateProductImage}
         />
       )}
 

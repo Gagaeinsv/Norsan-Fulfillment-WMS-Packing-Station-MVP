@@ -20,8 +20,12 @@ import {
   updateSlotAssignment,
   addNewSlot,
   deleteSlot,
+  updateProductImageApi,
 } from "../services/api";
-import { WarehouseSlotData } from "../components/supervisor/SlottingManager";
+import {
+  WarehouseSlotData,
+  generateBolzanoDefaultSlots,
+} from "../components/rack/rackTypes";
 import { useBarcodeScanner } from "./useBarcodeScanner";
 import { useSoundEffects } from "./useSoundEffects";
 
@@ -134,7 +138,24 @@ export function useWarehouseState() {
 
   const [lastScan, setLastScan] = useState<ScanEvent | null>(null);
   const [isMuted, setIsMuted] = useState(false);
-  const [productsList, setProductsList] = useState<Product[]>(NORSAN_PRODUCTS);
+
+  const getCustomProductImages = (): Record<string, string> => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("wms_custom_product_images") || "{}",
+      );
+    } catch {
+      return {};
+    }
+  };
+
+  const [productsList, setProductsList] = useState<Product[]>(() => {
+    const customImgs = getCustomProductImages();
+    return NORSAN_PRODUCTS.map((p) => ({
+      ...p,
+      imageUrl: customImgs[p.id] || p.imageUrl,
+    }));
+  });
   const [slotsList, setSlotsList] = useState<WarehouseSlotData[]>([]);
 
   // Modals for Selly ERP CSV import and Barcode Binding
@@ -144,16 +165,18 @@ export function useWarehouseState() {
 
   // Load live DB data from SQLite backend on mount
   useEffect(() => {
+    const customImgs = getCustomProductImages();
     fetchProducts().then((prods) => {
       if (prods && prods.length > 0) {
         const merged = prods.map((p) => {
           const staticProd = NORSAN_PRODUCTS.find(
-            (sp) => sp.sku === p.sku || sp.id === p.id
+            (sp) => sp.sku === p.sku || sp.id === p.id,
           );
           return {
             ...p,
+            imageUrl: customImgs[p.id] || p.imageUrl,
             aliases: Array.from(
-              new Set([...(staticProd?.aliases || []), ...(p.aliases || [])])
+              new Set([...(staticProd?.aliases || []), ...(p.aliases || [])]),
             ),
           };
         });
@@ -161,9 +184,90 @@ export function useWarehouseState() {
       }
     });
     fetchWarehouseSlots().then((slots) => {
-      if (slots && slots.length > 0) setSlotsList(slots);
+      if (slots && slots.length > 0) {
+        const mergedSlots = slots.map((s) => {
+          if (s.product_id && customImgs[s.product_id]) {
+            return { ...s, product_image_url: customImgs[s.product_id] };
+          }
+          return s;
+        });
+        setSlotsList(mergedSlots);
+      }
     });
   }, []);
+
+  // Update product photo (Team Lead feature)
+  const handleUpdateProductImage = useCallback(
+    (productId: string, imageUrl: string) => {
+      try {
+        const saved = JSON.parse(
+          localStorage.getItem("wms_custom_product_images") || "{}",
+        );
+        if (imageUrl) {
+          saved[productId] = imageUrl;
+        } else {
+          delete saved[productId];
+        }
+        localStorage.setItem(
+          "wms_custom_product_images",
+          JSON.stringify(saved),
+        );
+      } catch (e) {
+        console.warn("Could not save product image to localStorage", e);
+      }
+
+      // Sync to SQLite backend if online
+      updateProductImageApi(productId, imageUrl).catch(() => {});
+
+      // Instant optimistic state update for products
+      setProductsList((prev) =>
+        prev.map((p) => {
+          if (p.id === productId || p.sku === productId) {
+            return { ...p, imageUrl };
+          }
+          return p;
+        }),
+      );
+
+      // Instant update for shelf slots
+      setSlotsList((prev) =>
+        prev.map((s) => {
+          if (s.product_id === productId) {
+            return { ...s, product_image_url: imageUrl };
+          }
+          return s;
+        }),
+      );
+
+      // Instant update for active orders containing this product
+      setOrders((prev) =>
+        prev.map((ord) => ({
+          ...ord,
+          items: ord.items.map((it) => {
+            if (it.product.id === productId || it.product.sku === productId) {
+              return {
+                ...it,
+                product: {
+                  ...it.product,
+                  imageUrl,
+                },
+              };
+            }
+            return it;
+          }),
+        })),
+      );
+    },
+    [],
+  );
+
+  // Reset shelf slots to standard Bolzano Hub 5-Tier layout
+  const handleResetSlotsToDefault = useCallback(() => {
+    localStorage.removeItem("wms_slots");
+    const fresh = generateBolzanoDefaultSlots(productsList);
+    setSlotsList(fresh);
+    localStorage.setItem("wms_slots", JSON.stringify(fresh));
+  }, [productsList]);
 
   // Handle dynamic slot reassignment (5S Slotting Manager)
   const handleAssignSlot = useCallback(
@@ -1241,6 +1345,8 @@ export function useWarehouseState() {
     handleForceAddProductToActiveOrder,
     handleBindBarcode,
     handleImportSellyOrders,
+    handleUpdateProductImage,
+    handleResetSlotsToDefault,
     triggerManualScan,
     leadOperators,
     isTeamLead,

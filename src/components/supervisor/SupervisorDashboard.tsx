@@ -45,6 +45,9 @@ interface SupervisorDashboardProps {
   onUpdateOperator?: (operator: Operator) => void;
   onDeleteOperator?: (operatorId: string) => void;
   onSimulateScan?: (barcode: string) => void;
+  stationConfigId?: string;
+  onUpdateProductImage?: (productId: string, imageUrl: string) => void;
+  onResetSlotsToDefault?: () => void;
 }
 
 const AVATAR_PRESETS = [
@@ -75,6 +78,9 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   onUpdateOperator,
   onDeleteOperator,
   onSimulateScan,
+  stationConfigId,
+  onUpdateProductImage,
+  onResetSlotsToDefault,
 }) => {
   const [activeTab, setActiveTab] = useState<
     "stations" | "ecommerce" | "issues" | "operators" | "slotting" | "lean"
@@ -424,9 +430,12 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
         <SlottingManager
           slots={slots}
           products={products}
+          stationConfigId={stationConfigId}
           onAssignSlot={onAssignSlot}
           onAddSlot={onAddSlot}
           onDeleteSlot={onDeleteSlot}
+          onUpdateProductImage={onUpdateProductImage}
+          onResetSlotsToDefault={onResetSlotsToDefault}
         />
       )}
 

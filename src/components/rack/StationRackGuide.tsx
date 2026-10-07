@@ -36,6 +36,7 @@ interface StationRackGuideProps {
   isTeamLead: boolean;
   onClose: () => void;
   onSimulateScan: (ean: string) => void;
+  onUpdateProductImage?: (productId: string, imageUrl: string) => void;
 }
 
 export const StationRackGuide: React.FC<StationRackGuideProps> = ({
@@ -44,6 +45,7 @@ export const StationRackGuide: React.FC<StationRackGuideProps> = ({
   isTeamLead,
   onClose,
   onSimulateScan,
+  onUpdateProductImage,
 }) => {
   const [overrides, setOverrides] =
     useState<Record<string, SlotOverride>>(loadOverrides);
@@ -99,8 +101,11 @@ export const StationRackGuide: React.FC<StationRackGuideProps> = ({
         saveOverrides(next);
         return next;
       });
+      if (data.customPhotoUrl && onUpdateProductImage) {
+        onUpdateProductImage(product.id, data.customPhotoUrl);
+      }
     },
-    [],
+    [onUpdateProductImage],
   );
 
   const renderTier = (tier: TierDef) => {

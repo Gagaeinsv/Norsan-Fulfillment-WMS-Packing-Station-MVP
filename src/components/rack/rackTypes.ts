@@ -117,3 +117,69 @@ export const TIERS: TierDef[] = [
 
 // Re-export Product for convenience (used in slot cell and edit panel)
 export type { Product };
+
+export interface WarehouseSlotData {
+  slot_code: string;
+  side: "S" | "D";
+  tier: 1 | 2 | 3;
+  tier_id?: "NA" | "NB" | "A" | "B" | "C" | "D" | "E";
+  description: string;
+  product_id?: string | null;
+  product_name?: string | null;
+  product_italian_name?: string | null;
+  product_ean?: string | null;
+  product_brand?: string | null;
+  product_volume?: string | null;
+  product_image_url?: string | null;
+  is_p2l?: boolean;
+  p2l_led_index?: number;
+}
+
+/**
+ * Generates the complete 5-tier Bolzano Hub warehouse slots (NORSAN N-A/N-B + ZREEN Tiers A/B/C/D).
+ * Automatically maps products according to shelfCoordinate or shelfLocation.
+ */
+export function generateBolzanoDefaultSlots(products: Product[]): WarehouseSlotData[] {
+  const result: WarehouseSlotData[] = [];
+  const productMap = new Map<string, Product>();
+
+  products.forEach((p) => {
+    const coord = p.shelfCoordinate || p.shelfLocation;
+    if (coord) {
+      productMap.set(coord.toUpperCase(), p);
+    }
+  });
+
+  TIERS.forEach((tier) => {
+    if (tier.isFloor) return;
+    for (let i = 1; i <= tier.count; i++) {
+      const slotCode = buildSlotCoordinate(tier, i);
+      const prod = productMap.get(slotCode.toUpperCase());
+      const numericTier: 1 | 2 | 3 =
+        tier.id === "D"
+          ? 1
+          : tier.id === "NA" || tier.id === "NB" || tier.id === "C"
+            ? 2
+            : 3;
+
+      result.push({
+        slot_code: slotCode,
+        side: tier.isNorsan ? "S" : "D",
+        tier: numericTier,
+        tier_id: tier.id,
+        description: `${tier.label} - Slot ${slotCode}`,
+        product_id: prod?.id || null,
+        product_name: prod?.name || null,
+        product_italian_name: prod?.italianName || null,
+        product_ean: prod?.ean || null,
+        product_brand: prod?.brand || (tier.isNorsan ? "NORSAN" : "ZREEN"),
+        product_volume: prod?.volume || null,
+        product_image_url: prod?.imageUrl || null,
+        is_p2l: tier.id === "D",
+        p2l_led_index: tier.id === "D" ? i : undefined,
+      });
+    }
+  });
+
+  return result;
+}

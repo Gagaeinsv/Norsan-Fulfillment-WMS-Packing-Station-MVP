@@ -29,9 +29,18 @@ export const RackSlotEditPanel: React.FC<RackSlotEditPanelProps> = ({
       "",
   );
   const [notes, setNotes] = useState(override?.notes || "");
-  const [photoUrl, setPhotoUrl] = useState<string | undefined>(
-    override?.customPhotoUrl,
-  );
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(() => {
+    if (override?.customPhotoUrl) return override.customPhotoUrl;
+    try {
+      const customImgs = JSON.parse(
+        localStorage.getItem("wms_custom_product_images") || "{}",
+      );
+      if (customImgs[product.id]) return customImgs[product.id];
+    } catch {
+      // ignore
+    }
+    return product.imageUrl;
+  });
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {

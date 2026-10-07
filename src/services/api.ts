@@ -1,102 +1,81 @@
 import { Product } from "../types/wms";
-import { WarehouseSlotData } from "../components/supervisor/SlottingManager";
+import {
+  WarehouseSlotData,
+  generateBolzanoDefaultSlots,
+} from "../components/rack/rackTypes";
 import { NORSAN_PRODUCTS } from "../data/norsanProducts";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
   `http://${window.location.hostname}:3001/api`;
 
-const DEFAULT_SLOTS: WarehouseSlotData[] = [
-  {
-    slot_code: "S3-A",
-    side: "S",
-    tier: 3,
-    description: "Piano 3",
-    product_id: "prod-03",
-    product_name: "NORSAN Omega-3 Arktis",
-    product_brand: "NORSAN",
-    product_ean: "4260368140032",
-  },
-  {
-    slot_code: "S2-A",
-    side: "S",
-    tier: 2,
-    description: "Piano 2",
-    product_id: "prod-01",
-    product_name: "NORSAN Omega-3 Total (Limone)",
-    product_brand: "NORSAN",
-    product_ean: "4260368140018",
-  },
-  {
-    slot_code: "S2-C",
-    side: "S",
-    tier: 2,
-    description: "Piano 2",
-    product_id: "prod-11",
-    product_name: "ZREEN Collagene Idrolizzato",
-    product_brand: "ZREEN",
-    product_ean: "4260368140220",
-  },
-  {
-    slot_code: "D2-A",
-    side: "D",
-    tier: 2,
-    description: "Piano 2",
-    product_id: "prod-06",
-    product_name: "NORSAN Omega-3 Total Capsule",
-    product_brand: "NORSAN",
-    product_ean: "4260368140063",
-  },
-  {
-    slot_code: "D2-C",
-    side: "D",
-    tier: 2,
-    description: "Piano 2",
-    product_id: "prod-12",
-    product_name: "ZREEN Ashwagandha KSM-66",
-    product_brand: "ZREEN",
-    product_ean: "4260368140213",
-  },
-  {
-    slot_code: "D3-C",
-    side: "D",
-    tier: 3,
-    description: "Piano 3",
-    product_id: null,
-    product_name: "Volantini Pubblicitari",
-  },
-];
+export const DEFAULT_SLOTS: WarehouseSlotData[] = generateBolzanoDefaultSlots(NORSAN_PRODUCTS);
 
 // LocalStorage helpers for MVP frontend-only mode
 function getLocalProducts(): Product[] {
   const saved = localStorage.getItem("wms_products");
-  if (!saved) return NORSAN_PRODUCTS;
+  const customImagesRaw = localStorage.getItem("wms_custom_product_images");
+  const customImages: Record<string, string> = customImagesRaw
+    ? JSON.parse(customImagesRaw)
+    : {};
+
+  if (!saved) {
+    return NORSAN_PRODUCTS.map((p) => ({
+      ...p,
+      imageUrl: customImages[p.id] || p.imageUrl,
+    }));
+  }
   try {
     const parsed: Product[] = JSON.parse(saved);
     return NORSAN_PRODUCTS.map((prod) => {
       const savedProd = parsed.find(
-        (p) => p.id === prod.id || p.sku === prod.sku
+        (p) => p.id === prod.id || p.sku === prod.sku,
       );
-      if (!savedProd) return prod;
+      const base = savedProd ? { ...prod, ...savedProd } : prod;
       return {
-        ...prod,
-        ...savedProd,
+        ...base,
+        imageUrl: customImages[prod.id] || base.imageUrl,
         aliases: Array.from(
-          new Set([...(prod.aliases || []), ...(savedProd.aliases || [])])
+          new Set([...(prod.aliases || []), ...(savedProd?.aliases || [])]),
         ),
       };
     });
   } catch {
-    return NORSAN_PRODUCTS;
+    return NORSAN_PRODUCTS.map((p) => ({
+      ...p,
+      imageUrl: customImages[p.id] || p.imageUrl,
+    }));
   }
 }
+
 function setLocalProducts(products: Product[]) {
   localStorage.setItem("wms_products", JSON.stringify(products));
 }
+
 function getLocalSlots(): WarehouseSlotData[] {
   const saved = localStorage.getItem("wms_slots");
-  return saved ? JSON.parse(saved) : DEFAULT_SLOTS;
+  if (saved) {
+    try {
+      const parsed: WarehouseSlotData[] = JSON.parse(saved);
+      // Migration check: ensure slots reflect the real 5-tier Bolzano topology
+      const hasRealSlots = parsed.some(
+        (s) =>
+          s.slot_code.startsWith("N-A") ||
+          s.slot_code.startsWith("A-") ||
+          s.slot_code.startsWith("D-"),
+      );
+      if (hasRealSlots && parsed.length >= 20) {
+        return parsed;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  const defaultSlots = generateBolzanoDefaultSlots(getLocalProducts());
+  setLocalSlots(defaultSlots);
+  return defaultSlots;
 }
+
 function setLocalSlots(slots: WarehouseSlotData[]) {
   localStorage.setItem("wms_slots", JSON.stringify(slots));
 }
@@ -239,5 +218,21 @@ export async function deleteSlot(slotCode: string): Promise<boolean> {
     if (modified) setLocalProducts(products);
     
     return true;
+  }
+}
+
+export async function updateProductImageApi(
+  productId: string,
+  imageUrl: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/products/${productId}/image`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageUrl }),
+    });
+    return res.ok;
+  } catch {
+    return false;
   }
 }
