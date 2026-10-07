@@ -1,5 +1,5 @@
-﻿import React, { useState } from "react";
-import { Barcode, Link2, X } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Barcode, Link2, X, Sparkles } from "lucide-react";
 import { Product } from "../../types/wms";
 
 interface BarcodeBindModalProps {
@@ -8,6 +8,8 @@ interface BarcodeBindModalProps {
   onClose: () => void;
   onBind: (barcode: string, selectedSku: string) => void;
   catalog: Product[];
+  activeOrderSku?: string;
+  activeOrderSkus?: string[];
 }
 
 export const BarcodeBindModal: React.FC<BarcodeBindModalProps> = ({
@@ -16,10 +18,45 @@ export const BarcodeBindModal: React.FC<BarcodeBindModalProps> = ({
   onClose,
   onBind,
   catalog,
+  activeOrderSku,
+  activeOrderSkus = [],
 }) => {
-  const [selectedSku, setSelectedSku] = useState<string>(
-    catalog[0]?.sku || "NOR-TOT-200-LEM"
-  );
+  const defaultSku = useMemo(() => {
+    if (activeOrderSku && catalog.some((p) => p.sku === activeOrderSku)) {
+      return activeOrderSku;
+    }
+    const matchingOrderSku = activeOrderSkus.find((sku) =>
+      catalog.some((p) => p.sku === sku),
+    );
+    if (matchingOrderSku) return matchingOrderSku;
+    return catalog[0]?.sku || "NOR-TOT-200-LEM";
+  }, [activeOrderSku, activeOrderSkus, catalog]);
+
+  const [selectedSku, setSelectedSku] = useState<string>(defaultSku);
+
+  // When modal opens or activeOrderSku changes, always default to the active order's product!
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedSku(defaultSku);
+    }
+  }, [isOpen, defaultSku]);
+
+  // Sort catalog so products in the active order appear at the top
+  const sortedCatalog = useMemo(() => {
+    const activeSet = new Set(
+      activeOrderSkus.length > 0
+        ? activeOrderSkus
+        : activeOrderSku
+          ? [activeOrderSku]
+          : [],
+    );
+    return [...catalog].sort((a, b) => {
+      const aInOrder = activeSet.has(a.sku) ? 1 : 0;
+      const bInOrder = activeSet.has(b.sku) ? 1 : 0;
+      if (aInOrder !== bInOrder) return bInOrder - aInOrder;
+      return a.name.localeCompare(b.name);
+    });
+  }, [catalog, activeOrderSku, activeOrderSkus]);
 
   if (!isOpen) return null;
 
@@ -69,19 +106,31 @@ export const BarcodeBindModal: React.FC<BarcodeBindModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-2">
-              Seleziona il Prodotto Corrispondente:
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold text-slate-300">
+                Seleziona il Prodotto Corrispondente:
+              </label>
+              {activeOrderSku && (
+                <span className="text-[10px] text-amber-400 font-bold flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" /> Pre-selezionato da ordine attivo
+                </span>
+              )}
+            </div>
             <select
               value={selectedSku}
               onChange={(e) => setSelectedSku(e.target.value)}
-              className="w-full bg-slate-950 border-2 border-slate-700 focus:border-norsan-500 rounded-xl p-3 text-sm text-white font-bold cursor-pointer"
+              className="w-full bg-slate-950 border-2 border-amber-500/70 focus:border-amber-400 rounded-xl p-3 text-sm text-white font-bold cursor-pointer"
             >
-              {catalog.map((p) => (
-                <option key={p.id} value={p.sku}>
-                  [{p.shelfLocation}] {p.name} ({p.sku})
-                </option>
-              ))}
+              {sortedCatalog.map((p) => {
+                const isInActiveOrder =
+                  activeOrderSkus.includes(p.sku) || p.sku === activeOrderSku;
+                return (
+                  <option key={p.id} value={p.sku}>
+                    {isInActiveOrder ? "⭐ [ORDINE ATTIVO] " : ""}
+                    [{p.shelfLocation}] {p.name} ({p.sku})
+                  </option>
+                );
+              })}
             </select>
           </div>
 

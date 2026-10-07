@@ -269,6 +269,8 @@ export function App() {
           setIsBindModalOpen(false);
         }}
         catalog={productsList}
+        activeOrderSku={activeOrder?.items[0]?.product.sku}
+        activeOrderSkus={activeOrder?.items.map((it) => it.product.sku) || []}
       />
     </div>
   );
