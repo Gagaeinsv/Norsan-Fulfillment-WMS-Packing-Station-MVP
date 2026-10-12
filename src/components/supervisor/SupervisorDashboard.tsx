@@ -18,6 +18,8 @@ import {
   Check,
   Edit3,
   Trash2,
+  AlertTriangle,
+  MapPin,
 } from "lucide-react";
 import {
   WarehouseStation,
@@ -27,6 +29,7 @@ import {
   Product,
 } from "../../types/wms";
 import { SlottingManager, WarehouseSlotData } from "./SlottingManager";
+import { AddressFixModal } from "../shared/AddressFixModal";
 
 interface SupervisorDashboardProps {
   stations: WarehouseStation[];
@@ -48,6 +51,7 @@ interface SupervisorDashboardProps {
   stationConfigId?: string;
   onUpdateProductImage?: (productId: string, imageUrl: string) => void;
   onResetSlotsToDefault?: () => void;
+  onUpdateOrderAddress?: (orderId: string, updatedFields: any) => void;
 }
 
 const AVATAR_PRESETS = [
@@ -81,10 +85,17 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   stationConfigId,
   onUpdateProductImage,
   onResetSlotsToDefault,
+  onUpdateOrderAddress,
 }) => {
   const [activeTab, setActiveTab] = useState<
     "stations" | "ecommerce" | "issues" | "operators" | "slotting" | "lean"
   >("stations");
+
+  // Address Normalizer Modal State
+  const [selectedAddressOrder, setSelectedAddressOrder] = useState<Order | null>(
+    null
+  );
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
   // Modals for Operator Management & Editing
   const [isAddOperatorOpen, setIsAddOperatorOpen] = useState(false);
@@ -530,59 +541,150 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
         </div>
       )}
 
-      {/* Tab Content 2: E-Commerce Stream */}
+      {/* Tab Content 2: E-Commerce Stream & Address Validation */}
       {activeTab === "ecommerce" && (
-        <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 shadow-sm">
-          <h3 className="text-sm font-black text-slate-900 mb-3">
-            Flusso Ordini in Tempo Reale
-          </h3>
+        <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 shadow-sm space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+            <div>
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-blue-600" />
+                <span>Flusso Ordini & Validazione Indirizzi Spedizione</span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                Verifica automatica formato indirizzi IT per etichette DHL / Amazon FBM (Via + Civico + Piano)
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold">
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                <span>
+                  {orders.filter((o) => o.addressStatus !== "warning").length}{" "}
+                  Validi
+                </span>
+              </span>
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-300">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                <span>
+                  {orders.filter((o) => o.addressStatus === "warning").length}{" "}
+                  Da verificare
+                </span>
+              </span>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            {orders.map((o) => (
-              <div
-                key={o.id}
-                className="p-3 rounded-2xl border border-slate-200 hover:border-slate-400 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3 transition"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-sm font-black text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-300">
-                    {o.orderNumber}
-                  </span>
-                  <div>
-                    <div className="text-xs font-bold text-slate-900">
-                      {o.customerName} ({o.customerCity})
+            {orders.map((o) => {
+              const hasAddressWarning =
+                o.addressStatus === "warning" ||
+                (!o.addressDetails?.houseNumber && o.customerAddress);
+
+              return (
+                <div
+                  key={o.id}
+                  className={`p-3.5 rounded-2xl border transition flex flex-wrap items-center justify-between gap-3 ${
+                    hasAddressWarning
+                      ? "border-amber-300 bg-amber-50/40 hover:border-amber-400"
+                      : "border-slate-200 hover:border-slate-400 bg-slate-50/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-2 rounded-xl border flex items-center justify-center ${
+                        hasAddressWarning
+                          ? "bg-amber-100 text-amber-800 border-amber-300"
+                          : "bg-emerald-100 text-emerald-800 border-emerald-300"
+                      }`}
+                    >
+                      {hasAddressWarning ? (
+                        <AlertTriangle className="w-4 h-4 text-amber-700" />
+                      ) : (
+                        <MapPin className="w-4 h-4 text-emerald-700" />
+                      )}
                     </div>
-                    <div className="text-[10px] text-slate-500">
-                      {o.source} •{" "}
-                      {o.items.reduce(
-                        (s: number, i: any) => s + i.quantityRequired,
-                        0,
-                      )}{" "}
-                      prodotti
+
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-black text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-300">
+                          {o.orderNumber}
+                        </span>
+                        <span className="text-xs font-bold text-slate-900">
+                          {o.customerName}
+                        </span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-bold">
+                          {o.customerCountry || "IT"}
+                        </span>
+                      </div>
+
+                      <div className="text-[11px] text-slate-600 mt-1 flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-slate-800">
+                          📍 {o.customerAddress} • {o.customerZip}{" "}
+                          {o.customerCity} ({o.customerProvince})
+                        </span>
+                        {o.addressDetails?.addressAddition && (
+                          <span className="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 text-[10px] font-semibold border border-blue-200">
+                            🏢 {o.addressDetails.addressAddition}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="text-[10px] text-slate-400 mt-0.5">
+                        {o.source} •{" "}
+                        {o.items.reduce(
+                          (s: number, i: any) => s + i.quantityRequired,
+                          0,
+                        )}{" "}
+                        prodotti
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
-                      o.status === "packed"
-                        ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                  <div className="flex items-center gap-2">
+                    {hasAddressWarning ? (
+                      <button
+                        onClick={() => {
+                          setSelectedAddressOrder(o);
+                          setIsAddressModalOpen(true);
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-black text-xs transition active:scale-95 shadow-xs cursor-pointer animate-pulse"
+                      >
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>Risolvi Indirizzo</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setSelectedAddressOrder(o);
+                          setIsAddressModalOpen(true);
+                        }}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px] border border-slate-300 transition cursor-pointer"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Dettagli Indirizzo</span>
+                      </button>
+                    )}
+
+                    <span
+                      className={`text-[10px] font-black uppercase px-2 py-1 rounded border ${
+                        o.status === "packed"
+                          ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                          : o.status === "packing"
+                            ? "bg-amber-100 text-amber-900 border-amber-300"
+                            : "bg-slate-100 text-slate-700 border-slate-300"
+                      }`}
+                    >
+                      {o.status === "packed"
+                        ? "Spedito DHL"
                         : o.status === "packing"
-                          ? "bg-amber-100 text-amber-900 border-amber-300"
-                          : "bg-slate-100 text-slate-700 border-slate-300"
-                    }`}
-                  >
-                    {o.status === "packed"
-                      ? "Spedito DHL"
-                      : o.status === "packing"
-                        ? "In Imballaggio"
-                        : "In Coda"}
-                  </span>
-                  <span className="text-xs font-mono font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
-                    {o.courier}
-                  </span>
+                          ? "In Imballaggio"
+                          : "In Coda"}
+                    </span>
+                    <span className="text-xs font-mono font-bold text-slate-700 bg-white px-2 py-1 rounded border border-slate-200">
+                      {o.courier}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -1526,6 +1628,23 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal 5: Smart Address Normalizer & DHL Fix Modal */}
+      {isAddressModalOpen && selectedAddressOrder && (
+        <AddressFixModal
+          order={selectedAddressOrder}
+          isOpen={isAddressModalOpen}
+          onClose={() => {
+            setIsAddressModalOpen(false);
+            setSelectedAddressOrder(null);
+          }}
+          onSaveAddress={(orderId, updatedFields) => {
+            if (onUpdateOrderAddress) {
+              onUpdateOrderAddress(orderId, updatedFields);
+            }
+          }}
+        />
       )}
     </div>
   );

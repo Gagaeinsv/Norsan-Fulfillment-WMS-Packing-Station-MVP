@@ -1,5 +1,6 @@
 import { Order } from "../types/wms";
 import { NORSAN_PRODUCTS } from "./norsanProducts";
+import { parseItalianAddress } from "../services/italianAddressParser";
 
 // Helper: find product by SKU with safety check
 const p = (sku: string) => {
@@ -282,6 +283,83 @@ const RAW_ORDERS: Order[] = [
     retentionGift: "none",
     requiresPhysicalDocument: false,
   },
+  // ─────────────────────────────────────────────────────────────────────
+  // ORDINE 8: Simone Marchini — Amazon FBM con indirizzo a 2 piani (Foto Reale)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "ord-mvp-8",
+    orderNumber: "408-7719203-9941201",
+    barcode: "408-7719203-9941201",
+    source: "Amazon Marketplace",
+    createdAt: Date.now() - 1000 * 60 * 10,
+    customerName: "Simone Marchini",
+    customerAddress: "Via Giuseppe Di Vittorio 22, 2 piano",
+    customerCity: "Pontassieve",
+    customerZip: "50065",
+    customerProvince: "FI",
+    customerCountry: "IT",
+    courier: "DHL Express",
+    trackingNumber: "DHL-AMZ-7719-088",
+    priority: "express",
+    boxBranding: "neutral_unbranded",
+    boxRecommendation: "BOX-AMZ-M",
+    items: [
+      {
+        product: p("NOR-TOT-200-LEM"),
+        quantityRequired: 1,
+        quantityScanned: 0,
+        status: "pending",
+      },
+    ],
+    marketingFlyers: [],
+    status: "ready_to_pack",
+    isSubscription: false,
+    customerOrderCount: 2,
+    retentionGift: "none",
+    requiresPhysicalDocument: false,
+  },
+  // ─────────────────────────────────────────────────────────────────────
+  // ORDINE 9: Alessia — Indirizzo incompleto con Alert ⚠️ (Foto Reale)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "ord-mvp-9",
+    orderNumber: "A2RS5CWJU4F8",
+    barcode: "A2RS5CWJU4F8",
+    source: "Amazon Marketplace",
+    createdAt: Date.now() - 1000 * 60 * 5,
+    customerName: "Alessia",
+    customerAddress: "Via Roma", // Mancante di numero civico -> Genera Warning
+    customerCity: "Firenze",
+    customerZip: "50123",
+    customerProvince: "FI",
+    customerCountry: "IT",
+    courier: "DHL Express",
+    trackingNumber: "DHL-AMZ-A2RS5-001",
+    priority: "standard",
+    boxBranding: "neutral_unbranded",
+    boxRecommendation: "BOX-AMZ-S",
+    items: [
+      {
+        product: p("NOR-TOT-CAP-120"),
+        quantityRequired: 1,
+        quantityScanned: 0,
+        status: "pending",
+      },
+    ],
+    marketingFlyers: [],
+    status: "ready_to_pack",
+    isSubscription: false,
+    customerOrderCount: 1,
+    retentionGift: "none",
+    requiresPhysicalDocument: false,
+  },
 ];
 
-export const INITIAL_ORDERS = RAW_ORDERS;
+export const INITIAL_ORDERS: Order[] = RAW_ORDERS.map((o) => {
+  const parsed = parseItalianAddress(o.customerAddress);
+  return {
+    ...o,
+    addressDetails: parsed,
+    addressStatus: parsed.status,
+  };
+});

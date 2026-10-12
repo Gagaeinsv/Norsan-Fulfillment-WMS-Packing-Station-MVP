@@ -1227,6 +1227,25 @@ export function useWarehouseState() {
     if (!isMuted) playScanSuccess();
   };
 
+  const handleUpdateOrderAddress = useCallback(
+    (orderId: string, updatedFields: any) => {
+      setOrders((prev) =>
+        prev.map((o) => {
+          if (o.id === orderId) {
+            return {
+              ...o,
+              ...updatedFields,
+              addressStatus: updatedFields.addressDetails?.status || "valid",
+            };
+          }
+          return o;
+        }),
+      );
+      if (!isMuted) playScanSuccess();
+    },
+    [isMuted, playScanSuccess],
+  );
+
   const handleSwitchToStation = (_stationId: string) => {
     setActiveView("packing");
   };
@@ -1345,6 +1364,7 @@ export function useWarehouseState() {
     handleForceAddProductToActiveOrder,
     handleBindBarcode,
     handleImportSellyOrders,
+    handleUpdateOrderAddress,
     handleUpdateProductImage,
     handleResetSlotsToDefault,
     triggerManualScan,

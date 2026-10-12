@@ -1,6 +1,7 @@
 import { Order, OrderItem, Product, BoxType, BoxBranding } from "../types/wms";
 import { isSellyErpServiceSku } from "../data/marketingFlyers";
 import { NORSAN_PRODUCTS } from "../data/norsanProducts";
+import { parseItalianAddress } from "./italianAddressParser";
 
 export interface SellyImportSummary {
   totalRows: number;
@@ -434,6 +435,8 @@ export function parseSellyOrdersCsv(
       boxRec = "BOX-NOR-M";
     }
 
+    const parsedAddr = parseItalianAddress(group.customerAddress);
+
     const newOrder: Order = {
       id: `ord-selly-${orderNum}`,
       orderNumber: orderNum,
@@ -451,6 +454,8 @@ export function parseSellyOrdersCsv(
       priority: group.courier.includes("Express") ? "express" : "standard",
       boxBranding: boxBrand,
       boxRecommendation: boxRec,
+      addressDetails: parsedAddr,
+      addressStatus: parsedAddr.status,
       items: orderItems,
       marketingFlyers: [
         {

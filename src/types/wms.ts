@@ -129,6 +129,18 @@ export interface Order {
   // SellyErp integration
   sellyErpOrderId?: string; // e.g. "INT50953", "ORDVE2026121172"
   sellyErpRawItems?: SellyErpLineItem[]; // Raw lines before service filtering
+  // Italian Address Normalizer (DACH/Selly/Amazon Fix)
+  addressDetails?: AddressDetails;
+  addressStatus?: "valid" | "warning" | "error";
+}
+
+export interface AddressDetails {
+  street?: string; // "Via Giuseppe Di Vittorio"
+  houseNumber?: string; // "22", "14/A", "SNC"
+  addressAddition?: string; // "2 piano", "Scala B"
+  status: "valid" | "warning" | "error";
+  validationError?: string;
+  rawInput?: string;
 }
 
 export interface SellyErpLineItem {

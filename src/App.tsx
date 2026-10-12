@@ -79,6 +79,7 @@ export function App() {
     handleImportSellyOrders,
     handleUpdateProductImage,
     handleResetSlotsToDefault,
+    handleUpdateOrderAddress,
     triggerManualScan,
     leadOperators,
     isTeamLead,
@@ -190,6 +191,7 @@ export function App() {
             stationConfigId={stationConfigId}
             onUpdateProductImage={handleUpdateProductImage}
             onResetSlotsToDefault={handleResetSlotsToDefault}
+            onUpdateOrderAddress={handleUpdateOrderAddress}
           />
         </main>
       )}
