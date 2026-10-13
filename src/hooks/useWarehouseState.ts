@@ -531,6 +531,36 @@ export function useWarehouseState() {
     if (!isMuted) playScanSuccess();
   }, [activeOrderId, isMuted, playScanSuccess]);
 
+  // Fast Confirmation for Paper-based Picking (No individual item barcode scanning)
+  const handleConfirmAllItems = useCallback(() => {
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.id === activeOrderId) {
+          const completedItems = o.items.map((it) => ({
+            ...it,
+            quantityScanned: it.quantityRequired,
+            status: "completed" as const,
+          }));
+          const completedFlyers = o.marketingFlyers.map((f) => ({
+            ...f,
+            isIncluded: true,
+          }));
+          return {
+            ...o,
+            items: completedItems,
+            marketingFlyers: completedFlyers,
+            giftConfirmed: true,
+            physicalDocumentConfirmed: true,
+          };
+        }
+        return o;
+      }),
+    );
+    clearOrderLeds(activeOrder); // Turn off Pick-to-Light LEDs
+    if (!isMuted) playOrderComplete();
+    setIsLabelModalOpen(true);
+  }, [activeOrderId, activeOrder, isMuted, playOrderComplete]);
+
   // Simulate Incoming Web Order from norsan.it
   const handleSimulateIncomingWebOrder = useCallback(() => {
     const webOrderNum = `ORD-2026-${Math.floor(8820 + Math.random() * 80)}`;
@@ -1360,6 +1390,7 @@ export function useWarehouseState() {
     handleToggleFlyer,
     handleToggleGift,
     handleTogglePhysicalDocument,
+    handleConfirmAllItems,
     handleSimulateIncomingWebOrder,
     handleBarcodeScanned,
     handleCompleteAndNext,

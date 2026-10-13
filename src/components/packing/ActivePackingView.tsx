@@ -36,6 +36,7 @@ interface ActivePackingViewProps {
   onQuickSwitchOrder?: (orderId: string, autoScanBarcode?: string) => void;
   onForceAddProduct?: (product: Product) => void;
   onOpenBindModal?: (barcode: string) => void;
+  onConfirmAllItems?: () => void;
 }
 
 export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
@@ -52,6 +53,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   onQuickSwitchOrder,
   onForceAddProduct,
   onOpenBindModal,
+  onConfirmAllItems,
 }) => {
   const totalItemsRequired = order.items.reduce(
     (s, it) => s + it.quantityRequired,
@@ -367,11 +369,23 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
         <div className="flex items-center gap-3 w-full md:w-auto justify-end">
           <button
             onClick={onOpenIssueModal}
-            className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-rose-50 active:scale-95 text-rose-700 hover:text-rose-900 text-xs font-bold border border-slate-300 hover:border-rose-300 transition flex items-center gap-1.5 shadow-xs"
+            className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-rose-50 active:scale-95 text-rose-700 hover:text-rose-900 text-xs font-bold border border-slate-300 hover:border-rose-300 transition flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <AlertOctagon className="w-4 h-4" />
             <span>Segnala Anomalia</span>
           </button>
+
+          {!isOrderFullyReady && onConfirmAllItems && (
+            <button
+              onClick={onConfirmAllItems}
+              className="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-black border border-blue-700 transition flex items-center gap-2 shadow-md cursor-pointer animate-pulse"
+              title="Valida tutti gli articoli letti dalla distinta cartacea (senza scansione barcode pezzo per pezzo)"
+            >
+              <ShieldCheck className="w-4 h-4 text-white" />
+              <span>Conferma Prelievo da Bolla (Tutto Ok)</span>
+            </button>
+          )}
+
           {isOrderFullyReady ? (
             <button
               onClick={onOpenLabelModal}

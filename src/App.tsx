@@ -64,6 +64,7 @@ export function App() {
     handleToggleFlyer,
     handleToggleGift,
     handleTogglePhysicalDocument,
+    handleConfirmAllItems,
     handleSimulateIncomingWebOrder,
     handleCompleteAndNext,
     handleResetData,
@@ -159,6 +160,7 @@ export function App() {
               stationConfigId={stationConfigId}
               onToggleGift={handleToggleGift}
               onTogglePhysicalDocument={handleTogglePhysicalDocument}
+              onConfirmAllItems={handleConfirmAllItems}
               lastScan={lastScan}
               onQuickSwitchOrder={handleQuickSwitchOrder}
               onForceAddProduct={handleForceAddProductToActiveOrder}
