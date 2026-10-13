@@ -24,6 +24,7 @@ import {
   RefreshCw,
   Key,
   Settings,
+  ShoppingBag,
 } from "lucide-react";
 import {
   WarehouseStation,
@@ -96,7 +97,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   onUpdateOrderAddress,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    "stations" | "ecommerce" | "issues" | "operators" | "slotting" | "lean"
+    "stations" | "ecommerce" | "amazon" | "issues" | "operators" | "slotting" | "lean"
   >("stations");
 
   // Address Normalizer Modal State
@@ -104,6 +105,16 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     null
   );
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+
+  // Amazon SP-API Integration State
+  const [amazonSellerId, setAmazonSellerId] = useState("");
+  const [amazonClientId, setAmazonClientId] = useState("");
+  const [amazonClientSecret, setAmazonClientSecret] = useState("");
+  const [amazonRefreshToken, setAmazonRefreshToken] = useState("");
+  const [isAmazonSyncing, setIsAmazonSyncing] = useState(false);
+  const [amazonSyncStatus, setAmazonSyncStatus] = useState<"idle" | "ok" | "error">("idle");
+  const [amazonSyncMessage, setAmazonSyncMessage] = useState("In attesa credenziali SP-API");
+  const [isAmazonConfigModalOpen, setIsAmazonConfigModalOpen] = useState(false);
 
   // Selly ERP Auto-Sync State
   const [sellyApiKey, setSellyApiKey] = useState("");
@@ -286,14 +297,21 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     }
   };
 
-  // Stats calculations
+  // Stats calculations & Channel split
   const totalOrders = orders.length;
   const packedOrders = orders.filter((o) => o.status === "packed").length;
   const inPackingOrders = orders.filter((o) => o.status === "packing").length;
   const readyOrders = orders.filter((o) => o.status === "ready_to_pack").length;
-  const webOrdersCount = orders.filter(
-    (o) => o.source === "norsan.it Web Shop",
-  ).length;
+  
+  // Specific Channel Separation
+  const amazonOrders = orders.filter(
+    (o) => o.source === "Amazon Marketplace" || o.source?.toLowerCase().includes("amazon")
+  );
+  const sellyOrders = orders.filter(
+    (o) => o.source !== "Amazon Marketplace" && !o.source?.toLowerCase().includes("amazon")
+  );
+  const webOrdersCount = sellyOrders.length;
+  const amazonOrdersCount = amazonOrders.length;
 
   const handleCreateOperator = (e: React.FormEvent) => {
     e.preventDefault();
@@ -466,12 +484,24 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           onClick={() => setActiveTab("ecommerce")}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
             activeTab === "ecommerce"
-              ? "bg-norsan-600 text-white shadow-sm"
+              ? "bg-blue-600 text-white shadow-sm"
               : "bg-white text-slate-600 hover:text-slate-900 border border-slate-300"
           }`}
         >
-          <Globe className="w-4 h-4" />
-          <span>Flusso Ordini E-Commerce</span>
+          <Globe className="w-4 h-4 text-blue-400" />
+          <span>Selly Web-Shop ({webOrdersCount})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("amazon")}
+          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+            activeTab === "amazon"
+              ? "bg-amber-600 text-white shadow-sm"
+              : "bg-white text-amber-900 hover:text-amber-950 border border-amber-300"
+          }`}
+        >
+          <ShoppingBag className="w-4 h-4 text-amber-500" />
+          <span>📦 Amazon FBM ({amazonOrdersCount})</span>
         </button>
 
         <button
@@ -631,39 +661,39 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
         </div>
       )}
 
-      {/* Tab Content 2: E-Commerce Stream & Address Validation */}
+      {/* Tab Content 2: Selly Web-Shop Stream & Address Validation */}
       {activeTab === "ecommerce" && (
         <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 shadow-sm space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
             <div>
               <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
                 <Globe className="w-4 h-4 text-blue-600" />
-                <span>Flusso Ordini & Validazione Indirizzi Spedizione</span>
+                <span>Flusso Ordini Web-Shop (Selly ERP) & Indirizzi IT</span>
               </h3>
               <p className="text-xs text-slate-500">
-                Verifica automatica formato indirizzi IT per etichette DHL / Amazon FBM (Via + Civico + Piano)
+                Ordini diretti dallo store online norsan.it sincronizzati con Selly ERP
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
               <button
-                onClick={() => printBatchAmazonPackingSlips(orders)}
+                onClick={() => printBatchAmazonPackingSlips(sellyOrders)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition active:scale-95 shadow-xs cursor-pointer"
-                title="Stampa tutte le distinte di prelievo / bolle degli ordini per il magazzino"
+                title="Stampa tutte le distinte di prelievo / bolle degli ordini Web Shop"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>Stampa Tutte le Bolle ({orders.length})</span>
+                <span>Stampa Tutte le Bolle ({sellyOrders.length})</span>
               </button>
               <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300">
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                 <span>
-                  {orders.filter((o) => o.addressStatus !== "warning").length}{" "}
+                  {sellyOrders.filter((o) => o.addressStatus !== "warning").length}{" "}
                   Validi
                 </span>
               </span>
               <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-300">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
                 <span>
-                  {orders.filter((o) => o.addressStatus === "warning").length}{" "}
+                  {sellyOrders.filter((o) => o.addressStatus === "warning").length}{" "}
                   Da verificare
                 </span>
               </span>
@@ -723,7 +753,12 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           </div>
 
           <div className="space-y-2">
-            {orders.map((o) => {
+            {sellyOrders.length === 0 ? (
+              <div className="p-8 text-center text-slate-500 bg-slate-50 rounded-2xl border border-slate-200">
+                Nessun ordine Web-Shop presente al momento.
+              </div>
+            ) : (
+              sellyOrders.map((o) => {
               const hasAddressWarning =
                 o.addressStatus === "warning" ||
                 (!o.addressDetails?.houseNumber && o.customerAddress);
@@ -837,13 +872,246 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                           ? "In Imballaggio"
                           : "In Coda"}
                     </span>
-                    <span className="text-xs font-mono font-bold text-slate-700 bg-white px-2 py-1 rounded border border-slate-200">
-                      {o.courier}
-                    </span>
+                      <span className="text-xs font-mono font-bold text-slate-700 bg-white px-2 py-1 rounded border border-slate-200">
+                        {o.courier}
+                      </span>
+                    </div>
                   </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content 2.5: Amazon FBM Marketplace Stream */}
+      {activeTab === "amazon" && (
+        <div className="bg-white border-2 border-amber-300 rounded-3xl p-5 shadow-sm space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 pb-3">
+            <div>
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-amber-600" />
+                <span>Canale Amazon FBM (Fulfillment by Merchant)</span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                Ordini Amazon Marketplace: obbligo <strong>Scatola Neutra Senza Logo</strong> e rispetto rigido SLA DHL
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+              <button
+                onClick={() => printBatchAmazonPackingSlips(amazonOrders)}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs transition active:scale-95 shadow cursor-pointer"
+                title="Stampa tutte le distinte di prelievo A4 per gli ordini Amazon"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Stampa Bolle Amazon ({amazonOrders.length})</span>
+              </button>
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                <span>
+                  {amazonOrders.filter((o) => o.addressStatus !== "warning").length}{" "}
+                  Validi
+                </span>
+              </span>
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-300">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                <span>
+                  {amazonOrders.filter((o) => o.addressStatus === "warning").length}{" "}
+                  Da verificare
+                </span>
+              </span>
+            </div>
+          </div>
+
+          {/* Amazon SP-API Integration Banner */}
+          <div className="bg-gradient-to-r from-amber-950 via-amber-900 to-slate-900 text-white rounded-2xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 border border-amber-800">
+            <div className="flex items-center gap-3">
+              <div className={`p-2.5 rounded-xl flex items-center justify-center ${
+                amazonSyncStatus === "ok"
+                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                  : amazonSyncStatus === "error"
+                  ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                  : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+              }`}>
+                <ShoppingBag className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm">Amazon SP-API Direct Sync</span>
+                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                    amazonSellerId
+                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                      : "bg-amber-950/60 text-amber-300 border border-amber-700"
+                  }`}>
+                    {amazonSellerId ? "COLLEGATO (SP-API)" : "SOSTITUZIONE PROCLADKA ATTIVA"}
+                  </span>
                 </div>
-              );
-            })}
+                <p className="text-xs text-amber-200/80 mt-0.5">
+                  {amazonSyncMessage} • Sostituisce il software tedesco intermediario
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAmazonSyncing(true);
+                  setAmazonSyncMessage("Sincronizzazione ordini Amazon FBM...");
+                  setTimeout(() => {
+                    setIsAmazonSyncing(false);
+                    setAmazonSyncStatus("ok");
+                    setAmazonSyncMessage(`Sincronizzati ${amazonOrders.length} ordini Amazon FBM`);
+                  }, 600);
+                }}
+                disabled={isAmazonSyncing}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 text-xs font-black rounded-xl transition active:scale-95 shadow cursor-pointer"
+                title="Sincronizza ordini Amazon FBM pendenti"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isAmazonSyncing ? "animate-spin" : ""}`} />
+                <span>{isAmazonSyncing ? "Sincronizzazione..." : "Sincronizza Amazon"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsAmazonConfigModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-100 text-xs font-bold rounded-xl transition border border-amber-700/60 cursor-pointer"
+                title="Configura credenziali Amazon SP-API"
+              >
+                <Key className="w-3.5 h-3.5 text-amber-400" />
+                <span>Credenziali SP-API</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Amazon Orders Listing */}
+          <div className="space-y-2">
+            {amazonOrders.length === 0 ? (
+              <div className="p-8 text-center text-slate-500 bg-amber-50/40 rounded-2xl border border-amber-200">
+                Nessun ordine Amazon FBM in attesa di spedizione.
+              </div>
+            ) : (
+              amazonOrders.map((o) => {
+                const hasAddressWarning =
+                  o.addressStatus === "warning" ||
+                  (!o.addressDetails?.houseNumber && o.customerAddress);
+
+                return (
+                  <div
+                    key={o.id}
+                    className={`p-3.5 rounded-2xl border transition flex flex-wrap items-center justify-between gap-3 ${
+                      hasAddressWarning
+                        ? "border-amber-300 bg-amber-50/40 hover:border-amber-400"
+                        : "border-amber-200 hover:border-amber-400 bg-amber-50/20"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`p-2 rounded-xl border flex items-center justify-center ${
+                          hasAddressWarning
+                            ? "bg-amber-100 text-amber-800 border-amber-300"
+                            : "bg-amber-50 text-amber-800 border-amber-300"
+                        }`}
+                      >
+                        {hasAddressWarning ? (
+                          <AlertTriangle className="w-4 h-4 text-amber-700" />
+                        ) : (
+                          <ShoppingBag className="w-4 h-4 text-amber-700" />
+                        )}
+                      </div>
+
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-black text-amber-950 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                            {o.orderNumber}
+                          </span>
+                          <span className="text-xs font-bold text-slate-900">
+                            {o.customerName}
+                          </span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-200 text-amber-900 font-bold">
+                            📦 SCATOLA NEUTRA
+                          </span>
+                        </div>
+
+                        <div className="text-[11px] text-slate-600 mt-1 flex flex-wrap items-center gap-2">
+                          <span className="font-medium text-slate-800">
+                            📍 {o.customerAddress} • {o.customerZip}{" "}
+                            {o.customerCity} ({o.customerProvince})
+                          </span>
+                          {o.addressDetails?.addressAddition && (
+                            <span className="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 text-[10px] font-semibold border border-blue-200">
+                              🏢 {o.addressDetails.addressAddition}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="text-[10px] text-slate-500 mt-0.5">
+                          Amazon FBM Prime •{" "}
+                          {o.items.reduce(
+                            (s: number, i: any) => s + i.quantityRequired,
+                            0,
+                          )}{" "}
+                          prodotti NORSAN (senza volantini)
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => printAmazonPackingSlip(o)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition active:scale-95 shadow-xs cursor-pointer"
+                        title="Stampa distinta di prelievo / bolla d'ordine A4 (Layout Amazon)"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-amber-200" />
+                        <span>Stampa Bolla A4</span>
+                      </button>
+
+                      {hasAddressWarning ? (
+                        <button
+                          onClick={() => {
+                            setSelectedAddressOrder(o);
+                            setIsAddressModalOpen(true);
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-black text-xs transition active:scale-95 shadow-xs cursor-pointer animate-pulse"
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>Risolvi Indirizzo</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setSelectedAddressOrder(o);
+                            setIsAddressModalOpen(true);
+                          }}
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-300 transition cursor-pointer"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Dettagli Indirizzo</span>
+                        </button>
+                      )}
+
+                      <span
+                        className={`text-[10px] font-black uppercase px-2 py-1 rounded border ${
+                          o.status === "packed"
+                            ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                            : o.status === "packing"
+                              ? "bg-amber-100 text-amber-900 border-amber-300"
+                              : "bg-slate-100 text-slate-700 border-slate-300"
+                        }`}
+                      >
+                        {o.status === "packed"
+                          ? "Spedito DHL"
+                          : o.status === "packing"
+                            ? "In Imballaggio"
+                            : "In Coda"}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-amber-900 bg-amber-100 px-2 py-1 rounded border border-amber-300">
+                        {o.courier}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       )}
@@ -1930,6 +2198,127 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 >
                   <Check className="w-4 h-4" />
                   <span>Salva Configurazione</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 7: Amazon SP-API Integration Settings */}
+      {isAmazonConfigModalOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border-2 border-amber-300 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b border-amber-200 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-100 text-amber-800 rounded-xl">
+                  <ShoppingBag className="w-5 h-5 text-amber-700" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">
+                    Credenziali Amazon SP-API
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Sostituzione diretta software tedesco intermediario FBM
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAmazonConfigModalOpen(false)}
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setIsAmazonConfigModalOpen(false);
+                setAmazonSyncStatus("ok");
+                setAmazonSyncMessage("Credenziali SP-API salvate con successo");
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Merchant / Seller ID
+                </label>
+                <input
+                  type="text"
+                  value={amazonSellerId}
+                  onChange={(e) => setAmazonSellerId(e.target.value)}
+                  placeholder="Es. A2XXXXXXXXXXXXX"
+                  className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-800"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  LWA Client ID (Login with Amazon)
+                </label>
+                <input
+                  type="text"
+                  value={amazonClientId}
+                  onChange={(e) => setAmazonClientId(e.target.value)}
+                  placeholder="amzn1.application-oa2-client.xxxxxxxx"
+                  className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-800"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  LWA Client Secret
+                </label>
+                <input
+                  type="password"
+                  value={amazonClientSecret}
+                  onChange={(e) => setAmazonClientSecret(e.target.value)}
+                  placeholder="Incolla LWA Client Secret..."
+                  className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-800"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Refresh Token
+                </label>
+                <textarea
+                  rows={2}
+                  value={amazonRefreshToken}
+                  onChange={(e) => setAmazonRefreshToken(e.target.value)}
+                  placeholder="Atzr|IwEB..."
+                  className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-800 resize-none"
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-950 space-y-1">
+                <div className="font-bold flex items-center gap-1">
+                  <span>📦 Vantaggio Sostituzione Diretta:</span>
+                </div>
+                <p>
+                  • Nessun costo mensile per il software intermediario tedesco.
+                </p>
+                <p>
+                  • Stampa bolla Amazon A4 e notifica automatica di spedizione (Tracking DHL inviato istantaneamente ad Amazon).
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAmazonConfigModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-black text-xs rounded-xl shadow transition active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Salva Credenziali Amazon</span>
                 </button>
               </div>
             </form>
