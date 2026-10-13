@@ -28,6 +28,12 @@ import {
 } from "../components/rack/rackTypes";
 import { useBarcodeScanner } from "./useBarcodeScanner";
 import { useSoundEffects } from "./useSoundEffects";
+import {
+  lightActiveOrder,
+  markProductScanned,
+  blinkWrongScan,
+  clearOrderLeds,
+} from "../services/p2lClient";
 
 function resolveProduct(
   rawCode: string,
@@ -649,14 +655,15 @@ export function useWarehouseState() {
 
       if (matchedOrder) {
         setActiveOrderId(matchedOrder.id);
+        lightActiveOrder(matchedOrder); // Pick-to-Light: trigger LED shelf lighting
         if (!isMuted) playScanSuccess();
         setLastScan({
           id: Math.random().toString(),
           rawCode,
           resultType: "order_switch",
           status: "info",
-          title: "Foglio d'Ordine Caricato",
-          message: `Aperto ordine ${matchedOrder.orderNumber} per ${matchedOrder.customerName} (${matchedOrder.customerCity})`,
+          title: "Foglio d'Ordine Caricato • Pick-to-Light Attivo",
+          message: `Aperto ordine ${matchedOrder.orderNumber} per ${matchedOrder.customerName} (${matchedOrder.customerCity}) • Scaffali illuminati`,
           timestamp: Date.now(),
         });
         return;
@@ -830,6 +837,7 @@ export function useWarehouseState() {
         );
 
         if (!isMuted) playScanError();
+        blinkWrongScan(matchedProduct.p2lTier, matchedProduct.p2lLedIndex);
         setKpis((prev) => ({
           ...prev,
           errorsPrevented: prev.errorsPrevented + 1,
@@ -921,6 +929,7 @@ export function useWarehouseState() {
 
       if (isOrderDone) {
         if (!isMuted) playOrderComplete();
+        clearOrderLeds(activeOrder); // Turn off all shelf LEDs
         setIsLabelModalOpen(true);
         setLastScan({
           id: Math.random().toString(),
@@ -934,6 +943,7 @@ export function useWarehouseState() {
         });
       } else if (isItemDone) {
         if (!isMuted) playItemComplete();
+        markProductScanned(matchedProduct.p2lTier, matchedProduct.p2lLedIndex); // Turn off this product LED
         setLastScan({
           id: Math.random().toString(),
           rawCode: code,

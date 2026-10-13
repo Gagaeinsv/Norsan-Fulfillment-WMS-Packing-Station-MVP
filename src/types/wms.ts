@@ -132,6 +132,9 @@ export interface Order {
   // Italian Address Normalizer (DACH/Selly/Amazon Fix)
   addressDetails?: AddressDetails;
   addressStatus?: "valid" | "warning" | "error";
+  // Multi-collo DHL shipment support
+  packageCount?: number; // e.g. 1, 2, 3...
+  colliWeights?: number[]; // [weightCollo1, weightCollo2, ...]
 }
 
 export interface AddressDetails {

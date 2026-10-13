@@ -1,5 +1,13 @@
-﻿import React, { useEffect } from "react";
-import { X, Printer, CheckCircle, ArrowRight, ShieldAlert } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import {
+  X,
+  Printer,
+  CheckCircle,
+  ArrowRight,
+  ShieldAlert,
+  Package,
+  Layers,
+} from "lucide-react";
 import confetti from "canvas-confetti";
 import { Order } from "../../types/wms";
 
@@ -16,20 +24,36 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
   onClose,
   onCompleteAndNext,
 }) => {
+  const [packageCount, setPackageCount] = useState<number>(order.packageCount || 1);
+  const [activeColloIdx, setActiveColloIdx] = useState<number>(0);
+
   useEffect(() => {
     if (isOpen) {
+      setPackageCount(order.packageCount || 1);
+      setActiveColloIdx(0);
       confetti({
         particleCount: 50,
         spread: 60,
         origin: { y: 0.6 },
       });
     }
-  }, [isOpen]);
+  }, [isOpen, order]);
 
   if (!isOpen) return null;
 
   const totalUnits = order.items.reduce((s, i) => s + i.quantityScanned, 0);
   const isFragile = order.items.some((i) => i.product.fragile);
+
+  const totalWeightKg = (
+    (order.items.reduce(
+      (s, i) => s + i.product.weightGrams * i.quantityScanned,
+      0,
+    ) +
+      180 * packageCount) /
+    1000
+  ).toFixed(2);
+
+  const colloWeightKg = (parseFloat(totalWeightKg) / packageCount).toFixed(2);
 
   const handlePrint = () => {
     window.print();
@@ -60,6 +84,64 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Multi-Collo Configuration Bar */}
+        <div className="bg-blue-50/80 px-6 py-3 border-b border-blue-200 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Package className="w-4 h-4 text-blue-700" />
+            <span className="text-xs font-black text-blue-900">
+              Numero di Scatole / Colli (Multi-box):
+            </span>
+            <div className="flex items-center gap-1 bg-white border border-blue-300 rounded-xl p-0.5 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => {
+                  if (packageCount > 1) {
+                    const newCount = packageCount - 1;
+                    setPackageCount(newCount);
+                    if (activeColloIdx >= newCount) setActiveColloIdx(newCount - 1);
+                  }
+                }}
+                disabled={packageCount <= 1}
+                className="w-7 h-7 flex items-center justify-center font-black text-sm text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-40 transition cursor-pointer"
+              >
+                -
+              </button>
+              <span className="font-mono font-black text-xs px-2.5 text-blue-900">
+                {packageCount} {packageCount === 1 ? "collo" : "colli"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPackageCount(packageCount + 1)}
+                className="w-7 h-7 flex items-center justify-center font-black text-sm text-slate-700 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {packageCount > 1 && (
+            <div className="flex items-center gap-1.5 text-xs font-bold text-blue-800">
+              <Layers className="w-3.5 h-3.5" />
+              <span>Anteprima Collo:</span>
+              <div className="flex gap-1">
+                {Array.from({ length: packageCount }).map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveColloIdx(idx)}
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition ${
+                      activeColloIdx === idx
+                        ? "bg-blue-600 text-white border-blue-700"
+                        : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                    }`}
+                  >
+                    {idx + 1}/{packageCount}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Printable DHL Thermal Label Card */}
@@ -96,19 +178,12 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
               </div>
               <div className="text-right">
                 <div className="text-[9px] uppercase font-bold text-gray-600">
-                  Pezzi / Peso
+                  Collo / Peso
                 </div>
                 <div className="text-sm font-bold font-mono">
-                  1 collo •{" "}
-                  {(
-                    (order.items.reduce(
-                      (s, i) => s + i.product.weightGrams * i.quantityScanned,
-                      0,
-                    ) +
-                      180) /
-                    1000
-                  ).toFixed(2)}{" "}
-                  kg
+                  {packageCount > 1
+                    ? `Collo ${activeColloIdx + 1} di ${packageCount} • ${colloWeightKg} kg`
+                    : `1 collo • ${totalWeightKg} kg`}
                 </div>
               </div>
             </div>
@@ -140,11 +215,19 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
                 <div className="font-bold text-sm text-black mt-0.5">
                   {order.customerName}
                 </div>
-                <div className="text-xs font-semibold text-gray-800 leading-tight mt-0.5">
-                  {order.customerAddress}
+                <div className="text-xs text-gray-800 leading-tight mt-0.5">
+                  {order.addressDetails?.street
+                    ? `${order.addressDetails.street} ${order.addressDetails.houseNumber || ""}`
+                    : order.customerAddress}
+                  {order.addressDetails?.addressAddition && (
+                    <div className="font-semibold text-gray-700">
+                      {order.addressDetails.addressAddition}
+                    </div>
+                  )}
                   <br />
                   {order.customerZip} {order.customerCity} (
-                  {order.customerProvince})<br />
+                  {order.customerProvince})
+                  <br />
                   {order.customerCountry === "IT"
                     ? "ITALIA"
                     : order.customerCountry}
@@ -154,11 +237,18 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
 
             {/* Barcode & Tracking Number */}
             <div className="mt-3 text-center space-y-1">
-              <div className="text-[9px] font-bold text-gray-500 uppercase">
-                Waybill / Tracking Number
+              <div className="text-[9px] font-bold text-gray-500 uppercase flex items-center justify-center gap-2">
+                <span>Waybill / Tracking Number</span>
+                {packageCount > 1 && (
+                  <span className="bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.2 rounded">
+                    PIECE {activeColloIdx + 1}/{packageCount}
+                  </span>
+                )}
               </div>
               <div className="font-mono text-sm font-black tracking-widest bg-gray-100 py-1 rounded">
-                {order.trackingNumber}
+                {packageCount > 1
+                  ? `${order.trackingNumber || "JJD0000302488"}-${String(activeColloIdx + 1).padStart(2, "0")}`
+                  : order.trackingNumber || "JJD0000302488"}
               </div>
 
               {/* Realistic CSS Barcode Visual */}
@@ -192,6 +282,7 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
               </div>
               <div className="font-mono">
                 Rif. Ordine: {order.orderNumber} ({totalUnits} pz)
+                {packageCount > 1 && ` [Collo ${activeColloIdx + 1}/${packageCount}]`}
               </div>
             </div>
           </div>
@@ -201,15 +292,19 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
         <div className="p-4 bg-white border-t border-slate-200 flex items-center justify-between gap-4">
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs border border-slate-300 transition active:scale-95 shadow-xs"
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs border border-slate-300 transition active:scale-95 shadow-xs cursor-pointer"
           >
-            <Printer className="w-4 h-4 text-norsan-700" />
-            <span>Stampa Etichetta Termica (A6)</span>
+            <Printer className="w-4 h-4 text-blue-700" />
+            <span>
+              {packageCount > 1
+                ? `Stampa Tutte le ${packageCount} Etichette DHL`
+                : "Stampa Etichetta Termica (A6)"}
+            </span>
           </button>
 
           <button
             onClick={onCompleteAndNext}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm transition active:scale-95 shadow-md"
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm transition active:scale-95 shadow-md cursor-pointer"
           >
             <span>Conferma & Prossimo Ordine</span>
             <ArrowRight className="w-4 h-4" />

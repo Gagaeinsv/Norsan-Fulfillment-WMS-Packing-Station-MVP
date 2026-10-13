@@ -20,6 +20,7 @@ import {
   Trash2,
   AlertTriangle,
   MapPin,
+  FileText,
 } from "lucide-react";
 import {
   WarehouseStation,
@@ -30,6 +31,10 @@ import {
 } from "../../types/wms";
 import { SlottingManager, WarehouseSlotData } from "./SlottingManager";
 import { AddressFixModal } from "../shared/AddressFixModal";
+import {
+  printAmazonPackingSlip,
+  printBatchAmazonPackingSlips,
+} from "../../services/amazonSlipPrinter";
 
 interface SupervisorDashboardProps {
   stations: WarehouseStation[];
@@ -554,7 +559,15 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 Verifica automatica formato indirizzi IT per etichette DHL / Amazon FBM (Via + Civico + Piano)
               </p>
             </div>
-            <div className="flex items-center gap-2 text-xs font-bold">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+              <button
+                onClick={() => printBatchAmazonPackingSlips(orders)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition active:scale-95 shadow-xs cursor-pointer"
+                title="Stampa tutte le distinte di prelievo / bolle degli ordini per il magazzino"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Stampa Tutte le Bolle ({orders.length})</span>
+              </button>
               <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300">
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                 <span>
@@ -638,30 +651,39 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {hasAddressWarning ? (
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => {
-                          setSelectedAddressOrder(o);
-                          setIsAddressModalOpen(true);
-                        }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-black text-xs transition active:scale-95 shadow-xs cursor-pointer animate-pulse"
+                        onClick={() => printAmazonPackingSlip(o)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition active:scale-95 shadow-xs cursor-pointer"
+                        title="Stampa distinta di prelievo / bolla d'ordine in formato A4"
                       >
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        <span>Risolvi Indirizzo</span>
+                        <FileText className="w-3.5 h-3.5 text-blue-400" />
+                        <span>Stampa Bolla</span>
                       </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          setSelectedAddressOrder(o);
-                          setIsAddressModalOpen(true);
-                        }}
-                        className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px] border border-slate-300 transition cursor-pointer"
-                      >
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Dettagli Indirizzo</span>
-                      </button>
-                    )}
+
+                      {hasAddressWarning ? (
+                        <button
+                          onClick={() => {
+                            setSelectedAddressOrder(o);
+                            setIsAddressModalOpen(true);
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-black text-xs transition active:scale-95 shadow-xs cursor-pointer animate-pulse"
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>Risolvi Indirizzo</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setSelectedAddressOrder(o);
+                            setIsAddressModalOpen(true);
+                          }}
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px] border border-slate-300 transition cursor-pointer"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Dettagli Indirizzo</span>
+                        </button>
+                      )}
 
                     <span
                       className={`text-[10px] font-black uppercase px-2 py-1 rounded border ${
