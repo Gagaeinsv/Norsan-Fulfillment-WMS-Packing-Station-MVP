@@ -21,6 +21,9 @@ import {
   AlertTriangle,
   MapPin,
   FileText,
+  RefreshCw,
+  Key,
+  Settings,
 } from "lucide-react";
 import {
   WarehouseStation,
@@ -101,6 +104,88 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     null
   );
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+
+  // Selly ERP Auto-Sync State
+  const [sellyApiKey, setSellyApiKey] = useState("");
+  const [sellyApiUrl, setSellyApiUrl] = useState("https://api.sellyerp.com/v1");
+  const [sellyInterval, setSellyInterval] = useState(5);
+  const [sellyAutoSyncEnabled, setSellyAutoSyncEnabled] = useState(false);
+  const [isSellySyncing, setIsSellySyncing] = useState(false);
+  const [sellySyncStatus, setSellySyncStatus] = useState<"idle" | "ok" | "error">("idle");
+  const [sellySyncMessage, setSellySyncMessage] = useState("In attesa di API Key");
+  const [isSellyConfigModalOpen, setIsSellyConfigModalOpen] = useState(false);
+
+  // Fetch Selly config on initial load
+  React.useEffect(() => {
+    fetch("/api/selly/config")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data) {
+          if (data.apiKey) setSellyApiKey(data.apiKey);
+          if (data.apiUrl) setSellyApiUrl(data.apiUrl);
+          if (data.syncIntervalMinutes) setSellyInterval(data.syncIntervalMinutes);
+          if (data.isEnabled !== undefined) setSellyAutoSyncEnabled(data.isEnabled);
+          if (data.lastSyncStatus) setSellySyncStatus(data.lastSyncStatus);
+          if (data.lastSyncMessage) setSellySyncMessage(data.lastSyncMessage);
+        }
+      })
+      .catch(() => {
+        // Backend not reachable or running in mock standalone mode
+      });
+  }, []);
+
+  const handleSaveSellyConfig = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    try {
+      const res = await fetch("/api/selly/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          apiKey: sellyApiKey.trim(),
+          apiUrl: sellyApiUrl.trim(),
+          syncIntervalMinutes: sellyInterval,
+          isEnabled: sellyAutoSyncEnabled,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsSellyConfigModalOpen(false);
+        setSellySyncStatus(data.config.isEnabled && data.config.apiKey ? "ok" : "idle");
+        setSellySyncMessage(
+          data.config.apiKey
+            ? `Connessione Selly salvata (polling ogni ${data.config.syncIntervalMinutes} min)`
+            : "In attesa di API Key"
+        );
+      }
+    } catch (err) {
+      console.warn("Could not save Selly config to backend:", err);
+      setIsSellyConfigModalOpen(false);
+    }
+  };
+
+  const handleSyncSellyNow = async () => {
+    setIsSellySyncing(true);
+    setSellySyncMessage("Sincronizzazione in corso con Selly ERP...");
+    try {
+      const res = await fetch("/api/selly/sync-now", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSellySyncStatus("ok");
+        setSellySyncMessage(data.message || `Sincronizzazione completata: ${data.count} ordini`);
+      } else {
+        setSellySyncStatus("idle");
+        setSellySyncMessage(data.message || "Nessun ordine o API Key mancante");
+      }
+    } catch (err) {
+      setSellySyncStatus("error");
+      setSellySyncMessage("Errore di rete o server WMS locale non avviato");
+    } finally {
+      setIsSellySyncing(false);
+    }
+  };
 
   // Modals for Operator Management & Editing
   const [isAddOperatorOpen, setIsAddOperatorOpen] = useState(false);
@@ -582,6 +667,58 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   Da verificare
                 </span>
               </span>
+            </div>
+          </div>
+
+          {/* Selly ERP Direct Sync Control Banner */}
+          <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 border border-slate-700">
+            <div className="flex items-center gap-3">
+              <div className={`p-2.5 rounded-xl flex items-center justify-center ${
+                sellySyncStatus === "ok"
+                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                  : sellySyncStatus === "error"
+                  ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                  : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+              }`}>
+                <RefreshCw className={`w-5 h-5 ${isSellySyncing ? "animate-spin" : ""}`} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm">Selly ERP Auto-Sync</span>
+                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                    sellyAutoSyncEnabled && sellyApiKey
+                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                      : "bg-slate-700 text-slate-300 border border-slate-600"
+                  }`}>
+                    {sellyAutoSyncEnabled && sellyApiKey ? `ATTIVO (OGNI ${sellyInterval}M)` : "CONFIGURAZIONE MANUALE"}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  {sellySyncMessage}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSyncSellyNow}
+                disabled={isSellySyncing}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-black rounded-xl transition active:scale-95 shadow cursor-pointer"
+                title="Esegui sincronizzazione immediata da Selly ERP senza attendere il timer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSellySyncing ? "animate-spin" : ""}`} />
+                <span>{isSellySyncing ? "Sincronizzazione..." : "Sincronizza Ora"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsSellyConfigModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-bold rounded-xl transition border border-slate-600 cursor-pointer"
+                title="Configura API Key Selly ERP"
+              >
+                <Settings className="w-3.5 h-3.5 text-slate-300" />
+                <span>Impostazioni API</span>
+              </button>
             </div>
           </div>
 
@@ -1667,6 +1804,137 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
             }
           }}
         />
+      )}
+
+      {/* Modal 6: Selly ERP Integration & Auto-Sync Settings */}
+      {isSellyConfigModalOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border-2 border-slate-300 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">
+                    Integrazione Selly ERP
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Sincronizzazione automatica diretta senza file intermedi
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSellyConfigModalOpen(false)}
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveSellyConfig} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  API Key / Token Selly ERP
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={sellyApiKey}
+                    onChange={(e) => setSellyApiKey(e.target.value)}
+                    placeholder="Incolla qui la chiave fornita dalla direzione..."
+                    className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 pr-10"
+                  />
+                  <div className="absolute right-3 top-2.5 text-slate-400">
+                    <Key className="w-4 h-4" />
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  💡 La chiave API viene fornita dal manager/direttore nel pannello amministrativo di Selly.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  URL Endpoint Selly
+                </label>
+                <input
+                  type="text"
+                  value={sellyApiUrl}
+                  onChange={(e) => setSellyApiUrl(e.target.value)}
+                  placeholder="https://api.sellyerp.com/v1"
+                  className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Intervallo Poll (minuti)
+                  </label>
+                  <select
+                    value={sellyInterval}
+                    onChange={(e) => setSellyInterval(Number(e.target.value))}
+                    className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  >
+                    <option value={2}>Ogni 2 minuti</option>
+                    <option value={5}>Ogni 5 minuti (Consigliato)</option>
+                    <option value={10}>Ogni 10 minuti</option>
+                    <option value={15}>Ogni 15 minuti</option>
+                    <option value={30}>Ogni 30 minuti</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col justify-end">
+                  <label className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={sellyAutoSyncEnabled}
+                      onChange={(e) => setSellyAutoSyncEnabled(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                    />
+                    <span className="text-xs font-bold text-slate-800">
+                      Auto-Sync Attivo
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-[11px] text-blue-900 space-y-1">
+                <div className="font-bold flex items-center gap-1">
+                  <span>⚡ Flusso Automatico WMS:</span>
+                </div>
+                <p>
+                  1. Recupera gli ordini con stato "In lavorazione" da Selly.
+                </p>
+                <p>
+                  2. Filtra automaticamente le righe non logistiche (es. servizio contrassegno <code>3000-001</code>).
+                </p>
+                <p>
+                  3. Normalizza gli indirizzi italiani per l'etichettatura DHL automatica.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsSellyConfigModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow transition active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Salva Configurazione</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

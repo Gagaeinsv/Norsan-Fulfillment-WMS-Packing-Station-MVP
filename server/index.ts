@@ -230,6 +230,31 @@ app.post("/api/p2l/clear", async (req, res) => {
   res.json({ success: true });
 });
 
+// --- 4. SELLY DIRECT SYNC DAEMON API ---
+
+import {
+  getSellySyncConfig,
+  updateSellySyncConfig,
+  fetchNewOrdersFromSelly,
+} from "./services/sellySyncService";
+
+// GET /api/selly/config — Get current sync settings
+app.get("/api/selly/config", (_req, res) => {
+  res.json(getSellySyncConfig());
+});
+
+// POST /api/selly/config — Update API key, URL or auto-sync interval
+app.post("/api/selly/config", (req, res) => {
+  const updated = updateSellySyncConfig(req.body);
+  res.json({ success: true, config: updated });
+});
+
+// POST /api/selly/sync-now — Trigger manual instant sync from Selly ERP
+app.post("/api/selly/sync-now", async (_req, res) => {
+  const result = await fetchNewOrdersFromSelly();
+  res.json(result);
+});
+
 if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {
     console.log(`⚡ WMS Backend Server running on http://localhost:${PORT}`);
