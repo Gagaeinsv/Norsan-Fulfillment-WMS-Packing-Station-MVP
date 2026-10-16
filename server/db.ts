@@ -114,11 +114,7 @@ export function initDatabase() {
     .prepare("SELECT COUNT(*) as count FROM warehouse_slots")
     .get() as { count: number };
 
-  if (countSlots.count < 60) {
-    db.exec("PRAGMA foreign_keys = OFF;");
-    db.prepare("DELETE FROM product_slotting").run();
-    db.prepare("DELETE FROM warehouse_slots").run();
-    db.exec("PRAGMA foreign_keys = ON;");
+  if (countSlots.count === 0) {
     const insertSlot = db.prepare(
       "INSERT INTO warehouse_slots (slot_code, side, tier, position_index, description) VALUES (?, ?, ?, ?, ?)",
     );

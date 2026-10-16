@@ -1,4 +1,6 @@
 import { parseItalianAddress } from "../../src/services/italianAddressParser";
+import { NORSAN_PRODUCTS } from "../../src/data/norsanProducts";
+import { matchCatalogProduct } from "../../src/services/sellyCsvImporter";
 
 export interface SellyConfig {
   apiUrl: string;
@@ -97,15 +99,49 @@ export async function fetchNewOrdersFromSelly(): Promise<{
         raw.shipping_address || raw.address || ""
       );
 
-      // Filter out non-physical service items (e.g. 3000-001 Spedizione DHL €0.00)
-      const physicalItems = (raw.items || []).filter((item: any) => {
-        const sku = String(item.sku || "").toUpperCase();
-        return (
-          !sku.startsWith("3000-") &&
-          !sku.includes("SPEDIZIONE") &&
-          !sku.includes("SHIPPING")
-        );
-      });
+      // Filter out non-physical service items (e.g. 3000-001 Spedizione DHL €0.00) and map to OrderItem
+      const physicalItems = (raw.items || [])
+        .filter((item: any) => {
+          const sku = String(item.sku || "").toUpperCase();
+          return (
+            !sku.startsWith("3000-") &&
+            !sku.includes("SPEDIZIONE") &&
+            !sku.includes("SHIPPING")
+          );
+        })
+        .map((item: any, idx: number) => {
+          const rawSku = String(item.sku || "").trim();
+          const rawDesc = String(item.name || item.description || "").trim();
+          const qty = Math.max(1, Number(item.quantity || 1));
+          const matchedProd =
+            matchCatalogProduct(rawSku, rawDesc, NORSAN_PRODUCTS) || {
+              id: `selly-${rawSku || idx}`,
+              sku: rawSku || `UNBOUND-${idx + 1}`,
+              name: rawDesc || rawSku || "Articolo Selly ERP",
+              italianName: rawDesc || rawSku || "Articolo Selly ERP",
+              ean: rawSku || `UNBOUND-${idx + 1}`,
+              category: "oil" as const,
+              brand: rawSku.toUpperCase().includes("ZRE") ? "ZREEN" : "NORSAN",
+              volume: "200 ml",
+              packageType: "glass_bottle" as const,
+              shelfLocation: "N-TEMP",
+              shelfCoordinate: "N-TEMP",
+              rackSide: "S" as const,
+              tier: 2 as const,
+              weightGrams: 420,
+              imageUrl:
+                "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=80",
+              barcodeText: rawSku || `UNBOUND-${idx + 1}`,
+              fragile: true,
+              instructions: "Articolo non associato a EAN standard.",
+            };
+          return {
+            product: matchedProd,
+            quantityRequired: qty,
+            quantityScanned: 0,
+            status: "pending" as const,
+          };
+        });
 
       return {
         id: `selly-${raw.id || Date.now()}-${Math.floor(Math.random() * 1000)}`,

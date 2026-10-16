@@ -1,7 +1,8 @@
 {
-  "name": "norsan",
+  "name": "norsan-fulfillment-wms",
+  "description": "NORSAN & ZREEN Fulfillment WMS Packing Station & Supervisor Control Tower (Bolzano Hub) — Poka-Yoke Barcode Verification, 5-Tier Slotting, Amazon FBM & Selly ERP Integration",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",

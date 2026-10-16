@@ -39,6 +39,7 @@ import {
   printAmazonPackingSlip,
   printBatchAmazonPackingSlips,
 } from "../../services/amazonSlipPrinter";
+import { getCode128Bars } from "../../services/barcodeGenerator";
 
 interface SupervisorDashboardProps {
   stations: WarehouseStation[];
@@ -106,14 +107,29 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   );
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
-  // Amazon SP-API Integration State
-  const [amazonSellerId, setAmazonSellerId] = useState("");
-  const [amazonClientId, setAmazonClientId] = useState("");
-  const [amazonClientSecret, setAmazonClientSecret] = useState("");
-  const [amazonRefreshToken, setAmazonRefreshToken] = useState("");
+  // Amazon SP-API Integration State (persisted to localStorage)
+  const savedAmazonConfig = (() => {
+    try {
+      const raw = localStorage.getItem("wms_amazon_sp_config");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const [amazonSellerId, setAmazonSellerId] = useState(savedAmazonConfig?.sellerId || "");
+  const [amazonClientId, setAmazonClientId] = useState(savedAmazonConfig?.clientId || "");
+  const [amazonClientSecret, setAmazonClientSecret] = useState(savedAmazonConfig?.clientSecret || "");
+  const [amazonRefreshToken, setAmazonRefreshToken] = useState(savedAmazonConfig?.refreshToken || "");
   const [isAmazonSyncing, setIsAmazonSyncing] = useState(false);
-  const [amazonSyncStatus, setAmazonSyncStatus] = useState<"idle" | "ok" | "error">("idle");
-  const [amazonSyncMessage, setAmazonSyncMessage] = useState("In attesa credenziali SP-API");
+  const [amazonSyncStatus, setAmazonSyncStatus] = useState<"idle" | "ok" | "error">(
+    savedAmazonConfig?.sellerId ? "ok" : "idle"
+  );
+  const [amazonSyncMessage, setAmazonSyncMessage] = useState(
+    savedAmazonConfig?.sellerId
+      ? "Credenziali SP-API configurate"
+      : "Modalità Bolla A4 e CSV/PDF attiva"
+  );
   const [isAmazonConfigModalOpen, setIsAmazonConfigModalOpen] = useState(false);
 
   // Selly ERP Auto-Sync State
@@ -126,9 +142,14 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   const [sellySyncMessage, setSellySyncMessage] = useState("In attesa di API Key");
   const [isSellyConfigModalOpen, setIsSellyConfigModalOpen] = useState(false);
 
+  const sellyBackendBase =
+    typeof window !== "undefined"
+      ? `http://${window.location.hostname}:3001/api`
+      : "http://localhost:3001/api";
+
   // Fetch Selly config on initial load
   React.useEffect(() => {
-    fetch("/api/selly/config")
+    fetch(`${sellyBackendBase}/selly/config`)
       .then((res) => res.json())
       .then((data) => {
         if (data) {
@@ -143,12 +164,12 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
       .catch(() => {
         // Backend not reachable or running in mock standalone mode
       });
-  }, []);
+  }, [sellyBackendBase]);
 
   const handleSaveSellyConfig = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     try {
-      const res = await fetch("/api/selly/config", {
+      const res = await fetch(`${sellyBackendBase}/selly/config`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -178,7 +199,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     setIsSellySyncing(true);
     setSellySyncMessage("Sincronizzazione in corso con Selly ERP...");
     try {
-      const res = await fetch("/api/selly/sync-now", {
+      const res = await fetch(`${sellyBackendBase}/selly/sync-now`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
@@ -943,7 +964,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                       ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
                       : "bg-amber-950/60 text-amber-300 border border-amber-700"
                   }`}>
-                    {amazonSellerId ? "COLLEGATO (SP-API)" : "SOSTITUZIONE PROCLADKA ATTIVA"}
+                    {amazonSellerId ? "COLLEGATO (SP-API)" : "INTEGRAZIONE FBM DIRETTA"}
                   </span>
                 </div>
                 <p className="text-xs text-amber-200/80 mt-0.5">
@@ -1740,23 +1761,35 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 {badgeOperator.shift}
               </div>
 
-              {/* High Resolution Code 128 Barcode Simulation */}
+              {/* Genuine Code 128-B Barcode */}
               <div className="w-full mt-4 bg-white text-slate-950 rounded-xl p-3 shadow-inner flex flex-col items-center">
-                {/* SVG Barcode Bars */}
-                <div className="w-full h-12 flex items-center justify-between px-1">
-                  {[
-                    4, 2, 6, 1, 3, 5, 2, 4, 1, 6, 3, 2, 5, 1, 4, 2, 6, 3, 1, 5,
-                    2, 4, 6, 1, 3, 5, 2, 4, 1, 6, 3, 2, 5, 1, 4, 2,
-                  ].map((w, i) => (
-                    <div
-                      key={i}
-                      className="bg-black h-full"
-                      style={{ width: `${w * 1.5}px` }}
-                    />
-                  ))}
-                </div>
+                {(() => {
+                  const { bars, totalModules } = getCode128Bars(
+                    badgeOperator.operatorCode,
+                  );
+                  return (
+                    <svg
+                      viewBox={`0 0 ${totalModules} 48`}
+                      className="w-full h-12 max-w-[230px]"
+                      preserveAspectRatio="none"
+                    >
+                      <rect width={totalModules} height={48} fill="#ffffff" />
+                      <g fill="#000000">
+                        {bars.map((bar, i) => (
+                          <rect
+                            key={i}
+                            x={bar.x}
+                            y={2}
+                            width={bar.width}
+                            height={44}
+                          />
+                        ))}
+                      </g>
+                    </svg>
+                  );
+                })()}
                 <span className="font-mono text-sm font-black tracking-widest text-slate-900 mt-1">
-                  *{badgeOperator.operatorCode}*
+                  {badgeOperator.operatorCode}
                 </span>
               </div>
             </div>
@@ -2235,6 +2268,17 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
             <form
               onSubmit={(e) => {
                 e.preventDefault();
+                try {
+                  localStorage.setItem(
+                    "wms_amazon_sp_config",
+                    JSON.stringify({
+                      sellerId: amazonSellerId.trim(),
+                      clientId: amazonClientId.trim(),
+                      clientSecret: amazonClientSecret.trim(),
+                      refreshToken: amazonRefreshToken.trim(),
+                    }),
+                  );
+                } catch {}
                 setIsAmazonConfigModalOpen(false);
                 setAmazonSyncStatus("ok");
                 setAmazonSyncMessage("Credenziali SP-API salvate con successo");

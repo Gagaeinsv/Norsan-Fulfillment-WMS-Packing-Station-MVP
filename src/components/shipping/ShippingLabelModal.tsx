@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Order } from "../../types/wms";
+import { getCode128Bars } from "../../services/barcodeGenerator";
 
 interface ShippingLabelModalProps {
   order: Order;
@@ -251,22 +252,35 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
                   : order.trackingNumber || "JJD0000302488"}
               </div>
 
-              {/* Realistic CSS Barcode Visual */}
-              <div className="py-2 flex items-center justify-center">
-                <div className="h-14 w-full bg-slate-900 flex items-center justify-around px-2 rounded-sm overflow-hidden">
-                  {Array.from({ length: 48 }).map((_, idx) => (
-                    <div
-                      key={idx}
-                      className={`h-full bg-white ${
-                        idx % 3 === 0
-                          ? "w-1.5"
-                          : idx % 2 === 0
-                            ? "w-0.5"
-                            : "w-1"
-                      }`}
-                    />
-                  ))}
-                </div>
+              {/* Genuine Code 128-B Barcode Visual */}
+              <div className="py-2 flex items-center justify-center bg-white rounded-sm">
+                {(() => {
+                  const trackingText =
+                    packageCount > 1
+                      ? `${order.trackingNumber || "JJD0000302488"}-${String(activeColloIdx + 1).padStart(2, "0")}`
+                      : order.trackingNumber || "JJD0000302488";
+                  const { bars, totalModules } = getCode128Bars(trackingText);
+                  return (
+                    <svg
+                      viewBox={`0 0 ${totalModules} 52`}
+                      className="w-full h-14 max-w-[340px]"
+                      preserveAspectRatio="none"
+                    >
+                      <rect width={totalModules} height={52} fill="#ffffff" />
+                      <g fill="#000000">
+                        {bars.map((bar, idx) => (
+                          <rect
+                            key={idx}
+                            x={bar.x}
+                            y={2}
+                            width={bar.width}
+                            height={48}
+                          />
+                        ))}
+                      </g>
+                    </svg>
+                  );
+                })()}
               </div>
             </div>
 

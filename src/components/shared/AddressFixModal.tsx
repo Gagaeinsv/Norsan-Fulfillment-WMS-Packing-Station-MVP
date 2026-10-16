@@ -86,8 +86,8 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
 
   // Auto-normalize trigger
   const handleAutoNormalize = () => {
-    // If user pasted a full multi-line block
-    if (rawAddressText.includes("\n") && (rawAddressText.includes("Pontassieve") || /\d{5}/.test(rawAddressText))) {
+    // If user pasted a full multi-line block containing a 5-digit CAP
+    if (rawAddressText.includes("\n") && /\b\d{5}\b/.test(rawAddressText)) {
       const fullBlock = parseFullAddressBlock(rawAddressText);
       if (fullBlock) {
         if (fullBlock.customerName) setCustomerName(fullBlock.customerName);

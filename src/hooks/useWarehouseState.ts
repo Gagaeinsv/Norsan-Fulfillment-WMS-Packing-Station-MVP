@@ -531,35 +531,57 @@ export function useWarehouseState() {
     if (!isMuted) playScanSuccess();
   }, [activeOrderId, isMuted, playScanSuccess]);
 
-  // Fast Confirmation for Paper-based Picking (No individual item barcode scanning)
+  // Fast Confirmation for Paper-based Picking (validates product items from paper slip while preserving Poka-Yoke for flyers/gifts/B2B docs)
   const handleConfirmAllItems = useCallback(() => {
+    if (!activeOrder || activeOrder.status === "packed") return;
+
     setOrders((prev) =>
       prev.map((o) => {
-        if (o.id === activeOrderId) {
+        if (o.id === activeOrder.id) {
           const completedItems = o.items.map((it) => ({
             ...it,
             quantityScanned: it.quantityRequired,
             status: "completed" as const,
           }));
-          const completedFlyers = o.marketingFlyers.map((f) => ({
-            ...f,
-            isIncluded: true,
-          }));
           return {
             ...o,
             items: completedItems,
-            marketingFlyers: completedFlyers,
-            giftConfirmed: true,
-            physicalDocumentConfirmed: true,
           };
         }
         return o;
       }),
     );
     clearOrderLeds(activeOrder); // Turn off Pick-to-Light LEDs
-    if (!isMuted) playOrderComplete();
-    setIsLabelModalOpen(true);
-  }, [activeOrderId, activeOrder, isMuted, playOrderComplete]);
+
+    const flyersOk = activeOrder.marketingFlyers.every((f) => f.isIncluded);
+    const giftOk =
+      !activeOrder.retentionGift ||
+      activeOrder.retentionGift === "none" ||
+      !!activeOrder.giftConfirmed;
+    const docOk =
+      !activeOrder.requiresPhysicalDocument ||
+      !!activeOrder.physicalDocumentConfirmed;
+
+    if (flyersOk && giftOk && docOk) {
+      if (!isMuted) playOrderComplete();
+      setIsLabelModalOpen(true);
+    } else {
+      if (!isMuted) playItemComplete();
+      const missingParts: string[] = [];
+      if (!flyersOk) missingParts.push("Volantino");
+      if (!giftOk) missingParts.push("Omaggio Fedeltà");
+      if (!docOk) missingParts.push("Fattura/DDT Cartaceo");
+      setLastScan({
+        id: Math.random().toString(),
+        rawCode: activeOrder.orderNumber,
+        resultType: "product_match",
+        status: "info",
+        title: "Articoli Confermati da Bolla ✓",
+        message: `Prodotti validati. Conferma ora: ${missingParts.join(", ")} per sbloccare la stampa etichetta.`,
+        timestamp: Date.now(),
+      });
+    }
+  }, [activeOrder, isMuted, playOrderComplete, playItemComplete]);
 
   // Simulate Incoming Web Order from norsan.it
   const handleSimulateIncomingWebOrder = useCallback(() => {
@@ -661,6 +683,12 @@ export function useWarehouseState() {
       );
       if (matchedOperator) {
         setCurrentOperator(matchedOperator);
+        if (
+          matchedOperator.role !== "team_lead" &&
+          matchedOperator.role !== "supervisor"
+        ) {
+          setActiveView("packing");
+        }
         setIsTerminalLocked(false);
         setIsSupervisorPinModalOpen(false);
         if (!isMuted) playScanSuccess();
@@ -685,6 +713,19 @@ export function useWarehouseState() {
 
       if (matchedOrder) {
         setActiveOrderId(matchedOrder.id);
+        if (matchedOrder.status === "packed") {
+          if (!isMuted) playScanError();
+          setLastScan({
+            id: Math.random().toString(),
+            rawCode,
+            resultType: "order_switch",
+            status: "warning",
+            title: "Attenzione: Ordine Già Imballato",
+            message: `L'ordine ${matchedOrder.orderNumber} per ${matchedOrder.customerName} risulta già completato.`,
+            timestamp: Date.now(),
+          });
+          return;
+        }
         lightActiveOrder(matchedOrder); // Pick-to-Light: trigger LED shelf lighting
         if (!isMuted) playScanSuccess();
         setLastScan({
@@ -696,6 +737,11 @@ export function useWarehouseState() {
           message: `Aperto ordine ${matchedOrder.orderNumber} per ${matchedOrder.customerName} (${matchedOrder.customerCity}) • Scaffali illuminati`,
           timestamp: Date.now(),
         });
+        return;
+      }
+
+      if (!activeOrder) {
+        if (!isMuted) playScanError();
         return;
       }
 
@@ -1017,19 +1063,34 @@ export function useWarehouseState() {
     ],
   );
 
-  // Hook for global keyboard scanner interception
+  // Hook for global keyboard scanner interception (paused when blocking modals are open)
+  const isAnyModalBlockingScanner =
+    isLabelModalOpen ||
+    isIssueModalOpen ||
+    isOperatorAuthOpen ||
+    isSupervisorPinModalOpen ||
+    isSellyModalOpen ||
+    isBindModalOpen ||
+    isRackGuideOpen;
+
   const { triggerManualScan } = useBarcodeScanner({
     onScan: handleBarcodeScanned,
+    disabled: isAnyModalBlockingScanner,
   });
 
   // Finish order and advance to next
   const handleCompleteAndNext = () => {
     setIsLabelModalOpen(false);
+    if (!activeOrder || activeOrder.status === "packed") {
+      return;
+    }
+
+    const completedOrderId = activeOrder.id;
 
     // Mark current order as packed
     setOrders((prev) =>
       prev.map((o) => {
-        if (o.id === activeOrderId) {
+        if (o.id === completedOrderId) {
           return { ...o, status: "packed", packingCompletedAt: Date.now() };
         }
         return o;
@@ -1055,7 +1116,7 @@ export function useWarehouseState() {
 
     // Find next ready order
     const nextOrder = orders.find(
-      (o) => o.id !== activeOrderId && o.status !== "packed",
+      (o) => o.id !== completedOrderId && o.status !== "packed",
     );
     if (nextOrder) {
       setActiveOrderId(nextOrder.id);
@@ -1233,7 +1294,7 @@ export function useWarehouseState() {
   const handleSubmitIssue = (type: string, note: string) => {
     const newIssue: IssueTicket = {
       id: `iss-${Date.now()}`,
-      orderNumber: activeOrder.orderNumber,
+      orderNumber: activeOrder?.orderNumber || "N/A",
       stationId: currentOperator.stationId,
       operatorName: currentOperator.name,
       type,
@@ -1411,6 +1472,6 @@ export function useWarehouseState() {
     triggerManualScan,
     leadOperators,
     isTeamLead,
-    activeOrder: orders.find((o) => o.id === activeOrderId),
+    activeOrder,
   };
 }

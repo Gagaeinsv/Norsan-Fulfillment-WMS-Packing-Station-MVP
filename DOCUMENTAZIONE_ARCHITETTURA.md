@@ -1,76 +1,64 @@
-# Architettura del Progetto - Norsan & ZREEN Fulfillment WMS (MVP)
+# Architettura del Progetto - NORSAN & ZREEN Fulfillment WMS (Bolzano Hub)
 
-Questo documento descrive la struttura completa della codebase, le dipendenze tra i moduli e il funzionamento interno dell'applicazione (WMS - Warehouse Management System).
+Questo documento descrive la struttura completa della codebase, le dipendenze tra i moduli e il funzionamento interno dell'applicazione **NORSAN & ZREEN Fulfillment WMS**.
+
+---
 
 ## 📂 Struttura delle Directory
 
-### `/src` (Frontend React)
-Il cuore dell'applicazione React (Vite + TypeScript + Tailwind CSS). L'architettura è modulare e basata sul principio di Single Responsibility.
+### `/src` (Frontend React 19 + TypeScript + Tailwind CSS v4)
+L'architettura è modulare e basata sul principio di Single Responsibility:
 
 #### `src/components/` (Livello UI / Presentazione)
-Tutti i componenti visivi, divisi per dominio di business:
-*   **`/auth`**: Componenti per l'autenticazione (`OperatorAuthModal.tsx`, `TerminalLockScreen.tsx`, `SupervisorPinModal.tsx`). Gestisce il blocco dello schermo e i permessi.
-*   **`/packing`**: Il cuore operativo (`ActivePackingView.tsx`, `PackingItemCard.tsx`, `PackingBanners.tsx`). Gestisce la visualizzazione dell'ordine attivo, lo stato di scansione e i feedback visivi (es. "Scatola completata").
-*   **`/queue`**: Gestione della coda ordini (`OrderQueue.tsx`). Mostra gli ordini in attesa e il calcolo del Takt time.
-*   **`/rack`**: Gestione visiva dello scaffale e Pick-to-Light (`StationRackGuide.tsx`, `RackSlotCell.tsx`, `RackSlotEditPanel.tsx`). Supporta la topologia reale a 5 livelli (A, B, C, D, E) dell'Hub di Bolzano e i tavoli speculari (Norsan/Zreen invertiti).
-*   **`/supervisor`**: Pannello di controllo del Team Lead (`SupervisorDashboard.tsx` e la sottocartella `/tabs`). Permette la gestione dello Slotting (5S), KPI Lean, risoluzione anomalie e gestione operatori.
-*   **`/layout`**: Componenti strutturali della pagina (`Header.tsx`, `ScannerStatusBanner.tsx`).
-*   **`/dev`**: Strumenti di test e debug (`BarcodeSimulator.tsx`, `IssueReportModal.tsx`).
-*   **`/shipping`**: Flusso di fine imballaggio (`ShippingLabelModal.tsx`), pronto per interfacciarsi con stampanti Zebra ZT411 tramite ZPL.
+* **`/auth`**: Componenti per l'autenticazione e il controllo accessi RBAC (`OperatorAuthModal.tsx`, `TerminalLockScreen.tsx`, `SupervisorPinModal.tsx`). Impedisce l'accesso non autorizzato alla Dashboard Supervisore senza PIN o badge Team Lead.
+* **`/packing`**: Il cuore operativo (`ActivePackingView.tsx`, `PackingItemCard.tsx`, `PackingBanners.tsx`). Gestisce la visualizzazione dell'ordine attivo, lo stato di scansione, la conferma rapida da bolla cartacea e i blocchi Poka-Yoke (articoli, volantini, omaggi fedeltà, documenti B2B).
+* **`/queue`**: Gestione della coda ordini (`OrderQueue.tsx`) con filtri rapidi per canale e stato.
+* **`/rack`**: Mappa visiva dello scaffale a **5 livelli (`E, D, C, B, A`)** dell'Hub di Bolzano (`StationRackGuide.tsx`, `RackSlotCell.tsx`, `RackSlotEditPanel.tsx`) con inversione speculare automatica tra Stazione 1 e Stazione 2.
+* **`/supervisor`**: Control Tower del Team Lead (`SupervisorDashboard.tsx`, `SlottingManager.tsx`). Include:
+  - Monitoraggio Stazioni & KPI Lean in tempo reale
+  - **Tab dedicata Amazon FBM** con stampa Distinte di Prelievo A4 (singole e batch) e configurazione SP-API
+  - **Tab Ordini E-Commerce & Selly ERP** con normalizzazione indirizzi italiani
+  - Configuratore **Slotting 5S** e stampa Badge Operatori con codice a barre Code 128-B
+* **`/shared`**: Modali trasversali (`SellyCsvModal.tsx` per importazione CSV/PDF da Selly ERP, `AddressFixModal.tsx` per la correzione assistita degli indirizzi italiani, `BarcodeBindModal.tsx` per associare nuovi EAN/codici fornitore al volo).
+* **`/layout`**: Componenti strutturali (`Header.tsx`, `ScannerStatusBanner.tsx`).
+* **`/dev`**: Strumenti di simulazione e segnalazione anomalie (`BarcodeSimulator.tsx`, `IssueReportModal.tsx`).
+* **`/shipping`**: Flusso di fine imballaggio (`ShippingLabelModal.tsx`) con supporto **Multi-Collo**, calcolo peso lordo automatico e codice a barre **Code 128-B** reale per il tracking DHL.
 
 #### `src/hooks/` (Livello di Business Logic)
-I Custom Hooks che gestiscono tutto lo stato dell'applicazione, isolando la logica dalla UI:
-*   **`useWarehouseState.ts`**: Il "Cervello" (Global State Orchestrator) dell'app. Gestisce ordini, operatori, postazioni, KPI e gestisce le transizioni di stato. *Sostituisce soluzioni come Redux o Zustand per l'MVP.*
-*   **`useBarcodeScanner.ts`**: Intercetta gli input fisici dello scanner hardware (es. lettori Zebra/Honeywell in modalità tastiera) a livello di finestra (window event listener).
-*   **`useSoundEffects.ts`**: Genera feedback audio (Web Audio API) per successi, errori e completamento ordini.
+* **`useWarehouseState.ts`**: Global State Orchestrator dell'applicazione. Gestisce ordini, operatori, postazioni, KPI, regole Poka-Yoke, persistenza locale e sincronizzazione con il backend.
+* **`useBarcodeScanner.ts`**: Intercetta gli input fisici dello scanner hardware USB/Bluetooth (modalità emulazione tastiera HID) e si mette automaticamente in pausa quando una finestra modale blocca lo schermo.
+* **`useSoundEffects.ts`**: Genera feedback audio sintetizzati (Web Audio API) per scansioni valide, completamento riga, errori Poka-Yoke e completamento ordine.
 
-#### `src/data/` (Livello Dati / Database Statico)
-Dati mock e cataloghi di riferimento per il funzionamento standalone (senza backend):
-*   **`norsanProducts.ts`** (e sottocartelle `/products`): Il database completo dei prodotti Norsan e Zreen, inclusi EAN, SKU e coordinate fisiche degli scaffali reali.
-*   **`marketingFlyers.ts`**: Configurazione dei volantini marketing, gadget e tipologie di scatole logistische.
-*   **`mockOrders.ts`**: Ordini e-commerce simulati (es. da SellyErp) per testare il flusso B2C/B2B.
-*   **`mockOperators.ts`**: Database degli operatori (Packer, Team Lead, Supervisor).
+#### `src/services/` (Servizi & Motori di Dominio)
+* **`barcodeGenerator.ts`**: Codificatore **Code 128-B** standard (Start Code B `104`, checksum modulo 103, Stop Code `106`) che produce SVG nativi leggibili da pistole barcode fisiche.
+* **`amazonSlipPrinter.ts`**: Generatore di **Distinte di Prelievo & Spedizione A4** (singole e multi-ordine) con barcode Code 128-B e avvisi obbligatori per scatole neutre Amazon FBM.
+* **`sellyCsvImporter.ts`**: Motore di importazione CSV da Selly ERP con rilevamento automatico del delimitatore, filtro intelligente delle righe di servizio (`3000-001 Spedizione`, spese incasso, ecc.) e risoluzione SKU/EAN/alias + associazioni personalizzate.
+* **`italianAddressParser.ts`**: Normalizzatore di indirizzi italiani che separa automaticamente `street` (Via/Corso/Piazza), `houseNumber` (civico, `snc`, `km`) e `addressAddition` (`piano`, `scala`, `interno`, `citofono`, `c/o`).
+* **`p2lClient.ts`**: Client asincrono per l'invio dei comandi luminosi al server Pick-to-Light.
+* **`api.ts`**: Livello di astrazione per le chiamate API REST con protezione del catalogo a 5 livelli di Bolzano e fallback su `localStorage`.
 
-#### `src/types/`
-*   **`wms.ts`**: Contiene tutte le interfacce TypeScript (`Product`, `Order`, `Operator`, `WarehouseStation`, `StationKPIs`). È la "singola fonte di verità" per i tipi di dato.
-
-#### `src/services/`
-*   **`api.ts`**: Livello di astrazione per le chiamate API verso il backend. Per l'MVP, molte di queste funzioni simulano chiamate asincrone leggendo dai dati in `/data`.
-
-#### File Radice (Frontend)
-*   **`App.tsx`**: Orchestratore UI. Inizializza `useWarehouseState` e renderizza i macro-componenti (Header, Modal, Viste attive).
-*   **`main.tsx`**: Entry point di React (creazione del DOM root).
-
-### `/server` (Backend Node.js / Express - Se presente)
-Astrazione per il database SQLite (Better-SQLite3) e le API REST. Gestisce lo slotting dinamico e l'ingestione reale degli ordini da ERP. (File principali: `index.ts`, `db.ts`).
+#### `src/data/` (Catalogo Reale & Configurazioni)
+* **`norsanProducts.ts` & `products/*.ts`**: Catalogo completo NORSAN e ZREEN (>100 referenze) con EAN-13 ufficiali, alias di lotto, pesi e coordinate scaffale a 5 livelli (`S-E..S-A`, `D-E..D-A`, `TAVOLO`).
+* **`marketingFlyers.ts`**: Configurazione dei volantini marketing e delle scatole (`BOX-NOR-*`, `BOX-ZRE-*`, `BOX-AMZ-*`).
 
 ---
 
-## ⚙️ Come Funziona (Flusso Logico)
-
-1. **Avvio e Autenticazione:** L'applicazione parte con la schermata bloccata (`TerminalLockScreen`). Un operatore scansiona il proprio badge. `useWarehouseState` verifica il permesso e sblocca la stazione.
-2. **Ingestione Ordini (Paperless):** La lista degli ordini in `OrderQueue` viene popolata (da `mockOrders` o tramite chiamate API simulate in `api.ts`). L'operatore non stampa nulla su A4. L'ordine viene mostrato digitalmente.
-3. **Scansione e Pick-to-Light (Poka-Yoke):** 
-   - L'operatore scansiona un prodotto.
-   - `useBarcodeScanner.ts` cattura l'EAN.
-   - `useWarehouseState.ts` verifica se l'EAN appartiene all'ordine attivo (Poka-Yoke).
-   - In caso di successo: aggiorna la UI, suona un feedback tramite `useSoundEffects.ts`. Se il prodotto è errato, registra un'anomalia e blocca l'operatore (suono di errore).
-4. **Logica dei Tavoli Speculari:** I componenti leggono `stationConfigId` (`STATION_01` o `STATION_02`) per invertire visivamente la visualizzazione dello scaffale Norsan (destra/sinistra) su `StationRackGuide.tsx`.
-5. **Completamento e Stampa:** Quando tutti gli item richiesti (`quantityRequired`) sono scansionati, si apre `ShippingLabelModal.tsx`. Questo simula la stampa di etichette ZPL su stampanti Zebra ZT411.
-6. **Dashboard Supervisore:** Accessibile ai "Team Lead" scansionando il badge supervisore, ricarica `SupervisorDashboard.tsx` per metriche real-time e modifiche topologiche degli scaffali (Slotting).
+### `/server` (Backend Node.js / Express 5 / SQLite)
+* **`index.ts`**: Server REST API con validazione rigorosa degli input, gestione errori JSON sicura (senza leak di stack trace) ed endpoint `/api/products`, `/api/slots`, `/api/slotting/assign`, `/api/audit/scan`, `/api/p2l/*`, `/api/selly/*` e `/api/health`.
+* **`db.ts`**: Gestione database SQLite (`better-sqlite3`) con persistenza delle modifiche di slotting tra i riavvii.
+* **`services/p2lService.ts`**: Driver HTTP per il controller **ESP32 Pick-to-Light** con deduplicazione dei ping concorrenti e modalità mock automatica se il controller è offline.
+* **`services/sellySyncService.ts`**: Daemon di sincronizzazione periodica verso Selly ERP con trasformazione automatica degli articoli in `OrderItem` e parsing degli indirizzi.
+* **`tests/`**: 5 suite di test Vitest (`api.test.ts`, `hardening.test.ts`, `p2l.test.ts`, `sellyCsvImporter.test.ts`, `catalogIntegrity.test.ts` — 25 test totali).
 
 ---
 
-## 🔗 Dipendenze Chiave (Ecosistema)
+## ⚙️ Flusso Logico Operativo
 
-- **React 19 & TypeScript**: Core engine e tipizzazione forte per prevenire errori a runtime.
-- **Vite**: Bundler ultra-veloce (sostituisce Webpack). Fondamentale per il deploy rapido su Vercel.
-- **Tailwind CSS v4**: Styling modulare e utility-first (Zero CSS personalizzato, tutto via classi).
-- **Lucide React**: Libreria di icone vettoriali leggere.
-- **Web Audio API**: Per feedback sonori a bassa latenza senza necessità di file MP3 esterni (suoni generati tramite oscillatori).
-
-## 🚀 Istruzioni per il Deploy su Vercel
-Il progetto include un file `vercel.json` (se applicabile) o può essere deployato direttamente collegando questo branch `main` a Vercel con i seguenti settaggi standard (Zero-Config):
-- **Framework Preset**: Vite
-- **Build Command**: `npm run build` o `tsc && vite build`
-- **Output Directory**: `dist`
+1. **Autenticazione & RBAC**: L'operatore sblocca il terminale scansionando il proprio badge Code 128-B. I Packer accedono esclusivamente al terminale di imballaggio; l'accesso alla Dashboard Supervisore richiede il ruolo Team Lead o l'inserimento del PIN.
+2. **Acquisizione Ordini (API / CSV / Bolla A4)**: Gli ordini entrano in coda da Selly ERP (API o CSV), Web Shop `norsan.it` o Amazon FBM. Il Team Lead può stampare in blocco le distinte A4 con barcode Code 128-B.
+3. **Scansione Poka-Yoke o Conferma da Bolla**:
+   - Scansionando il barcode sulla distinta A4, il WMS apre istantaneamente l'ordine corrispondente e illumina i LED sugli scaffali.
+   - L'operatore può scansionare i singoli flaconi (con verifica anti-errore e anti-overpack) oppure premere **Conferma Prelievo da Bolla** se ha già verificato i pezzi fisicamente.
+   - Se un flacone ha un EAN di un nuovo lotto non riconosciuto, l'operatore può associarlo in 1 clic al prodotto corretto (`BarcodeBindModal`).
+4. **Validazione Obbligatoria Allegati**: Prima di abilitare il pulsante **STAMPA ETICHETTA**, il sistema verifica che siano confermati eventuali volantini, omaggi fedeltà (`retentionGift`) e documenti cartacei B2B (`requiresPhysicalDocument`).
+5. **Etichetta Termica Multi-Collo & Chiusura**: L'operatore seleziona il numero di colli, stampa l'etichetta termica DHL Express A6 con barcode Code 128-B reale e passa automaticamente all'ordine successivo in coda.

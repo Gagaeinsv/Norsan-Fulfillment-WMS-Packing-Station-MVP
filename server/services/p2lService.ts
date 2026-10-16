@@ -31,16 +31,20 @@ interface P2LCommand {
 // ─── Connectivity State ───────────────────────────────────────────────────────
 let isControllerOnline = false;
 let lastPingAttempt = 0;
+let inFlightPing: Promise<boolean> | null = null;
 const PING_INTERVAL_MS = 10_000; // Re-check controller every 10 s
 
-async function checkControllerOnline(): Promise<boolean> {
+async function checkControllerOnline(force = false): Promise<boolean> {
+  if (inFlightPing) {
+    return inFlightPing;
+  }
   const now = Date.now();
-  if (now - lastPingAttempt < PING_INTERVAL_MS) {
+  if (!force && lastPingAttempt > 0 && now - lastPingAttempt < PING_INTERVAL_MS) {
     return isControllerOnline;
   }
   lastPingAttempt = now;
 
-  return new Promise((resolve) => {
+  inFlightPing = new Promise<boolean>((resolve) => {
     const req = http.get(
       {
         hostname: ESP32_IP,
@@ -49,6 +53,7 @@ async function checkControllerOnline(): Promise<boolean> {
         timeout: TIMEOUT_MS,
       },
       (res) => {
+        res.resume();
         isControllerOnline = res.statusCode === 200;
         resolve(isControllerOnline);
       },
@@ -62,7 +67,11 @@ async function checkControllerOnline(): Promise<boolean> {
       isControllerOnline = false;
       resolve(false);
     });
+  }).finally(() => {
+    inFlightPing = null;
   });
+
+  return inFlightPing;
 }
 
 // ─── Core Send ────────────────────────────────────────────────────────────────
@@ -131,14 +140,16 @@ async function sendCommand(
  */
 export async function lightOrderItems(
   items: Array<{ tier?: "A" | "B" | "C" | "D"; ledIndex?: number }>,
-): Promise<void> {
-  const cmds = items
-    .filter((i) => i.tier && i.ledIndex != null)
-    .map((i) =>
+): Promise<{ total: number; sent: number; mock: boolean }> {
+  const validItems = items.filter((i) => i.tier && i.ledIndex != null);
+  const results = await Promise.all(
+    validItems.map((i) =>
       sendCommand({ tier: i.tier!, ledIndex: i.ledIndex!, color: "green" }),
-    );
-
-  await Promise.allSettled(cmds);
+    ),
+  );
+  const sent = results.filter((r) => r.sent).length;
+  const mock = results.length === 0 ? !isControllerOnline : results.some((r) => r.mock);
+  return { total: validItems.length, sent, mock };
 }
 
 /**
@@ -147,8 +158,8 @@ export async function lightOrderItems(
 export async function markItemScanned(
   tier: "A" | "B" | "C" | "D",
   ledIndex: number,
-): Promise<void> {
-  await sendCommand({
+): Promise<{ sent: boolean; mock: boolean }> {
+  return sendCommand({
     tier,
     ledIndex,
     color: "off",
@@ -164,8 +175,8 @@ export async function markItemScanned(
 export async function blinkError(
   tier: "A" | "B" | "C" | "D",
   ledIndex: number,
-): Promise<void> {
-  await sendCommand({
+): Promise<{ sent: boolean; mock: boolean }> {
+  return sendCommand({
     tier,
     ledIndex,
     color: "red",
@@ -179,14 +190,16 @@ export async function blinkError(
  */
 export async function clearAllLeds(
   items: Array<{ tier?: "A" | "B" | "C" | "D"; ledIndex?: number }>,
-): Promise<void> {
-  const cmds = items
-    .filter((i) => i.tier && i.ledIndex != null)
-    .map((i) =>
+): Promise<{ total: number; sent: number; mock: boolean }> {
+  const validItems = items.filter((i) => i.tier && i.ledIndex != null);
+  const results = await Promise.all(
+    validItems.map((i) =>
       sendCommand({ tier: i.tier!, ledIndex: i.ledIndex!, color: "off" }),
-    );
-
-  await Promise.allSettled(cmds);
+    ),
+  );
+  const sent = results.filter((r) => r.sent).length;
+  const mock = results.length === 0 ? !isControllerOnline : results.some((r) => r.mock);
+  return { total: validItems.length, sent, mock };
 }
 
 /**
@@ -195,4 +208,16 @@ export async function clearAllLeds(
  */
 export function getP2lStatus(): { online: boolean; ip: string; port: number } {
   return { online: isControllerOnline, ip: ESP32_IP, port: ESP32_PORT };
+}
+
+/**
+ * Actively pings the controller and returns the updated status.
+ */
+export async function refreshP2lStatus(): Promise<{
+  online: boolean;
+  ip: string;
+  port: number;
+}> {
+  await checkControllerOnline(true);
+  return getP2lStatus();
 }

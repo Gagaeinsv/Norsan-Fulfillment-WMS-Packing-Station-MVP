@@ -227,7 +227,21 @@ export function App() {
         currentOperator={currentOperator}
         isOpen={isOperatorAuthOpen}
         onClose={() => setIsOperatorAuthOpen(false)}
-        onSelectOperator={setCurrentOperator}
+        onSelectOperator={(op) => {
+          const isTargetLead = op.role === "team_lead" || op.role === "supervisor";
+          const isCurrentLead =
+            currentOperator.role === "team_lead" ||
+            currentOperator.role === "supervisor";
+          if (isTargetLead && !isCurrentLead) {
+            setIsOperatorAuthOpen(false);
+            setIsSupervisorPinModalOpen(true);
+            return;
+          }
+          setCurrentOperator(op);
+          if (!isTargetLead && activeView === "supervisor") {
+            handleSwitchToStation(op.stationId);
+          }
+        }}
       />
 
       {/* DHL Shipping Label & Completion Modal */}

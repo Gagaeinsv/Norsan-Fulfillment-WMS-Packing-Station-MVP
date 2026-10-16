@@ -1,4 +1,5 @@
 import { Order } from "../types/wms";
+import { generateCode128SvgMarkup } from "./barcodeGenerator";
 
 /**
  * Service to generate ready-to-print Amazon FBM / Marketplace Packing Slips (Bolle di Consegna)
@@ -163,18 +164,8 @@ export const printAmazonPackingSlip = (order: Order) => {
         ${order.orderNumber}
       </div>
       <div style="margin-top: 4px;">
-        <!-- Code128 visual barcode representation -->
-        <svg class="barcode-svg" viewBox="0 0 240 40" width="220" height="40" xmlns="http://www.w3.org/2000/svg">
-          <rect width="240" height="40" fill="#fff" />
-          <g fill="#000">
-            ${Array.from({ length: 44 })
-              .map(
-                (_, i) =>
-                  `<rect x="${i * 5.2 + 6}" y="2" width="${(i % 3 === 0 ? 3.2 : i % 2 === 0 ? 1.5 : 2.2)}" height="36" />`
-              )
-              .join("")}
-          </g>
-        </svg>
+        <!-- Genuine Code 128-B scannable barcode -->
+        ${generateCode128SvgMarkup(order.orderNumber, 40)}
       </div>
       <div style="font-size: 7.5pt; color: #64748b; text-transform: uppercase;">
         Scansiona codice per aprire su WMS
@@ -339,17 +330,7 @@ export const printBatchAmazonPackingSlips = (orders: Order[]) => {
               ${order.orderNumber}
             </div>
             <div style="margin-top: 3px;">
-              <svg class="barcode-svg" viewBox="0 0 240 38" width="200" height="38" xmlns="http://www.w3.org/2000/svg">
-                <rect width="240" height="38" fill="#fff" />
-                <g fill="#000">
-                  ${Array.from({ length: 44 })
-                    .map(
-                      (_, i) =>
-                        `<rect x="${i * 5.2 + 6}" y="2" width="${(i % 3 === 0 ? 3.2 : i % 2 === 0 ? 1.5 : 2.2)}" height="34" />`
-                    )
-                    .join("")}
-                </g>
-              </svg>
+              ${generateCode128SvgMarkup(order.orderNumber, 38)}
             </div>
           </div>
         </div>

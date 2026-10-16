@@ -64,13 +64,31 @@ app.get("/api/slots", (_req, res) => {
 
 // Dynamic Reassignment of Slotting (5S Rack Slotting Configurator)
 app.post("/api/slotting/assign", (req, res) => {
-  const { slotCode, productId } = req.body;
+  const { slotCode, productId } = req.body || {};
 
-  if (!slotCode) {
+  if (!slotCode || typeof slotCode !== "string") {
     return res.status(400).json({ error: "slotCode is required" });
   }
 
   try {
+    const slotExists = db
+      .prepare("SELECT 1 FROM warehouse_slots WHERE slot_code = ?")
+      .get(slotCode);
+    if (!slotExists) {
+      return res.status(404).json({ error: `Slot ${slotCode} non trovato` });
+    }
+
+    if (productId) {
+      const prodExists = db
+        .prepare("SELECT 1 FROM products WHERE id = ?")
+        .get(productId);
+      if (!prodExists) {
+        return res
+          .status(404)
+          .json({ error: `Prodotto ${productId} non trovato` });
+      }
+    }
+
     const assignTx = db.transaction(() => {
       db.prepare("DELETE FROM product_slotting WHERE slot_code = ?").run(
         slotCode,
@@ -94,17 +112,33 @@ app.post("/api/slotting/assign", (req, res) => {
 
 // Add a new slot to a shelf tier
 app.post("/api/slots/add", (req, res) => {
-  const { slotCode, side, tier, description } = req.body;
-  if (!slotCode || !side || !tier) {
+  const { slotCode, side, tier, description } = req.body || {};
+  if (
+    !slotCode ||
+    typeof slotCode !== "string" ||
+    !/^[A-Za-z0-9_-]{1,20}$/.test(slotCode) ||
+    (side !== "S" && side !== "D") ||
+    typeof tier !== "number" ||
+    !Number.isInteger(tier) ||
+    tier < 1 ||
+    tier > 5
+  ) {
     return res
       .status(400)
-      .json({ error: "slotCode, side, and tier are required" });
+      .json({ error: "Parametri slotCode, side (S|D) o tier (1..5) non validi" });
   }
 
   try {
+    const existing = db
+      .prepare("SELECT 1 FROM warehouse_slots WHERE slot_code = ?")
+      .get(slotCode);
+    if (existing) {
+      return res.status(409).json({ error: `Lo slot ${slotCode} esiste già` });
+    }
+
     db.prepare(
       `
-      INSERT OR REPLACE INTO warehouse_slots (slot_code, side, tier, position_index, description)
+      INSERT INTO warehouse_slots (slot_code, side, tier, position_index, description)
       VALUES (?, ?, ?, (SELECT COALESCE(MAX(position_index), 0) + 1 FROM warehouse_slots WHERE side = ? AND tier = ?), ?)
     `,
     ).run(
@@ -129,6 +163,13 @@ app.delete("/api/slots/:slotCode", (req, res) => {
   }
 
   try {
+    const existing = db
+      .prepare("SELECT 1 FROM warehouse_slots WHERE slot_code = ?")
+      .get(slotCode);
+    if (!existing) {
+      return res.status(404).json({ error: `Slot ${slotCode} non trovato` });
+    }
+
     db.prepare("DELETE FROM product_slotting WHERE slot_code = ?").run(
       slotCode,
     );
@@ -161,12 +202,24 @@ app.post("/api/audit/scan", (req, res) => {
     message,
     orderId,
     productId,
-  } = req.body;
+  } = req.body || {};
+
+  const requiredStrings = [operatorCode, rawCode, resultType, status, message];
+  if (
+    requiredStrings.some(
+      (v) => typeof v !== "string" || v.trim().length === 0 || v.length > 1000,
+    )
+  ) {
+    return res
+      .status(400)
+      .json({ error: "Campi audit obbligatori mancanti o troppo lunghi" });
+  }
+
   const insert = db.prepare(`
     INSERT INTO scan_audit_logs (operator_code, raw_code, result_type, status, message, order_id, product_id, timestamp)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  insert.run(
+  const info = insert.run(
     operatorCode,
     rawCode,
     resultType,
@@ -176,10 +229,22 @@ app.post("/api/audit/scan", (req, res) => {
     productId || null,
     Date.now(),
   );
-  res.json({ success: true });
+  res.json({ success: true, logId: Number(info.lastInsertRowid) });
 });
 
 // --- 3. PICK-TO-LIGHT API ---
+
+const VALID_P2L_TIERS = new Set(["A", "B", "C", "D"]);
+function isValidP2lItem(tier: unknown, ledIndex: unknown): boolean {
+  return (
+    typeof tier === "string" &&
+    VALID_P2L_TIERS.has(tier) &&
+    typeof ledIndex === "number" &&
+    Number.isInteger(ledIndex) &&
+    ledIndex >= 0 &&
+    ledIndex <= 500
+  );
+}
 
 // GET /api/p2l/status — Health check for ESP32 controller
 app.get("/api/p2l/status", (_req, res) => {
@@ -188,46 +253,52 @@ app.get("/api/p2l/status", (_req, res) => {
 
 // POST /api/p2l/light — Light up LEDs for open order items (GREEN)
 app.post("/api/p2l/light", async (req, res) => {
-  const { items } = req.body as {
-    items: Array<{ tier?: string; ledIndex?: number }>;
+  const { items } = (req.body || {}) as {
+    items?: Array<{ tier?: string; ledIndex?: number }>;
   };
   if (!items || !Array.isArray(items)) {
     return res.status(400).json({ error: "items array required" });
   }
-  await lightOrderItems(items as any);
-  res.json({ success: true });
+  const result = await lightOrderItems(items as any);
+  res.json({ success: true, ...result });
 });
 
 // POST /api/p2l/scanned — Mark item LED as scanned (blink green × 2, then off)
 app.post("/api/p2l/scanned", async (req, res) => {
-  const { tier, ledIndex } = req.body as { tier?: string; ledIndex?: number };
-  if (!tier || ledIndex == null) {
-    return res.status(400).json({ error: "tier and ledIndex required" });
+  const { tier, ledIndex } = (req.body || {}) as {
+    tier?: string;
+    ledIndex?: number;
+  };
+  if (!isValidP2lItem(tier, ledIndex)) {
+    return res.status(400).json({ error: "tier (A..D) and valid ledIndex required" });
   }
-  await markItemScanned(tier as any, ledIndex);
-  res.json({ success: true });
+  const result = await markItemScanned(tier as any, ledIndex!);
+  res.json({ success: true, ...result });
 });
 
 // POST /api/p2l/error — Blink LED red × 2 (wrong scan feedback)
 app.post("/api/p2l/error", async (req, res) => {
-  const { tier, ledIndex } = req.body as { tier?: string; ledIndex?: number };
-  if (!tier || ledIndex == null) {
-    return res.status(400).json({ error: "tier and ledIndex required" });
+  const { tier, ledIndex } = (req.body || {}) as {
+    tier?: string;
+    ledIndex?: number;
+  };
+  if (!isValidP2lItem(tier, ledIndex)) {
+    return res.status(400).json({ error: "tier (A..D) and valid ledIndex required" });
   }
-  await blinkError(tier as any, ledIndex);
-  res.json({ success: true });
+  const result = await blinkError(tier as any, ledIndex!);
+  res.json({ success: true, ...result });
 });
 
 // POST /api/p2l/clear — Turn off all LEDs for completed order
 app.post("/api/p2l/clear", async (req, res) => {
-  const { items } = req.body as {
-    items: Array<{ tier?: string; ledIndex?: number }>;
+  const { items } = (req.body || {}) as {
+    items?: Array<{ tier?: string; ledIndex?: number }>;
   };
   if (!items || !Array.isArray(items)) {
     return res.status(400).json({ error: "items array required" });
   }
-  await clearAllLeds(items as any);
-  res.json({ success: true });
+  const result = await clearAllLeds(items as any);
+  res.json({ success: true, ...result });
 });
 
 // --- 4. SELLY DIRECT SYNC DAEMON API ---
@@ -245,7 +316,7 @@ app.get("/api/selly/config", (_req, res) => {
 
 // POST /api/selly/config — Update API key, URL or auto-sync interval
 app.post("/api/selly/config", (req, res) => {
-  const updated = updateSellySyncConfig(req.body);
+  const updated = updateSellySyncConfig(req.body || {});
   res.json({ success: true, config: updated });
 });
 
@@ -254,6 +325,29 @@ app.post("/api/selly/sync-now", async (_req, res) => {
   const result = await fetchNewOrdersFromSelly();
   res.json(result);
 });
+
+// GET /api/health — Service health endpoint
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: Date.now() });
+});
+
+// Global JSON parse / unhandled error middleware (prevents stack trace leaks)
+app.use(
+  (
+    err: any,
+    _req: express.Request,
+    res: express.Response,
+    next: express.NextFunction,
+  ) => {
+    if (err && (err.type === "entity.parse.failed" || err instanceof SyntaxError)) {
+      return res.status(400).json({ error: "JSON non valido nel corpo della richiesta" });
+    }
+    if (err) {
+      return res.status(500).json({ error: "Errore interno del server" });
+    }
+    next();
+  },
+);
 
 if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {

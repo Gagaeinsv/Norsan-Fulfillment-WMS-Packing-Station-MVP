@@ -55,6 +55,30 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   onOpenBindModal,
   onConfirmAllItems,
 }) => {
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [kanbanAlertItem, setKanbanAlertItem] = useState<string | null>(null);
+
+  useEffect(() => {
+    setElapsedSeconds(0);
+    if (!order?.id) return;
+    const interval = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [order?.id]);
+
+  if (!order) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-white border border-slate-300 rounded-xl p-8 text-center">
+        <FileText className="w-12 h-12 text-slate-400 mb-3" />
+        <h3 className="text-lg font-black text-slate-800">
+          Nessun ordine selezionato in coda
+        </h3>
+        <p className="text-xs text-slate-500 mt-1">
+          Seleziona un ordine dalla coda a sinistra o scansiona una distinta per iniziare.
+        </p>
+      </div>
+    );
+  }
+
   const totalItemsRequired = order.items.reduce(
     (s, it) => s + it.quantityRequired,
     0,
@@ -88,18 +112,11 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   const totalGrossWeight = productsWeightGrams + 180;
   const requiredFlyer = order.marketingFlyers[0];
 
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const targetTaktSeconds = totalItemsRequired > 5 ? 75 : 40;
-  useEffect(() => {
-    setElapsedSeconds(0);
-    const interval = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
-    return () => clearInterval(interval);
-  }, [order.id]);
   const isOverTaktTime = elapsedSeconds > targetTaktSeconds;
   const isNearTaktTime =
     elapsedSeconds > targetTaktSeconds * 0.75 && !isOverTaktTime;
 
-  const [kanbanAlertItem, setKanbanAlertItem] = useState<string | null>(null);
   const handleKanbanRefill = (_name: string, slotCode: string) => {
     setKanbanAlertItem(slotCode);
     setTimeout(() => setKanbanAlertItem(null), 2500);
@@ -405,7 +422,11 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
                 STAMPA BLOCCATA (
                 {!isProductsFullyScanned
                   ? `${totalItemsScanned}/${totalItemsRequired} SCANSIONATI`
-                  : "VOLANTINI MANCANTI"}
+                  : !isFlyersFullyScanned
+                  ? "VOLANTINI MANCANTI"
+                  : !isGiftConfirmed
+                  ? "CONFERMA OMAGGIO MANCANTE"
+                  : "CONFERMA DDT/FATTURA MANCANTE"}
                 )
               </span>
             </button>

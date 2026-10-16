@@ -88,6 +88,14 @@ export async function fetchProducts(): Promise<Product[]> {
     const res = await fetch(`${API_BASE}/products`);
     if (!res.ok) throw new Error("API request failed");
     const data = await res.json();
+    // Guard against legacy 15-item 3-tier seed in server/db.ts overwriting the full 5-tier Bolzano catalog
+    if (
+      !Array.isArray(data) ||
+      data.length < NORSAN_PRODUCTS.length ||
+      data.some((p: any) => /^S[123]-/.test(p.shelf_location || ""))
+    ) {
+      return getLocalProducts();
+    }
     return data.map((p: any) => ({
       id: p.id,
       sku: p.sku,
@@ -98,9 +106,10 @@ export async function fetchProducts(): Promise<Product[]> {
       brand: p.brand,
       volume: p.volume,
       packageType: p.package_type,
-      shelfLocation: p.shelf_location || "S1-A",
+      shelfLocation: p.shelf_location || "S-C-1",
+      shelfCoordinate: p.shelf_location || "S-C-1",
       rackSide: p.rack_side || "S",
-      tier: p.tier || 1,
+      tier: p.tier || 3,
       weightGrams: p.weight_grams,
       imageUrl: p.image_url,
       barcodeText: p.ean,
@@ -117,7 +126,15 @@ export async function fetchWarehouseSlots(): Promise<WarehouseSlotData[]> {
   try {
     const res = await fetch(`${API_BASE}/slots`);
     if (!res.ok) throw new Error("API request failed");
-    return await res.json();
+    const data = await res.json();
+    // Guard against legacy S1-A..S3-J 3-tier slots from server/db.ts
+    if (
+      !Array.isArray(data) ||
+      data.some((s: any) => /^S[123]-/.test(s.slot_code || ""))
+    ) {
+      return getLocalSlots();
+    }
+    return data;
   } catch (err) {
     console.warn("[WMS API] using localStorage fallback for slots");
     return getLocalSlots();

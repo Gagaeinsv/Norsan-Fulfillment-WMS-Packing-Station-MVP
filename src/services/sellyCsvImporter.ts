@@ -104,6 +104,28 @@ export function matchCatalogProduct(
   const noZero = digitsOnly.replace(/^0+/, "");
   const descLower = (description || "").toLowerCase();
 
+  // 0. Check custom barcode bindings saved by operator
+  if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+    try {
+      const saved = localStorage.getItem("wms_custom_barcode_bindings");
+      if (saved) {
+        const bindings: Record<string, string> = JSON.parse(saved);
+        const targetSku =
+          bindings[cleanCode] ||
+          bindings[digitsOnly] ||
+          (noZero ? bindings[noZero] : undefined);
+        if (targetSku) {
+          const boundProd = catalog.find(
+            (p) => p.sku.toUpperCase() === targetSku.toUpperCase()
+          );
+          if (boundProd) return boundProd;
+        }
+      }
+    } catch {
+      // ignore localStorage read errors
+    }
+  }
+
   // 1. Direct SKU or EAN match
   let found = catalog.find((p) => {
     const pSku = p.sku.toUpperCase();
@@ -174,15 +196,17 @@ function isServiceLine(sku: string, description: string): boolean {
 
   const text = `${sku} ${description}`.toLowerCase();
   const serviceKeywords = [
-    "spediz",
-    "trasport",
-    "porto",
-    "contrassegn",
-    "spese incasso",
     "spese di spedizione",
-    "handling",
-    "imballo",
-    "consegna",
+    "contributo spedizione",
+    "costo spedizione",
+    "spese trasporto",
+    "porto franco",
+    "porto assegnato",
+    "diritto contrassegno",
+    "spese contrassegno",
+    "spese incasso",
+    "commissione",
+    "bollo virtuale",
   ];
 
   return serviceKeywords.some((kw) => text.includes(kw));
@@ -385,13 +409,15 @@ export function parseSellyOrdersCsv(
 
       if (!matchedProd) {
         unrecognizedSkusSet.add(rawItem.sku || rawItem.description);
-        // Create resilient fallback product so operator can pack it
+        const safeFallbackCode =
+          rawItem.sku || `UNBOUND-${orderNum}-${orderItems.length + 1}`;
+        // Create resilient fallback product without colliding with any real product EAN
         matchedProd = {
           id: `selly-${rawItem.sku || Math.random().toString(36).substring(7)}`,
-          sku: rawItem.sku || "NOR-CUSTOM",
+          sku: safeFallbackCode,
           name: rawItem.description || rawItem.sku || "Articolo Selly ERP",
           italianName: rawItem.description || rawItem.sku || "Articolo Selly ERP",
-          ean: rawItem.sku || "4260368140018",
+          ean: safeFallbackCode,
           category: "oil",
           brand: rawItem.sku.toUpperCase().includes("ZRE") ? "ZREEN" : "NORSAN",
           volume: "200 ml",
@@ -402,11 +428,11 @@ export function parseSellyOrdersCsv(
           tier: 2,
           weightGrams: 420,
           imageUrl:
-            "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=80",
-          barcodeText: rawItem.sku || "4260368140018",
+            "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&80",
+          barcodeText: safeFallbackCode,
           fragile: true,
-          instructions: "Articolo importato da Selly ERP.",
-          aliases: [rawItem.sku],
+          instructions: "Articolo non associato a EAN standard. Associare codice o confermare da bolla.",
+          aliases: rawItem.sku ? [rawItem.sku] : [],
         };
       }
 

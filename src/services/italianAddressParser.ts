@@ -132,9 +132,13 @@ export function parseItalianAddress(addressLine: string): ParsedItalianAddress {
     const potentialStreet = commaSplit[0].trim();
     const potentialRest = commaSplit.slice(1).join(", ").trim();
 
-    const hasAddition = ADDITION_MARKERS.some((m) =>
-      new RegExp(`\\b${m}\\b`, "i").test(potentialRest)
-    );
+    const hasAddition = ADDITION_MARKERS.some((m) => {
+      const escaped = m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const suffix = m.endsWith(".") ? "(?:$|\\s|\\d)" : "\\b";
+      return new RegExp(`(?:^|\\s|,)${escaped}${suffix}`, "i").test(
+        potentialRest,
+      );
+    });
     if (
       hasAddition ||
       /^\s*(?:piano|int|scala|sc\.|p\.)/i.test(potentialRest)
