@@ -164,9 +164,11 @@ export function parseItalianAddress(addressLine: string): ParsedItalianAddress {
   } else {
     // Check if mainLine has standalone addition marker at the end, e.g. "Via Roma 10 - 2 piano"
     for (const marker of ADDITION_MARKERS) {
+      const escaped = marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const suffix = marker.endsWith(".") ? "(?:$|\\s|\\d)" : "\\b";
       const inlineAdditionRegex = new RegExp(
-        `\\s+(?:-|–)?\\s*(${marker}\\b.*)$`,
-        "i"
+        `\\s+(?:-|–)?\\s*(${escaped}${suffix}.*)$`,
+        "i",
       );
       const match = mainLine.match(inlineAdditionRegex);
       if (match) {
