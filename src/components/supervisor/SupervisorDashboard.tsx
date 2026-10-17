@@ -635,6 +635,17 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           <Package className="w-4 h-4 text-indigo-500" />
           <span>🏭 Magazzino Centrale & Inventario (Pallet)</span>
         </button>
+
+        <a
+          href="/calcolatore-omega3.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer bg-sky-50 text-sky-900 hover:bg-sky-100 border border-sky-300"
+          title="Apri il prototipo interattivo per norsan.it e Amazon A+"
+        >
+          <Sparkles className="w-4 h-4 text-sky-600" />
+          <span>🔬 Calcolatore Etichetta Omega-3 (Marketing) ↗</span>
+        </a>
       </div>
 
       {/* Tab Content 0: Slotting Manager */}

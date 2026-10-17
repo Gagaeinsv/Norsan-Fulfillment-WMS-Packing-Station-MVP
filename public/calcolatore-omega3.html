@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NORSAN Italia • Calcolatore Verità sull'Etichetta Omega-3 (Proposta E-Commerce & B2B)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    input[type="range"] { accent-color: #005b97; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen pb-16">
+
+  <!-- Top Executive Proposal Bar -->
+  <div class="bg-slate-900 text-white border-b border-slate-700 sticky top-0 z-40 shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div class="flex items-center gap-2">
+        <span class="bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 font-mono font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider text-[10px]">
+          Proposta Strategica • NORSAN S.r.l. Bolzano
+        </span>
+        <span class="font-bold text-slate-200 hidden sm:inline">
+          Strumento di Conversione Clienti & Medici (norsan.it / Amazon.it / QR Flyer)
+        </span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="#business-case" class="text-cyan-300 hover:text-white font-bold underline underline-offset-4">
+          📊 Vedi Business Case & Impatto Vendite
+        </a>
+        <a href="/" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1 rounded-lg border border-slate-600 font-semibold transition">
+          ← Torna al WMS Bolzano
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero Header -->
+  <header class="bg-gradient-to-br from-[#00426e] via-[#005b97] to-[#0277bd] text-white py-10 px-4 shadow-lg">
+    <div class="max-w-5xl mx-auto text-center space-y-3">
+      <div class="inline-flex items-center gap-2 bg-white/15 backdrop-blur-xs px-3.5 py-1 rounded-full text-xs font-bold tracking-wide uppercase border border-white/25">
+        <span>🔬 Trasparenza Scientifica NORSAN • Educazione del Consumatore</span>
+      </div>
+      <h1 class="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
+        La Verità sull&rsquo;Etichetta degli Omega-3:<br class="hidden sm:inline" />
+        <span class="text-cyan-200">1.000 mg di Olio di Pesce ≠ 1.000 mg di Omega-3</span>
+      </h1>
+      <p class="text-sm sm:text-base text-blue-100 max-w-2xl mx-auto font-medium">
+        Il 95% dei consumatori su Amazon confronta il prezzo del flacone senza leggere la tabella nutrizionale.
+        Scopri quante capsule &ldquo;low-cost&rdquo; servono davvero ogni giorno per raggiungere la dose efficace di <strong>2.000 mg di EPA e DHA</strong>.
+      </p>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 -mt-6 space-y-8">
+
+    <!-- Preset Selector Bar -->
+    <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-xl border-2 border-slate-200">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+        <div>
+          <h2 class="text-sm font-black uppercase tracking-wider text-slate-500">
+            1. Seleziona un prodotto da confrontare (o inserisci i dati dell&rsquo;etichetta)
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Confronto basato sul fabbisogno giornaliero raccomandato per riportare l&rsquo;Indice Omega-3 &gt; 8% (<strong>2.000 mg di Omega-3 al giorno</strong>).
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="applyPreset('amazon400')" id="btn-amazon400" class="preset-btn px-3.5 py-2 rounded-xl text-xs font-black bg-[#005b97] text-white shadow-sm cursor-pointer transition">
+            🔥 Bestseller Amazon (400 Softgel • 1000mg)
+          </button>
+          <button onclick="applyPreset('pharma60')" id="btn-pharma60" class="preset-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 cursor-pointer transition">
+            💊 Farmacia Standard (60 Softgel • 500mg)
+          </button>
+          <button onclick="applyPreset('gummies')" id="btn-gummies" class="preset-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 cursor-pointer transition">
+            🍬 Gommose / Basso Dosaggio (120 pz)
+          </button>
+        </div>
+      </div>
+
+      <!-- Interactive Calculator Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-5 items-stretch">
+
+        <!-- Left Column: Competitor Label Inputs (5 cols) -->
+        <div class="lg:col-span-5 bg-slate-50 rounded-2xl p-5 border border-slate-200 flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center justify-between border-b border-slate-200 pb-2.5">
+              <span class="text-xs font-black uppercase text-slate-700">📋 Tabella Nutrizionale Concorrente</span>
+              <span id="preset-badge" class="text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded">
+                Esempio: 2.000+ venduti/mese su Amazon.it
+              </span>
+            </div>
+
+            <div class="space-y-4 mt-4">
+              <!-- Input 1: Total Oil mg per capsule -->
+              <div>
+                <div class="flex justify-between text-xs font-bold mb-1">
+                  <span class="text-slate-700">Peso totale Olio di Pesce per 1 capsula:</span>
+                  <span class="font-mono font-black text-slate-900"><span id="val-oil">1000</span> mg</span>
+                </div>
+                <input type="range" id="inp-oil" min="500" max="1500" step="50" value="1000" oninput="recalc()" class="w-full" />
+                <div class="text-[11px] text-slate-500">Ciò che è scritto in grande sul fronte della scatola (es. &ldquo;Fish Oil 1000mg&rdquo;).</div>
+              </div>
+
+              <!-- Input 2: Actual Omega-3 (EPA + DHA) per capsule -->
+              <div class="p-3 bg-white rounded-xl border-2 border-amber-300 shadow-2xs">
+                <div class="flex justify-between text-xs font-bold mb-1">
+                  <span class="text-amber-950">Di cui VERO Omega-3 (EPA + DHA) per 1 capsula:</span>
+                  <span class="font-mono font-black text-amber-700 text-sm"><span id="val-omega">300</span> mg</span>
+                </div>
+                <input type="range" id="inp-omega" min="100" max="750" step="10" value="300" oninput="recalc()" class="w-full" />
+                <div class="flex justify-between text-[11px] text-slate-600 mt-1 font-mono">
+                  <span>EPA: <b id="val-epa">180</b> mg</span>
+                  <span>DHA: <b id="val-dha">120</b> mg</span>
+                  <span class="text-rose-700 font-bold">Zavorra: <b id="val-filler-pct">70%</b></span>
+                </div>
+              </div>
+
+              <!-- Input 3: Capsules per bottle & Price -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Capsule nel barattolo</label>
+                  <input type="number" id="inp-caps" value="400" min="30" max="1000" oninput="recalc()" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono font-black text-sm bg-white" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Prezzo barattolo (€)</label>
+                  <input type="number" id="inp-price" value="18.99" min="5" max="120" step="0.5" oninput="recalc()" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono font-black text-sm bg-white" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- NORSAN Selector -->
+          <div class="pt-3 border-t border-slate-200">
+            <label class="block text-[11px] font-black uppercase text-[#005b97] mb-1.5">Confronta con il prodotto NORSAN:</label>
+            <select id="inp-norsan" onchange="recalc()" class="w-full px-3 py-2.5 rounded-xl border-2 border-[#005b97] bg-blue-50/50 font-bold text-xs text-slate-900">
+              <option value="total">🐟 NORSAN Omega-3 Total (200 ml) — 2.000 mg Omega-3 per 1 cucchiaio (8 ml)</option>
+              <option value="vegan">🌱 NORSAN Omega-3 Vegan (100 ml) — 2.000 mg Omega-3 per 1 cucchiaino (5 ml)</option>
+              <option value="arktis">❄️ NORSAN Omega-3 Arktis (200 ml) — 2.000 mg Omega-3 per 1 cucchiaio (10 ml)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Right Column: Visual Shock Comparison (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col justify-between space-y-4">
+
+          <!-- Comparison Box 1: Daily Capsules vs 1 Spoon -->
+          <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-5 shadow-md">
+            <div class="text-[11px] font-mono uppercase tracking-wider text-cyan-300 font-bold">
+              Risultato 1 • Per ottenere la dose efficace di 2.000 mg di Omega-3 al giorno:
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 items-center">
+              <div class="bg-rose-500/15 border border-rose-400/40 rounded-xl p-3.5">
+                <div class="text-xs text-rose-200 font-semibold">Con queste capsule devi ingoiare:</div>
+                <div class="text-3xl font-black text-rose-300 font-mono mt-0.5">
+                  <span id="out-caps-needed">7</span> capsule / giorno
+                </div>
+                <div id="out-caps-icons" class="text-base mt-1 tracking-widest">💊💊💊💊💊💊💊</div>
+                <div class="text-[11px] text-rose-200/90 mt-1">
+                  1 sola capsula fornisce appena <b id="out-single-omega">300</b> mg (dose sub-clinica inefficace).
+                </div>
+              </div>
+
+              <div class="bg-emerald-500/15 border border-emerald-400/40 rounded-xl p-3.5">
+                <div class="text-xs text-emerald-200 font-semibold">Con NORSAN ti basta:</div>
+                <div class="text-3xl font-black text-emerald-300 font-mono mt-0.5">
+                  1 cucchiaio <span class="text-lg font-normal">(<span id="out-norsan-ml">8</span> ml)</span>
+                </div>
+                <div class="text-base mt-1">🥄 ✨ Zero capsule da deglutire</div>
+                <div class="text-[11px] text-emerald-200/90 mt-1">
+                  <strong>2.000 mg</strong> di Omega-3 naturali puri + 800 UI Vitamina D3.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comparison Box 2 & 3: Duration Illusion & Unnecessary Fat -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Box 2: Duration Myth -->
+            <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4">
+              <div class="text-[10px] font-mono font-black uppercase text-amber-800">
+                Risultato 2 • L&rsquo;illusione della &ldquo;Fornitura 1+ Anno&rdquo;
+              </div>
+              <div class="mt-2 space-y-1.5">
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-600">Durata pubblicizzata (1 cps/gg):</span>
+                  <span class="font-mono font-bold line-through text-slate-400"><span id="out-promised-days">400</span> giorni</span>
+                </div>
+                <div class="flex justify-between text-sm font-black text-amber-950 bg-white px-2.5 py-1.5 rounded-lg border border-amber-300">
+                  <span>Durata REALE (a 2.000 mg/gg):</span>
+                  <span class="font-mono text-rose-600"><span id="out-real-days">57</span> giorni!</span>
+                </div>
+              </div>
+              <p class="text-[11px] text-amber-900 mt-2 leading-snug">
+                Alla dose terapeutica di 2.000 mg, il barattolo da <span id="out-caps-repeat">400</span> capsule finisce in meno di <strong><span id="out-real-months">1,9</span> mesi</strong>, non in un anno.
+              </p>
+            </div>
+
+            <!-- Box 3: Unnecessary Filler Fat -->
+            <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-4">
+              <div class="text-[10px] font-mono font-black uppercase text-rose-800">
+                Risultato 3 • Grassi &ldquo;Zavorra&rdquo; Ingeriti
+              </div>
+              <div class="mt-2">
+                <div class="text-2xl font-black font-mono text-rose-700">
+                  <span id="out-filler-daily">4.900</span> mg / giorno
+                </div>
+                <div class="text-xs font-bold text-rose-950">
+                  di olio non-Omega-3 + gelatina bovina
+                </div>
+              </div>
+              <p class="text-[11px] text-rose-900 mt-2 leading-snug">
+                Ogni capsula è composta per il <strong><span id="out-filler-pct2">70</span>% da altri grassi</strong>. In un anno di assunzione efficace ingerisci <strong><span id="out-filler-yearly">1,78</span> kg</strong> di grassi inutili e spesso ossidati (causa del reflusso di pesce).
+              </p>
+            </div>
+          </div>
+
+          <!-- Comparison Box 4: Biochemical Quality Table -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 text-xs">
+            <div class="font-black text-slate-800 uppercase text-[11px] mb-2">
+              Risultato 4 • Differenza Biochimica (Perché NORSAN è raccomandato dai medici)
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-[11px] border-t border-slate-200 pt-2">
+              <div class="font-bold text-slate-500">Parametro</div>
+              <div class="font-bold text-rose-700">Mass-Market / Low-Cost</div>
+              <div class="font-bold text-[#005b97]">Standard NORSAN</div>
+
+              <div class="text-slate-600 py-1 border-t border-slate-100">Forma Molecolare</div>
+              <div class="text-slate-700 py-1 border-t border-slate-100">Spesso Etil-Esteri sintetici</div>
+              <div class="font-bold text-emerald-800 py-1 border-t border-slate-100">100% Trigliceridi Naturali</div>
+
+              <div class="text-slate-600 py-1 border-t border-slate-100">Ossidazione (TOTOX)</div>
+              <div class="text-slate-700 py-1 border-t border-slate-100">Non dichiarato (spesso 15–26)</div>
+              <div class="font-bold text-emerald-800 py-1 border-t border-slate-100">TOTOX bassissimo (3–5) • Zero reflusso</div>
+
+              <div class="text-slate-600 py-1 border-t border-slate-100">Costo reale per 2.000 mg</div>
+              <div class="font-mono font-bold text-slate-800 py-1 border-t border-slate-100">€<span id="out-comp-cost-day">0,33</span> / giorno (7 cps + 5g scarti)</div>
+              <div class="font-mono font-bold text-[#005b97] py-1 border-t border-slate-100">€<span id="out-norsan-cost-day">1,16</span> / giorno (Olio puro + Vit. D3)</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Executive Business Case for NORSAN Management -->
+    <section id="business-case" class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-2 border-[#005b97]/30 space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+          <span class="text-xs font-mono font-black uppercase text-[#005b97] bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+            Executive Summary per la Direzione NORSAN Italia
+          </span>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+            Perché questo strumento aumenta la conversione su norsan.it e Amazon.it
+          </h2>
+        </div>
+        <div class="bg-slate-900 text-white px-4 py-3 rounded-2xl text-right">
+          <div class="text-[10px] uppercase font-mono text-slate-400">Potenziale Recupero Clienti</div>
+          <div class="text-lg font-black text-cyan-300">+15% / +25% Conversion Rate</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs leading-relaxed">
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+          <div class="text-sm font-black text-slate-900">1. Il Problema Attuale sul Mercato Italiano</div>
+          <p class="text-slate-600">
+            Su Amazon.it i concorrenti low-cost (es. <em>WeightWorld 400 Softgel 1000mg</em>) vendono <strong>oltre 2.000 barattoli al mese</strong> perché il cliente italiano legge <em>&ldquo;1000mg • Fornitura 1 Anno a 18€&rdquo;</em> e percepisce erroneamente il flacone NORSAN (29€–34€) come &ldquo;troppo costoso&rdquo;, ignorando che 1 capsula contiene solo 300mg di Omega-3 e 700mg di grassi inerti.
+          </p>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+          <div class="text-sm font-black text-slate-900">2. La Soluzione (3 Canali a Costo Zero)</div>
+          <ul class="space-y-1.5 text-slate-600 list-disc pl-4">
+            <li><strong>Widget su norsan.it:</strong> Pagina interattiva <em>&ldquo;Controlla la tua etichetta Omega-3&rdquo;</em> che trasforma l&rsquo;obiezione sul prezzo in fiducia immediata.</li>
+            <li><strong>Tabella A+ su Amazon.it:</strong> Grafica comparativa <em>&ldquo;1 Cucchiaio NORSAN = 7 Capsule Standard da 1000mg&rdquo;</em> nelle schede prodotto Amazon FBM.</li>
+            <li><strong>QR-Code sui Flyer & Rete Medici:</strong> Strumento immediato per nutrizionisti e farmacisti per spiegare ai pazienti perché 1 capsula da 300mg non alza l&rsquo;Indice Omega-3.</li>
+          </ul>
+        </div>
+
+        <div class="bg-blue-50/70 p-4 rounded-2xl border border-blue-200 space-y-2">
+          <div class="text-sm font-black text-[#005b97]">3. Piano di Implementazione Rapido</div>
+          <p class="text-slate-700">
+            Il prototipo funzionante è già pronto in HTML/JS puro e facilmente integrabile su WordPress/WooCommerce (<code>norsan.it</code>) in meno di 2 ore senza costi di agenzia esterna.
+          </p>
+          <div class="pt-2 text-[11px] font-bold text-[#005b97]">
+            Ideato e sviluppato da: Serhii Haharin • Hub Logistico & Operations Bolzano
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const PRESETS = {
+      amazon400: {
+        oil: 1000,
+        omega: 300,
+        epa: 180,
+        dha: 120,
+        caps: 400,
+        price: 18.99,
+        badge: "Esempio: Bestseller Amazon.it (400 Softgel • 2.000+ acquisti/mese)"
+      },
+      pharma60: {
+        oil: 1000,
+        omega: 350,
+        epa: 210,
+        dha: 140,
+        caps: 60,
+        price: 22.50,
+        badge: "Esempio: Integratore Standard Farmacia (60 Softgel)"
+      },
+      gummies: {
+        oil: 600,
+        omega: 150,
+        epa: 90,
+        dha: 60,
+        caps: 120,
+        price: 19.90,
+        badge: "Esempio: Gommose / Perle Basso Dosaggio (120 pz)"
+      }
+    };
+
+    const NORSAN_PRODUCTS = {
+      total: { mlPerDose: 8, dosesPerBottle: 25, price: 29.00 },
+      vegan: { mlPerDose: 5, dosesPerBottle: 20, price: 34.00 },
+      arktis: { mlPerDose: 10, dosesPerBottle: 20, price: 29.00 }
+    };
+
+    function applyPreset(key) {
+      const p = PRESETS[key];
+      if (!p) return;
+      document.getElementById('inp-oil').value = p.oil;
+      document.getElementById('inp-omega').value = p.omega;
+      document.getElementById('inp-caps').value = p.caps;
+      document.getElementById('inp-price').value = p.price;
+      document.getElementById('preset-badge').textContent = p.badge;
+
+      ['amazon400', 'pharma60', 'gummies'].forEach(k => {
+        const btn = document.getElementById('btn-' + k);
+        if (k === key) {
+          btn.className = "preset-btn px-3.5 py-2 rounded-xl text-xs font-black bg-[#005b97] text-white shadow-sm cursor-pointer transition";
+        } else {
+          btn.className = "preset-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 cursor-pointer transition";
+        }
+      });
+
+      recalc();
+    }
+
+    function recalc() {
+      const oilMg = Math.max(100, Number(document.getElementById('inp-oil').value) || 1000);
+      let omegaMg = Math.max(50, Number(document.getElementById('inp-omega').value) || 300);
+      if (omegaMg > oilMg) {
+        omegaMg = oilMg;
+        document.getElementById('inp-omega').value = omegaMg;
+      }
+      const capsPerBottle = Math.max(1, Number(document.getElementById('inp-caps').value) || 400);
+      const priceEur = Math.max(1, Number(document.getElementById('inp-price').value) || 18.99);
+      const norsanKey = document.getElementById('inp-norsan').value;
+      const norsan = NORSAN_PRODUCTS[norsanKey] || NORSAN_PRODUCTS.total;
+
+      const epaMg = Math.round(omegaMg * 0.6);
+      const dhaMg = omegaMg - epaMg;
+      const fillerMgPerCap = Math.max(0, oilMg - omegaMg);
+      const fillerPct = Math.round((fillerMgPerCap / oilMg) * 100);
+
+      // Therapeutic daily target = 2000 mg
+      const TARGET_MG = 2000;
+      const exactCapsNeeded = TARGET_MG / omegaMg;
+      const capsNeededRounded = Math.ceil(exactCapsNeeded);
+
+      const realDaysDuration = Math.floor(capsPerBottle / exactCapsNeeded);
+      const realMonthsDuration = (realDaysDuration / 30).toFixed(1).replace('.', ',');
+
+      const dailyFillerMg = Math.round(capsNeededRounded * fillerMgPerCap);
+      const yearlyFillerKg = ((dailyFillerMg * 365) / 1000000).toFixed(2).replace('.', ',');
+
+      const compCostPerDay = ((priceEur / capsPerBottle) * exactCapsNeeded).toFixed(2).replace('.', ',');
+      const norsanCostPerDay = (norsan.price / norsan.dosesPerBottle).toFixed(2).replace('.', ',');
+
+      document.getElementById('val-oil').textContent = oilMg;
+      document.getElementById('val-omega').textContent = omegaMg;
+      document.getElementById('val-epa').textContent = epaMg;
+      document.getElementById('val-dha').textContent = dhaMg;
+      document.getElementById('val-filler-pct').textContent = fillerPct + '%';
+
+      document.getElementById('out-caps-needed').textContent = capsNeededRounded;
+      document.getElementById('out-single-omega').textContent = omegaMg;
+      document.getElementById('out-caps-icons').textContent = '💊'.repeat(Math.min(14, capsNeededRounded));
+      document.getElementById('out-norsan-ml').textContent = norsan.mlPerDose;
+
+      document.getElementById('out-promised-days').textContent = capsPerBottle;
+      document.getElementById('out-real-days').textContent = realDaysDuration;
+      document.getElementById('out-caps-repeat').textContent = capsPerBottle;
+      document.getElementById('out-real-months').textContent = realMonthsDuration;
+
+      document.getElementById('out-filler-daily').textContent = dailyFillerMg.toLocaleString('it-IT');
+      document.getElementById('out-filler-pct2').textContent = fillerPct;
+      document.getElementById('out-filler-yearly').textContent = yearlyFillerKg;
+
+      document.getElementById('out-comp-cost-day').textContent = compCostPerDay;
+      document.getElementById('out-norsan-cost-day').textContent = norsanCostPerDay;
+    }
+
+    recalc();
+  </script>
+</body>
+</html>
