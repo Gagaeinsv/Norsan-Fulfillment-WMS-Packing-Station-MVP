@@ -21,6 +21,12 @@ import {
   rotateToSecondaryLot,
   computeFefoStatus,
 } from "../../src/services/lotTraceabilityService";
+import {
+  getWarehouseInventory,
+  recordPhysicalCount,
+  transferCartonsToPackingShelf,
+  receiveInboundPallet,
+} from "../../src/services/mainWarehouseInventoryService";
 
 describe("Code 128-B Barcode Generator (Hardware Scanner Compliance)", () => {
   it("encodes Start Code B (104), valid modulo-103 checksum, and Stop Code (106)", () => {
@@ -161,4 +167,56 @@ describe("FEFO Expiry & Batch/Lot Traceability Service (HACCP Reg. CE 178/2002)"
     expect(updated.fefoStatus).toBe("optimal");
   });
 });
+
+describe("Main Warehouse Inventory, Kanban Transfer & Shelf-Life Run-Rate Forecast", () => {
+  it("calculates two-tier stock (closed cartons * unitsPerCarton + packing shelf) and detects ERP discrepancies", () => {
+    const inv = getWarehouseInventory(NORSAN_PRODUCTS);
+    const vegan = inv.find((i) => i.sku === "NOR-VEG-100-LEM")!;
+    // 14 cartons * 12 + 10 = 178 physical vs 180 ERP => -2 discrepancy
+    expect(vegan.physicalTotalUnits).toBe(178);
+    expect(vegan.discrepancyUnits).toBe(-2);
+
+    const kids = inv.find((i) => i.sku === "NOR-KID-OIL-150")!;
+    // 230 units @ 55/month (~4.2 months) vs expiry 12/2026 (2 months => max sellable 110) => 120 units at risk
+    expect(kids.writeOffRiskUnits).toBe(120);
+    expect(kids.stockHealth).toBe("overstock_expiry_risk");
+  });
+
+  it("transfers master cartons from pallet to packing shelf (Kanban) without changing total physical stock", () => {
+    const afterKanban = transferCartonsToPackingShelf(
+      NORSAN_PRODUCTS,
+      "NOR-TOT-200-LEM",
+      2,
+    );
+    const total = afterKanban.find((i) => i.sku === "NOR-TOT-200-LEM")!;
+    expect(total.closedCartonsOnPallet).toBe(36); // 38 - 2
+    expect(total.openUnitsOnPackingShelf).toBe(64); // 24 + 40
+    expect(total.physicalTotalUnits).toBe(784);
+  });
+
+  it("records rapid physical cycle counts and receives inbound pallets from Berlin", () => {
+    const afterCount = recordPhysicalCount(
+      NORSAN_PRODUCTS,
+      "NOR-VEG-100-LEM",
+      14,
+      12,
+      true,
+    );
+    const vegan = afterCount.find((i) => i.sku === "NOR-VEG-100-LEM")!;
+    expect(vegan.physicalTotalUnits).toBe(180);
+    expect(vegan.discrepancyUnits).toBe(0);
+
+    const afterInbound = receiveInboundPallet(
+      NORSAN_PRODUCTS,
+      "NOR-TOT-200-NAT",
+      10,
+      "L2705T",
+      "12/2027",
+    );
+    const nat = afterInbound.find((i) => i.sku === "NOR-TOT-200-NAT")!;
+    expect(nat.closedCartonsOnPallet).toBe(26); // 16 + 10
+    expect(nat.lotNumber).toBe("L2705T");
+  });
+});
+
 

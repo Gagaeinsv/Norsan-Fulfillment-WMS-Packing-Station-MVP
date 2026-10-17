@@ -45,6 +45,12 @@ import {
   updateProductLotInfo,
   rotateToSecondaryLot,
 } from "../../services/lotTraceabilityService";
+import {
+  getWarehouseInventory,
+  recordPhysicalCount,
+  transferCartonsToPackingShelf,
+  receiveInboundPallet,
+} from "../../services/mainWarehouseInventoryService";
 
 interface SupervisorDashboardProps {
   stations: WarehouseStation[];
@@ -111,6 +117,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     | "slotting"
     | "lean"
     | "fefo"
+    | "inventory"
   >("stations");
 
   // FEFO & Batch Recall State
@@ -119,6 +126,16 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   const [editingShelfProductId, setEditingShelfProductId] = useState<string | null>(null);
   const [shelfLotDraft, setShelfLotDraft] = useState("");
   const [shelfExpDraft, setShelfExpDraft] = useState("");
+
+  // Main Warehouse & Smart Cycle Count State
+  const [countingSku, setCountingSku] = useState<string | null>(null);
+  const [countCartonsDraft, setCountCartonsDraft] = useState<number>(0);
+  const [countShelfDraft, setCountShelfDraft] = useState<number>(0);
+  const [inboundSku, setInboundSku] = useState<string>("NOR-TOT-200-LEM");
+  const [inboundCartons, setInboundCartons] = useState<number>(20);
+  const [inboundLot, setInboundLot] = useState<string>("L2702N");
+  const [inboundExpiry, setInboundExpiry] = useState<string>("11/2027");
+  const [inventorySearch, setInventorySearch] = useState<string>("");
 
   // Address Normalizer Modal State
   const [selectedAddressOrder, setSelectedAddressOrder] = useState<Order | null>(
@@ -605,6 +622,18 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
         >
           <CheckCircle className="w-4 h-4 text-teal-500" />
           <span>🧪 Lotti, Scadenze FEFO & Richiamo</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("inventory")}
+          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+            activeTab === "inventory"
+              ? "bg-indigo-700 text-white shadow-sm"
+              : "bg-white text-indigo-900 hover:text-indigo-950 border border-indigo-300"
+          }`}
+        >
+          <Package className="w-4 h-4 text-indigo-500" />
+          <span>🏭 Magazzino Centrale & Inventario (Pallet)</span>
         </button>
       </div>
 
@@ -1908,6 +1937,518 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Tab Content 7: Main Warehouse (Bulk Pallets), Cycle Counting & Shelf-Life Run-Rate Forecast */}
+      {activeTab === "inventory" &&
+        (() => {
+          const allInventory = getWarehouseInventory(products);
+          const filteredInventory = inventorySearch.trim()
+            ? allInventory.filter(
+                (item) =>
+                  item.sku
+                    .toLowerCase()
+                    .includes(inventorySearch.trim().toLowerCase()) ||
+                  (item.product.italianName || item.product.name)
+                    .toLowerCase()
+                    .includes(inventorySearch.trim().toLowerCase()) ||
+                  item.palletZone
+                    .toLowerCase()
+                    .includes(inventorySearch.trim().toLowerCase()),
+              )
+            : allInventory;
+
+          const totalPhysicalUnits = allInventory.reduce(
+            (sum, i) => sum + i.physicalTotalUnits,
+            0,
+          );
+          const totalCartons = allInventory.reduce(
+            (sum, i) => sum + i.closedCartonsOnPallet,
+            0,
+          );
+          const discrepancyItems = allInventory.filter(
+            (i) => i.discrepancyUnits !== 0,
+          );
+          const expiryRiskItems = allInventory.filter(
+            (i) => i.writeOffRiskUnits > 0,
+          );
+          const totalRiskEur = expiryRiskItems.reduce(
+            (sum, i) => sum + i.writeOffRiskEur,
+            0,
+          );
+
+          return (
+            <div className="space-y-4">
+              {/* Top Executive Banner */}
+              <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 border-2 border-indigo-500/40 rounded-3xl p-5 text-white shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/40 font-bold">
+                    <Package className="w-3.5 h-3.5" />
+                    <span>
+                      Controllo Magazzino Centrale (Pedane) ↔ Zona Imballaggio ↔
+                      Selly ERP
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-black tracking-tight text-white">
+                    Inventario Rapido (Cycle Counting), Rifornimento Kanban &
+                    Radar Scadenze su Pedana
+                  </h3>
+                  <p className="text-xs text-slate-300 max-w-3xl">
+                    Collega le pedane chiuse ricevute da Berlino con gli
+                    scaffali di prelievo: calcola automaticamente i flaconi
+                    totali (Cartoni × Pezzi + Scaffale), rileva disallineamenti
+                    con Selly ERP e segnala in anticipo le pedane che rischiano
+                    di scadere in base alla velocità di vendita mensile.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="bg-slate-900/90 border border-indigo-500/40 rounded-2xl px-4 py-2.5 text-center">
+                    <div className="text-[10px] font-bold uppercase text-slate-400">
+                      Totale Magazzino
+                    </div>
+                    <div className="text-xl font-black font-mono text-indigo-300">
+                      {totalPhysicalUnits} pz{" "}
+                      <span className="text-xs text-slate-400">
+                        ({totalCartons} cart.)
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-slate-900/90 border border-indigo-500/40 rounded-2xl px-4 py-2.5 text-center">
+                    <div className="text-[10px] font-bold uppercase text-slate-400">
+                      Discrepanze Selly ERP
+                    </div>
+                    <div
+                      className={`text-xl font-black font-mono ${
+                        discrepancyItems.length > 0
+                          ? "text-amber-400"
+                          : "text-emerald-400"
+                      }`}
+                    >
+                      {discrepancyItems.length} SKU
+                    </div>
+                  </div>
+                  <div className="bg-slate-900/90 border border-indigo-500/40 rounded-2xl px-4 py-2.5 text-center">
+                    <div className="text-[10px] font-bold uppercase text-slate-400">
+                      Rischio Sfrido / Scadenza
+                    </div>
+                    <div
+                      className={`text-xl font-black font-mono ${
+                        totalRiskEur > 0 ? "text-rose-400" : "text-emerald-400"
+                      }`}
+                    >
+                      €{totalRiskEur}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Inbound Pallet Registration + Run-Rate Expiry Radar */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Card 1: Carico Nuova Pedana da Berlino (Inbound) */}
+                <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-black text-slate-900">
+                        🚛 Carico Nuova Pedana / Consegna da Berlino (Inbound)
+                      </h4>
+                      <p className="text-xs text-slate-500">
+                        Registra l&apos;arrivo di nuovi cartoni chiusi con un
+                        unico codice lotto per l&apos;intera fornitura.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    <div className="col-span-2">
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">
+                        Prodotto SKU
+                      </label>
+                      <select
+                        value={inboundSku}
+                        onChange={(e) => setInboundSku(e.target.value)}
+                        className="w-full px-2.5 py-2 text-xs font-bold rounded-xl border border-slate-300 bg-slate-50"
+                      >
+                        {products.map((p) => (
+                          <option key={p.sku} value={p.sku}>
+                            {p.sku} — {p.italianName || p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">
+                        Cartoni (+N)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={inboundCartons}
+                        onChange={(e) =>
+                          setInboundCartons(
+                            Math.max(1, parseInt(e.target.value, 10) || 1),
+                          )
+                        }
+                        className="w-full px-2.5 py-2 text-xs font-mono font-black rounded-xl border border-slate-300"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">
+                        Lotto & Scad.
+                      </label>
+                      <div className="flex gap-1">
+                        <input
+                          type="text"
+                          value={inboundLot}
+                          onChange={(e) =>
+                            setInboundLot(e.target.value.toUpperCase())
+                          }
+                          placeholder="Lotto"
+                          className="w-1/2 px-2 py-2 text-[11px] font-mono font-bold rounded-xl border border-slate-300 uppercase"
+                        />
+                        <input
+                          type="text"
+                          value={inboundExpiry}
+                          onChange={(e) => setInboundExpiry(e.target.value)}
+                          placeholder="MM/YYYY"
+                          className="w-1/2 px-2 py-2 text-[11px] font-mono font-bold rounded-xl border border-slate-300"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        receiveInboundPallet(
+                          products,
+                          inboundSku,
+                          inboundCartons,
+                          inboundLot,
+                          inboundExpiry,
+                        );
+                        setFefoRefreshTick((t) => t + 1);
+                      }}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-xs"
+                    >
+                      + Registra Carico Pedana ({inboundCartons} Cartoni • Lotto{" "}
+                      {inboundLot})
+                    </button>
+                  </div>
+                </div>
+
+                {/* Card 2: Radar Rischio Scadenza vs Run-Rate Vendite */}
+                <div className="bg-white border-2 border-rose-200 rounded-3xl p-5 shadow-sm space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-black text-rose-950 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-rose-600" />
+                      <span>
+                        Radar Prevenzione Sfridi (Run-Rate Vendite vs. Scadenza
+                        Pedana)
+                      </span>
+                    </h4>
+                    <span className="text-[10px] font-mono font-black bg-rose-100 text-rose-900 px-2 py-0.5 rounded border border-rose-300">
+                      Analisi Preditiva Ufficio
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600">
+                    Confronta i mesi di copertura scorta attuali con i mesi
+                    residui prima della scadenza del lotto:
+                  </p>
+
+                  {expiryRiskItems.length === 0 ? (
+                    <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-900">
+                      ✓ Tutte le pedane verranno esaurite prima della data di
+                      scadenza al ritmo di vendita attuale.
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                      {expiryRiskItems.map((risk) => (
+                        <div
+                          key={risk.sku}
+                          className="p-2.5 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-between gap-2 text-xs"
+                        >
+                          <div>
+                            <div className="font-black text-rose-950">
+                              {risk.product.italianName || risk.product.name} (
+                              <span className="font-mono">{risk.sku}</span>)
+                            </div>
+                            <div className="text-[11px] text-rose-800">
+                              Scorta: <b>{risk.physicalTotalUnits} pz</b> (
+                              {risk.monthsOfStockRemaining} mesi di vendita @{" "}
+                              {risk.monthlySalesVelocity} pz/mese) • Lotto{" "}
+                              <b>{risk.lotNumber}</b> scade tra{" "}
+                              <b>{risk.monthsUntilExpiry} mesi</b> (
+                              {risk.expiryDate})
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="font-mono font-black text-rose-700">
+                              {risk.writeOffRiskUnits} pz a rischio (~€
+                              {risk.writeOffRiskEur})
+                            </div>
+                            <div className="text-[10px] font-bold text-rose-900 bg-white px-2 py-0.5 rounded border border-rose-300 mt-0.5">
+                              💡 Azione: Promo / Bundle Sconto
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Full Two-Tier Inventory Table & Rapid Cycle Counter */}
+              <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 shadow-sm space-y-3 overflow-x-auto">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h4 className="text-sm font-black text-slate-900">
+                      📋 Tabella Inventario Fisico (Pedane Chiusi + Scaffali
+                      Picking) vs. Selly ERP
+                    </h4>
+                    <p className="text-xs text-slate-500">
+                      Clicca su <b>&ldquo;Conta / Rettifica&rdquo;</b> durante
+                      il giro di controllo per inserire i cartoni chiusi sulla
+                      pedana e i flaconi sullo scaffale, oppure{" "}
+                      <b>&ldquo;Kanban → Scaffale&rdquo;</b> quando apri un
+                      cartone.
+                    </p>
+                  </div>
+                  <input
+                    type="text"
+                    value={inventorySearch}
+                    onChange={(e) => setInventorySearch(e.target.value)}
+                    placeholder="Cerca SKU, prodotto o zona pallet..."
+                    className="px-3.5 py-2 text-xs font-bold rounded-xl border-2 border-slate-300 focus:border-indigo-600 focus:outline-none w-64"
+                  />
+                </div>
+
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b-2 border-slate-200 text-[10px] uppercase font-black text-slate-500 bg-slate-50">
+                      <th className="py-2.5 px-3">Zona Pallet & Scaffale</th>
+                      <th className="py-2.5 px-3">Articolo & Lotto</th>
+                      <th className="py-2.5 px-3 text-center">
+                        1. Pedana (Cartoni Chiusi)
+                      </th>
+                      <th className="py-2.5 px-3 text-center">
+                        2. Scaffale Picking (Flaconi)
+                      </th>
+                      <th className="py-2.5 px-3 text-center">
+                        Totale Fisico vs. ERP
+                      </th>
+                      <th className="py-2.5 px-3 text-center">
+                        Copertura & Scadenza
+                      </th>
+                      <th className="py-2.5 px-3 text-right">
+                        Operazioni Magazzino
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {filteredInventory.map((item) => {
+                      const isCounting = countingSku === item.sku;
+                      return (
+                        <tr key={item.sku} className="hover:bg-slate-50">
+                          <td className="py-2.5 px-3">
+                            <div className="font-mono font-black text-indigo-900 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded inline-block">
+                              {item.palletZone}
+                            </div>
+                            <div className="text-[10px] font-mono text-slate-500 mt-0.5">
+                              Picking: {item.product.shelfLocation}
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <div className="font-black text-slate-900">
+                              {item.product.italianName || item.product.name}
+                            </div>
+                            <div className="text-[10px] font-mono text-slate-500">
+                              SKU: <b>{item.sku}</b> • Lotto:{" "}
+                              <b className="text-teal-800">{item.lotNumber}</b>{" "}
+                              (Scad. {item.expiryDate})
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-center">
+                            {isCounting ? (
+                              <div className="flex flex-col items-center">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={countCartonsDraft}
+                                  onChange={(e) =>
+                                    setCountCartonsDraft(
+                                      Math.max(
+                                        0,
+                                        parseInt(e.target.value, 10) || 0,
+                                      ),
+                                    )
+                                  }
+                                  className="w-20 px-2 py-1 text-center font-mono font-black border-2 border-indigo-500 rounded-lg"
+                                />
+                                <span className="text-[9px] text-slate-500 mt-0.5">
+                                  × {item.unitsPerCarton} pz/cart. ={" "}
+                                  {countCartonsDraft * item.unitsPerCarton} pz
+                                </span>
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="font-mono font-black text-sm text-slate-900">
+                                  {item.closedCartonsOnPallet} cart.
+                                </span>
+                                <div className="text-[10px] font-mono text-slate-500">
+                                  ({item.closedCartonsOnPallet * item.unitsPerCarton}{" "}
+                                  pz • da {item.unitsPerCarton})
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-center">
+                            {isCounting ? (
+                              <div className="flex flex-col items-center">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={countShelfDraft}
+                                  onChange={(e) =>
+                                    setCountShelfDraft(
+                                      Math.max(
+                                        0,
+                                        parseInt(e.target.value, 10) || 0,
+                                      ),
+                                    )
+                                  }
+                                  className="w-20 px-2 py-1 text-center font-mono font-black border-2 border-indigo-500 rounded-lg"
+                                />
+                                <span className="text-[9px] text-slate-500 mt-0.5">
+                                  flaconi sciolti
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="font-mono font-black text-sm text-blue-900">
+                                {item.openUnitsOnPackingShelf} pz
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-center">
+                            <div className="font-mono font-black text-sm text-slate-900">
+                              {item.physicalTotalUnits} pz{" "}
+                              <span className="text-xs font-normal text-slate-500">
+                                / ERP: {item.erpExpectedTotalUnits}
+                              </span>
+                            </div>
+                            {item.discrepancyUnits === 0 ? (
+                              <span className="inline-block text-[10px] font-black bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded border border-emerald-300 mt-0.5">
+                                ✓ Allineato ({item.lastCountedAt})
+                              </span>
+                            ) : (
+                              <span className="inline-block text-[10px] font-black bg-amber-100 text-amber-950 px-2 py-0.5 rounded border border-amber-400 mt-0.5">
+                                ⚠️ Diff: {item.discrepancyUnits > 0 ? "+" : ""}
+                                {item.discrepancyUnits} pz
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-center">
+                            <div className="font-mono text-xs font-bold text-slate-800">
+                              {item.monthsOfStockRemaining} mesi scorta
+                            </div>
+                            <div className="text-[10px] text-slate-500">
+                              Scade tra {item.monthsUntilExpiry} mesi (
+                              {item.monthlySalesVelocity} pz/m)
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {isCounting ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      recordPhysicalCount(
+                                        products,
+                                        item.sku,
+                                        countCartonsDraft,
+                                        countShelfDraft,
+                                        false,
+                                      );
+                                      setCountingSku(null);
+                                      setFefoRefreshTick((t) => t + 1);
+                                    }}
+                                    className="px-2.5 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-black cursor-pointer"
+                                  >
+                                    Salva Conta
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      recordPhysicalCount(
+                                        products,
+                                        item.sku,
+                                        countCartonsDraft,
+                                        countShelfDraft,
+                                        true,
+                                      );
+                                      setCountingSku(null);
+                                      setFefoRefreshTick((t) => t + 1);
+                                    }}
+                                    className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-black cursor-pointer"
+                                    title="Salva e allinea anche la giacenza Selly ERP"
+                                  >
+                                    Allinea ERP
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setCountingSku(null)}
+                                    className="px-2 py-1 bg-slate-100 text-slate-700 rounded-lg text-[10px] font-bold cursor-pointer"
+                                  >
+                                    ✕
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    disabled={item.closedCartonsOnPallet <= 0}
+                                    onClick={() => {
+                                      transferCartonsToPackingShelf(
+                                        products,
+                                        item.sku,
+                                        1,
+                                      );
+                                      setFefoRefreshTick((t) => t + 1);
+                                    }}
+                                    className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 rounded-lg text-[10px] font-black cursor-pointer disabled:opacity-40 transition"
+                                    title={`Sposta 1 cartone (${item.unitsPerCarton} pz) dalla pedana allo scaffale di imballaggio`}
+                                  >
+                                    Kanban → Scaffale (+{item.unitsPerCarton})
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCountingSku(item.sku);
+                                      setCountCartonsDraft(
+                                        item.closedCartonsOnPallet,
+                                      );
+                                      setCountShelfDraft(
+                                        item.openUnitsOnPackingShelf,
+                                      );
+                                    }}
+                                    className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg text-[10px] font-bold cursor-pointer transition"
+                                  >
+                                    Conta / Rettifica
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
 
       {/* Modal 1: Add New Operator */}
       {isAddOperatorOpen && (
