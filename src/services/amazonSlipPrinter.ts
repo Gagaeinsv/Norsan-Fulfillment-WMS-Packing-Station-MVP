@@ -1,5 +1,6 @@
 import { Order } from "../types/wms";
 import { generateCode128SvgMarkup } from "./barcodeGenerator";
+import { getProductLotInfo } from "./lotTraceabilityService";
 
 /**
  * Service to generate ready-to-print Amazon FBM / Marketplace Packing Slips (Bolle di Consegna)
@@ -13,14 +14,18 @@ export const printAmazonPackingSlip = (order: Order) => {
   }
 
   const itemsHtml = order.items
-    .map(
-      (item, idx) => `
+    .map((item, idx) => {
+      const shelfLot = getProductLotInfo(item.product);
+      const lotStr = item.lotNumber || shelfLot.lotNumber;
+      const expStr = item.expiryDate || shelfLot.expiryDate;
+      return `
     <tr style="border-bottom: 1px solid #cbd5e1;">
       <td style="padding: 10px 8px; font-weight: bold; font-family: monospace;">${idx + 1}</td>
       <td style="padding: 10px 8px;">
         <div style="font-weight: 800; font-size: 11pt; color: #0f172a;">${item.product.italianName || item.product.name}</div>
         <div style="font-size: 9pt; color: #64748b; margin-top: 2px;">
           SKU: <b>${item.product.sku}</b> &nbsp;|&nbsp; EAN: <span style="font-family: monospace;">${item.product.ean}</span>
+          &nbsp;|&nbsp; <span style="color: #0369a1; font-weight: 700;">Lotto FEFO: ${lotStr} (Scad. ${expStr})</span>
         </div>
       </td>
       <td style="padding: 10px 8px; text-align: center;">
@@ -35,8 +40,8 @@ export const printAmazonPackingSlip = (order: Order) => {
         <div style="width: 22px; height: 22px; border: 2px solid #94a3b8; border-radius: 4px; margin: 0 auto;"></div>
       </td>
     </tr>
-  `
-    )
+  `;
+    })
     .join("");
 
   const street = order.addressDetails?.street || order.customerAddress;
@@ -280,14 +285,18 @@ export const printBatchAmazonPackingSlips = (orders: Order[]) => {
   const pagesHtml = orders
     .map((order, orderIdx) => {
       const itemsHtml = order.items
-        .map(
-          (item, idx) => `
+        .map((item, idx) => {
+          const shelfLot = getProductLotInfo(item.product);
+          const lotStr = item.lotNumber || shelfLot.lotNumber;
+          const expStr = item.expiryDate || shelfLot.expiryDate;
+          return `
         <tr style="border-bottom: 1px solid #cbd5e1;">
           <td style="padding: 9px 8px; font-weight: bold; font-family: monospace;">${idx + 1}</td>
           <td style="padding: 9px 8px;">
             <div style="font-weight: 800; font-size: 11pt; color: #0f172a;">${item.product.italianName || item.product.name}</div>
             <div style="font-size: 8.5pt; color: #64748b; margin-top: 2px;">
               SKU: <b>${item.product.sku}</b> &nbsp;|&nbsp; EAN: <span style="font-family: monospace;">${item.product.ean}</span>
+              &nbsp;|&nbsp; <span style="color: #0369a1; font-weight: 700;">Lotto FEFO: ${lotStr} (Scad. ${expStr})</span>
             </div>
           </td>
           <td style="padding: 9px 8px; text-align: center;">
@@ -302,8 +311,8 @@ export const printBatchAmazonPackingSlips = (orders: Order[]) => {
             <div style="width: 20px; height: 20px; border: 2px solid #94a3b8; border-radius: 4px; margin: 0 auto;"></div>
           </td>
         </tr>
-      `
-        )
+      `;
+        })
         .join("");
 
       const street = order.addressDetails?.street || order.customerAddress;

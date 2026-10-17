@@ -37,6 +37,7 @@ interface ActivePackingViewProps {
   onForceAddProduct?: (product: Product) => void;
   onOpenBindModal?: (barcode: string) => void;
   onConfirmAllItems?: () => void;
+  onUpdateItemLot?: (sku: string, lotNumber: string, expiryDate: string) => void;
 }
 
 export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
@@ -54,6 +55,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   onForceAddProduct,
   onOpenBindModal,
   onConfirmAllItems,
+  onUpdateItemLot,
 }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [kanbanAlertItem, setKanbanAlertItem] = useState<string | null>(null);
@@ -335,6 +337,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
               kanbanAlertItem={kanbanAlertItem}
               onSimulateScan={onSimulateScan}
               onKanbanRefill={handleKanbanRefill}
+              onUpdateItemLot={onUpdateItemLot}
             />
           ))}
         </div>

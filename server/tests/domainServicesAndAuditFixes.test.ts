@@ -15,6 +15,12 @@ import {
   matchCatalogProduct,
 } from "../../src/services/sellyCsvImporter";
 import { NORSAN_PRODUCTS } from "../../src/data/norsanProducts";
+import {
+  getProductLotInfo,
+  updateProductLotInfo,
+  rotateToSecondaryLot,
+  computeFefoStatus,
+} from "../../src/services/lotTraceabilityService";
 
 describe("Code 128-B Barcode Generator (Hardware Scanner Compliance)", () => {
   it("encodes Start Code B (104), valid modulo-103 checksum, and Stop Code (106)", () => {
@@ -125,3 +131,34 @@ ORD-2026-999;16/10/2026;Marco Neri;Via Dante 5;Bolzano;39100;BZ;DHL;SKU-IGNOTO-7
     expect(syncRes.body.success).toBe(false); // No API key configured in test env
   });
 });
+
+describe("FEFO Expiry & Batch/Lot Traceability Service (HACCP Reg. CE 178/2002)", () => {
+  it("returns active front-carton FEFO lot and secondary carton lot for high-runner SKUs", () => {
+    const totalLimone = NORSAN_PRODUCTS.find((p) => p.sku === "NOR-TOT-200-LEM")!;
+    const info = getProductLotInfo(totalLimone);
+    expect(info.lotNumber).toBe("L2604N");
+    expect(info.expiryDate).toBe("12/2026");
+    expect(info.secondaryLot?.lotNumber).toBe("L2609N");
+    expect(info.fefoStatus).toBe("fefo_priority");
+  });
+
+  it("computes FEFO status accurately based on expiry month/year and secondary lot presence", () => {
+    expect(computeFefoStatus("11/2026", false)).toBe("expiring_soon");
+    expect(computeFefoStatus("01/2027", false)).toBe("fefo_priority");
+    expect(computeFefoStatus("09/2027", true)).toBe("fefo_priority");
+    expect(computeFefoStatus("09/2027", false)).toBe("optimal");
+  });
+
+  it("rotates front carton to secondary lot and updates custom lot info cleanly", () => {
+    const arktis = NORSAN_PRODUCTS.find((p) => p.sku === "NOR-ARK-200-LEM")!;
+    const rotated = rotateToSecondaryLot(arktis);
+    expect(rotated.lotNumber).toBe("L2610A");
+    expect(rotated.expiryDate).toBe("10/2027");
+
+    const updated = updateProductLotInfo("NOR-ARK-200-LEM", "l2701a", "11/2027");
+    expect(updated.lotNumber).toBe("L2701A");
+    expect(updated.expiryDate).toBe("11/2027");
+    expect(updated.fefoStatus).toBe("optimal");
+  });
+});
+

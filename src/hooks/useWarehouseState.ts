@@ -34,6 +34,7 @@ import {
   blinkWrongScan,
   clearOrderLeds,
 } from "../services/p2lClient";
+import { getProductLotInfo } from "../services/lotTraceabilityService";
 
 function resolveProduct(
   rawCode: string,
@@ -531,6 +532,39 @@ export function useWarehouseState() {
     if (!isMuted) playScanSuccess();
   }, [activeOrderId, isMuted, playScanSuccess]);
 
+  // Update FEFO Lot & Expiry Date on an item in the active order
+  const handleUpdateItemLot = useCallback(
+    (sku: string, lotNumber: string, expiryDate: string) => {
+      if (!activeOrder) return;
+      setOrders((prev) =>
+        prev.map((o) => {
+          if (o.id === activeOrder.id) {
+            return {
+              ...o,
+              items: o.items.map((it) =>
+                it.product.sku === sku
+                  ? { ...it, lotNumber, expiryDate }
+                  : it,
+              ),
+            };
+          }
+          return o;
+        }),
+      );
+      if (!isMuted) playScanSuccess();
+      setLastScan({
+        id: Math.random().toString(),
+        rawCode: lotNumber,
+        resultType: "command",
+        status: "info",
+        title: "Tracciabilità FEFO Aggiornata",
+        message: `Registrato Lotto ${lotNumber} (Scad. ${expiryDate}) per SKU ${sku}`,
+        timestamp: Date.now(),
+      });
+    },
+    [activeOrder, isMuted, playScanSuccess],
+  );
+
   // Fast Confirmation for Paper-based Picking (validates product items from paper slip while preserving Poka-Yoke for flyers/gifts/B2B docs)
   const handleConfirmAllItems = useCallback(() => {
     if (!activeOrder || activeOrder.status === "packed") return;
@@ -538,11 +572,16 @@ export function useWarehouseState() {
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id === activeOrder.id) {
-          const completedItems = o.items.map((it) => ({
-            ...it,
-            quantityScanned: it.quantityRequired,
-            status: "completed" as const,
-          }));
+          const completedItems = o.items.map((it) => {
+            const lotInfo = getProductLotInfo(it.product);
+            return {
+              ...it,
+              quantityScanned: it.quantityRequired,
+              status: "completed" as const,
+              lotNumber: it.lotNumber || lotInfo.lotNumber,
+              expiryDate: it.expiryDate || lotInfo.expiryDate,
+            };
+          });
           return {
             ...o,
             items: completedItems,
@@ -968,7 +1007,8 @@ export function useWarehouseState() {
       const newScannedQty = currentItem.quantityScanned + actualAdd;
       const isItemDone = newScannedQty >= currentItem.quantityRequired;
 
-      // Update state
+      // Update state with FEFO Lot & Expiry traceability
+      const activeLotInfo = getProductLotInfo(matchedProduct);
       setOrders((prev) =>
         prev.map((ord) => {
           if (ord.id === activeOrder.id) {
@@ -978,6 +1018,8 @@ export function useWarehouseState() {
                   ...it,
                   quantityScanned: newScannedQty,
                   status: isItemDone ? "completed" : "in_progress",
+                  lotNumber: it.lotNumber || activeLotInfo.lotNumber,
+                  expiryDate: it.expiryDate || activeLotInfo.expiryDate,
                 };
               }
               return it;
@@ -1452,6 +1494,7 @@ export function useWarehouseState() {
     handleToggleGift,
     handleTogglePhysicalDocument,
     handleConfirmAllItems,
+    handleUpdateItemLot,
     handleSimulateIncomingWebOrder,
     handleBarcodeScanned,
     handleCompleteAndNext,

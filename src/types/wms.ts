@@ -32,6 +32,8 @@ export interface Product {
   // Fast-pick buffer (tavolo buffer next to packer)
   isFastBuffer?: boolean; // true = item lives in N-B1..N-B3 table buffer
   aliases?: string[]; // Real factory barcodes, UPC-12, EAN-13, PZN, Minsan
+  defaultLotNumber?: string; // Active shelf batch e.g. "L2604N"
+  defaultExpiryDate?: string; // Active shelf expiry e.g. "12/2026"
 }
 
 export interface OrderItem {
@@ -39,6 +41,8 @@ export interface OrderItem {
   quantityRequired: number;
   quantityScanned: number;
   status: "pending" | "in_progress" | "completed" | "overpack";
+  lotNumber?: string; // Recorded batch number for FEFO / Ministry recall traceability
+  expiryDate?: string; // Recorded expiry date (MM/YYYY)
 }
 
 export type OrderPriority = "standard" | "express" | "urgent";

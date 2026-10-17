@@ -65,6 +65,7 @@ export function App() {
     handleToggleGift,
     handleTogglePhysicalDocument,
     handleConfirmAllItems,
+    handleUpdateItemLot,
     handleSimulateIncomingWebOrder,
     handleCompleteAndNext,
     handleResetData,
@@ -161,6 +162,7 @@ export function App() {
               onToggleGift={handleToggleGift}
               onTogglePhysicalDocument={handleTogglePhysicalDocument}
               onConfirmAllItems={handleConfirmAllItems}
+              onUpdateItemLot={handleUpdateItemLot}
               lastScan={lastScan}
               onQuickSwitchOrder={handleQuickSwitchOrder}
               onForceAddProduct={handleForceAddProductToActiveOrder}

@@ -5,7 +5,7 @@
  * fragile warning, Kanban replenishment button, scan button, progress bar.
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   MapPin,
   ShieldAlert,
@@ -14,8 +14,15 @@ import {
   Sparkles,
   Boxes,
   Check,
+  CalendarClock,
+  RefreshCw,
 } from "lucide-react";
 import { OrderItem } from "../../types/wms";
+import {
+  getProductLotInfo,
+  updateProductLotInfo,
+  rotateToSecondaryLot,
+} from "../../services/lotTraceabilityService";
 
 interface PackingItemCardProps {
   item: OrderItem;
@@ -24,6 +31,7 @@ interface PackingItemCardProps {
   kanbanAlertItem: string | null;
   onSimulateScan: (ean: string, qty?: number) => void;
   onKanbanRefill: (productName: string, slotCode: string) => void;
+  onUpdateItemLot?: (sku: string, lotNumber: string, expiryDate: string) => void;
 }
 
 export const PackingItemCard: React.FC<PackingItemCardProps> = ({
@@ -33,7 +41,16 @@ export const PackingItemCard: React.FC<PackingItemCardProps> = ({
   kanbanAlertItem,
   onSimulateScan,
   onKanbanRefill,
+  onUpdateItemLot,
 }) => {
+  const shelfLot = getProductLotInfo(item.product);
+  const currentLot = item.lotNumber || shelfLot.lotNumber;
+  const currentExp = item.expiryDate || shelfLot.expiryDate;
+
+  const [isEditingLot, setIsEditingLot] = useState(false);
+  const [lotInput, setLotInput] = useState(currentLot);
+  const [expInput, setExpInput] = useState(currentExp);
+
   const isCompleted = item.quantityScanned >= item.quantityRequired;
   const isPartial = item.quantityScanned > 0 && !isCompleted;
   const progressPercent = Math.min(
@@ -167,13 +184,119 @@ export const PackingItemCard: React.FC<PackingItemCardProps> = ({
           <p className="text-xs text-slate-600 font-semibold mt-0.5 line-clamp-1">
             {item.product.italianName}
           </p>
-          <div className="mt-2 flex items-center gap-1 text-xs font-mono text-slate-600">
+          <div className="mt-1.5 flex items-center gap-1 text-xs font-mono text-slate-600">
             <Barcode className="w-4 h-4 text-slate-500" />
             <span>
               EAN:{" "}
               <strong className="text-slate-900">{item.product.ean}</strong>
             </span>
           </div>
+
+          {/* FEFO Lot & Expiry Date Control Strip */}
+          <div className="mt-1.5">
+            {!isEditingLot ? (
+              <div className="flex flex-wrap items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLotInput(currentLot);
+                    setExpInput(currentExp);
+                    setIsEditingLot(true);
+                  }}
+                  title="Clicca per modificare il Lotto o la Data di Scadenza (FEFO)"
+                  className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border flex items-center gap-1 transition cursor-pointer ${
+                    shelfLot.fefoStatus === "expiring_soon"
+                      ? "bg-rose-50 text-rose-900 border-rose-300 hover:bg-rose-100"
+                      : shelfLot.fefoStatus === "fefo_priority"
+                      ? "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
+                      : "bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200"
+                  }`}
+                >
+                  <CalendarClock className="w-3 h-3 shrink-0" />
+                  <span>
+                    Lotto: <b>{currentLot}</b> • Scad: <b>{currentExp}</b>
+                  </span>
+                </button>
+
+                {shelfLot.secondaryLot && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = rotateToSecondaryLot(item.product);
+                      setLotInput(next.lotNumber);
+                      setExpInput(next.expiryDate);
+                      if (onUpdateItemLot) {
+                        onUpdateItemLot(
+                          item.product.sku,
+                          next.lotNumber,
+                          next.expiryDate,
+                        );
+                      }
+                    }}
+                    title={`Esaurito lotto frontale ${currentLot}? Passa al nuovo cartone ${shelfLot.secondaryLot.lotNumber} (${shelfLot.secondaryLot.expiryDate})`}
+                    className="text-[10px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-300 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 transition cursor-pointer"
+                  >
+                    <RefreshCw className="w-2.5 h-2.5" />
+                    <span>→ {shelfLot.secondaryLot.lotNumber}</span>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="mt-1 p-1.5 bg-slate-100 border border-slate-300 rounded-lg flex flex-wrap items-center gap-1">
+                <input
+                  type="text"
+                  value={lotInput}
+                  onChange={(e) => setLotInput(e.target.value.toUpperCase())}
+                  placeholder="Lotto es. L2604N"
+                  className="w-20 px-1.5 py-0.5 text-[11px] font-mono font-bold bg-white border border-slate-300 rounded text-slate-900"
+                />
+                <input
+                  type="text"
+                  value={expInput}
+                  onChange={(e) => setExpInput(e.target.value)}
+                  placeholder="MM/AAAA"
+                  className="w-18 px-1.5 py-0.5 text-[11px] font-mono font-bold bg-white border border-slate-300 rounded text-slate-900"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (lotInput.trim() && expInput.trim()) {
+                      updateProductLotInfo(
+                        item.product.sku,
+                        lotInput.trim(),
+                        expInput.trim(),
+                      );
+                      if (onUpdateItemLot) {
+                        onUpdateItemLot(
+                          item.product.sku,
+                          lotInput.trim().toUpperCase(),
+                          expInput.trim(),
+                        );
+                      }
+                    }
+                    setIsEditingLot(false);
+                  }}
+                  className="px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-black rounded cursor-pointer"
+                >
+                  Salva
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingLot(false)}
+                  className="px-1.5 py-0.5 text-[10px] font-bold text-slate-600 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {shelfLot.fefoNote && !isCompleted && (
+              <div className="mt-1 text-[10px] font-bold text-amber-800 bg-amber-100/80 border border-amber-300 rounded px-1.5 py-0.5 leading-tight">
+                ⚠️ {shelfLot.fefoNote}
+              </div>
+            )}
+          </div>
+
           <div className="mt-2 flex items-center gap-1.5 flex-wrap">
             {item.product.fragile && (
               <span className="text-xs font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300">

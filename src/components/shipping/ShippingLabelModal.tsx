@@ -11,6 +11,7 @@ import {
 import confetti from "canvas-confetti";
 import { Order } from "../../types/wms";
 import { getCode128Bars } from "../../services/barcodeGenerator";
+import { getProductLotInfo } from "../../services/lotTraceabilityService";
 
 interface ShippingLabelModalProps {
   order: Order;
@@ -285,18 +286,29 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
             </div>
 
             {/* Footer tags */}
-            <div className="mt-2 pt-2 border-t border-dashed border-gray-400 flex items-center justify-between text-[9px] font-bold text-gray-700">
-              <div className="flex items-center gap-1 text-red-600">
-                {isFragile && (
-                  <>
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    <span>CONTIENE VETRO / FRAGILE</span>
-                  </>
-                )}
+            <div className="mt-2 pt-2 border-t border-dashed border-gray-400 flex flex-col gap-1 text-[9px] font-bold text-gray-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-red-600">
+                  {isFragile && (
+                    <>
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      <span>CONTIENE VETRO / FRAGILE</span>
+                    </>
+                  )}
+                </div>
+                <div className="font-mono">
+                  Rif. Ordine: {order.orderNumber} ({totalUnits} pz)
+                  {packageCount > 1 && ` [Collo ${activeColloIdx + 1}/${packageCount}]`}
+                </div>
               </div>
-              <div className="font-mono">
-                Rif. Ordine: {order.orderNumber} ({totalUnits} pz)
-                {packageCount > 1 && ` [Collo ${activeColloIdx + 1}/${packageCount}]`}
+              <div className="text-[8px] font-mono text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 truncate">
+                Tracciabilità Lotti FEFO:{" "}
+                {order.items
+                  .map((i) => {
+                    const lot = getProductLotInfo(i.product);
+                    return `${i.product.sku}: ${i.lotNumber || lot.lotNumber} (${i.expiryDate || lot.expiryDate})`;
+                  })
+                  .join(" • ")}
               </div>
             </div>
           </div>

@@ -40,6 +40,11 @@ import {
   printBatchAmazonPackingSlips,
 } from "../../services/amazonSlipPrinter";
 import { getCode128Bars } from "../../services/barcodeGenerator";
+import {
+  getProductLotInfo,
+  updateProductLotInfo,
+  rotateToSecondaryLot,
+} from "../../services/lotTraceabilityService";
 
 interface SupervisorDashboardProps {
   stations: WarehouseStation[];
@@ -98,8 +103,22 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   onUpdateOrderAddress,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    "stations" | "ecommerce" | "amazon" | "issues" | "operators" | "slotting" | "lean"
+    | "stations"
+    | "ecommerce"
+    | "amazon"
+    | "issues"
+    | "operators"
+    | "slotting"
+    | "lean"
+    | "fefo"
   >("stations");
+
+  // FEFO & Batch Recall State
+  const [recallSearchLot, setRecallSearchLot] = useState("");
+  const [, setFefoRefreshTick] = useState(0);
+  const [editingShelfProductId, setEditingShelfProductId] = useState<string | null>(null);
+  const [shelfLotDraft, setShelfLotDraft] = useState("");
+  const [shelfExpDraft, setShelfExpDraft] = useState("");
 
   // Address Normalizer Modal State
   const [selectedAddressOrder, setSelectedAddressOrder] = useState<Order | null>(
@@ -574,6 +593,18 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
         >
           <TrendingUp className="w-4 h-4 text-emerald-400" />
           <span>📈 Metriche Lean & 5S Kaizen</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("fefo")}
+          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+            activeTab === "fefo"
+              ? "bg-teal-700 text-white shadow-sm"
+              : "bg-white text-teal-800 hover:text-teal-950 border border-teal-300"
+          }`}
+        >
+          <CheckCircle className="w-4 h-4 text-teal-500" />
+          <span>🧪 Lotti, Scadenze FEFO & Richiamo</span>
         </button>
       </div>
 
@@ -1518,6 +1549,362 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content 6: FEFO Expiry & Batch Recall Traceability */}
+      {activeTab === "fefo" && (
+        <div className="space-y-4">
+          {/* Top FEFO & HACCP Banner */}
+          <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-teal-950 border-2 border-teal-600/40 rounded-3xl p-5 text-white shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/40 font-bold">
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>
+                  Controllo Qualità Nutraceutico • Reg. CE 178/2002 (HACCP)
+                </span>
+              </div>
+              <h3 className="text-lg font-black tracking-tight text-white">
+                Gestione Lotti, Scadenze FEFO (First Expired, First Out) &
+                Tracciabilità Richiami
+              </h3>
+              <p className="text-xs text-slate-300 max-w-3xl">
+                Previene lo stoccaggio di flaconi scaduti sugli scaffali di
+                Bolzano, guida gli operatori a esaurire sempre il cartone con
+                scadenza più ravvicinata e consente di rintracciare in 1 secondo
+                tutti i clienti che hanno ricevuto uno specifico lotto.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="bg-slate-900/90 border border-teal-500/40 rounded-2xl px-4 py-2.5 text-center">
+                <div className="text-[10px] font-bold uppercase text-slate-400">
+                  Rotazione Doppio Lotto
+                </div>
+                <div className="text-xl font-black font-mono text-amber-400">
+                  {
+                    products.filter((p) => !!getProductLotInfo(p).secondaryLot)
+                      .length
+                  }{" "}
+                  SKU
+                </div>
+              </div>
+              <div className="bg-slate-900/90 border border-teal-500/40 rounded-2xl px-4 py-2.5 text-center">
+                <div className="text-[10px] font-bold uppercase text-slate-400">
+                  Priorità FEFO Attiva
+                </div>
+                <div className="text-xl font-black font-mono text-rose-400">
+                  {
+                    products.filter(
+                      (p) => getProductLotInfo(p).fefoStatus !== "optimal",
+                    ).length
+                  }{" "}
+                  Lotti
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Batch Recall Search Box (Simulazione Richiamo Ministero / Controllo Qualità) */}
+          <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 shadow-sm space-y-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
+                <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <span>🔍 Ricerca Istantanea Richiamo Lotto (Batch Recall)</span>
+                  <span className="text-[10px] font-mono bg-teal-100 text-teal-900 px-2 py-0.5 rounded border border-teal-300 font-bold">
+                    Audit-Ready
+                  </span>
+                </h4>
+                <p className="text-xs text-slate-600">
+                  Inserisci un codice lotto (es.{" "}
+                  <code className="font-mono font-bold text-teal-800">
+                    L2604N
+                  </code>
+                  ,{" "}
+                  <code className="font-mono font-bold text-teal-800">
+                    L2602V
+                  </code>
+                  ,{" "}
+                  <code className="font-mono font-bold text-teal-800">
+                    L2607A
+                  </code>
+                  ) per visualizzare tutti gli ordini clienti che contengono quel
+                  lotto.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={recallSearchLot}
+                  onChange={(e) => setRecallSearchLot(e.target.value.toUpperCase())}
+                  placeholder="Cerca Lotto (es. L2604N)..."
+                  className="px-3.5 py-2 text-xs font-mono font-bold uppercase rounded-xl border-2 border-slate-300 focus:border-teal-600 focus:outline-none w-56"
+                />
+                {recallSearchLot && (
+                  <button
+                    type="button"
+                    onClick={() => setRecallSearchLot("")}
+                    className="px-3 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 rounded-xl cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {recallSearchLot.trim().length > 0 && (
+              <div className="pt-2 border-t border-slate-200">
+                {(() => {
+                  const q = recallSearchLot.trim().toUpperCase();
+                  const matchingOrders = orders.filter((o) =>
+                    o.items.some((item) => {
+                      const assignedLot =
+                        item.lotNumber || getProductLotInfo(item.product).lotNumber;
+                      return assignedLot.toUpperCase().includes(q);
+                    }),
+                  );
+
+                  if (matchingOrders.length === 0) {
+                    return (
+                      <div className="text-xs text-slate-500 py-3 text-center font-semibold">
+                        Nessun ordine trovato con il lotto &ldquo;{q}&rdquo;.
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-200 text-[10px] uppercase font-black text-slate-500 bg-slate-50">
+                            <th className="py-2 px-3">Ordine</th>
+                            <th className="py-2 px-3">Cliente & Città</th>
+                            <th className="py-2 px-3">Articolo & Lotto</th>
+                            <th className="py-2 px-3">Tracking DHL</th>
+                            <th className="py-2 px-3">Stato</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                          {matchingOrders.map((ord) => (
+                            <tr key={ord.id} className="hover:bg-slate-50">
+                              <td className="py-2 px-3 font-mono font-black text-slate-900">
+                                {ord.orderNumber}
+                              </td>
+                              <td className="py-2 px-3 font-bold text-slate-800">
+                                {ord.customerName} ({ord.customerCity})
+                              </td>
+                              <td className="py-2 px-3">
+                                {ord.items
+                                  .filter((item) =>
+                                    (
+                                      item.lotNumber ||
+                                      getProductLotInfo(item.product).lotNumber
+                                    )
+                                      .toUpperCase()
+                                      .includes(q),
+                                  )
+                                  .map((item) => {
+                                    const info = getProductLotInfo(item.product);
+                                    return (
+                                      <span
+                                        key={item.product.id}
+                                        className="inline-block mr-2 font-mono text-[11px] bg-teal-50 text-teal-900 border border-teal-300 px-2 py-0.5 rounded font-bold"
+                                      >
+                                        {item.product.sku} • Lotto{" "}
+                                        {item.lotNumber || info.lotNumber} (Scad.{" "}
+                                        {item.expiryDate || info.expiryDate})
+                                      </span>
+                                    );
+                                  })}
+                              </td>
+                              <td className="py-2 px-3 font-mono text-slate-600">
+                                {ord.trackingNumber || "In attesa etichetta"}
+                              </td>
+                              <td className="py-2 px-3">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                                    ord.status === "packed"
+                                      ? "bg-emerald-100 text-emerald-900"
+                                      : "bg-amber-100 text-amber-900"
+                                  }`}
+                                >
+                                  {ord.status === "packed"
+                                    ? "Spedito / Imballato"
+                                    : "In Magazzino"}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
+          {/* Shelf FEFO Lot Table */}
+          <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 shadow-sm overflow-x-auto">
+            <h4 className="text-sm font-black text-slate-900 mb-3">
+              📦 Mappa Scaffali FEFO • Lotti Frontali Attivi & Scadenze
+            </h4>
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b-2 border-slate-200 text-[10px] uppercase font-black text-slate-500 bg-slate-50">
+                  <th className="py-2.5 px-3">Scaffale</th>
+                  <th className="py-2.5 px-3">Prodotto (SKU)</th>
+                  <th className="py-2.5 px-3">Lotto Frontale (FEFO)</th>
+                  <th className="py-2.5 px-3">Scadenza & Stato</th>
+                  <th className="py-2.5 px-3">Secondo Cartone (Scorta)</th>
+                  <th className="py-2.5 px-3 text-right">Azioni Rapide</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {products.map((prod) => {
+                  const info = getProductLotInfo(prod);
+                  const isEditing = editingShelfProductId === prod.id;
+                    return (
+                      <tr key={prod.id} className="hover:bg-slate-50">
+                        <td className="py-2.5 px-3 font-mono font-black text-blue-900">
+                          {prod.shelfLocation}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <div className="font-black text-slate-900">
+                            {prod.italianName || prod.name}
+                          </div>
+                          <div className="text-[10px] font-mono text-slate-500">
+                            SKU: {prod.sku} • EAN: {prod.ean}
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-3 font-mono font-black">
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={shelfLotDraft}
+                              onChange={(e) =>
+                                setShelfLotDraft(e.target.value.toUpperCase())
+                              }
+                              className="w-24 px-2 py-1 text-xs font-mono font-bold border border-teal-500 rounded"
+                            />
+                          ) : (
+                            <span className="bg-slate-100 text-slate-900 px-2 py-0.5 rounded border border-slate-300">
+                              {info.lotNumber}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={shelfExpDraft}
+                              onChange={(e) => setShelfExpDraft(e.target.value)}
+                              placeholder="MM/YYYY"
+                              className="w-24 px-2 py-1 text-xs font-mono font-bold border border-teal-500 rounded"
+                            />
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className={`font-mono font-black px-2 py-0.5 rounded border ${
+                                  info.fefoStatus === "expiring_soon"
+                                    ? "bg-rose-100 text-rose-900 border-rose-300"
+                                    : info.fefoStatus === "fefo_priority"
+                                      ? "bg-amber-100 text-amber-950 border-amber-300"
+                                      : "bg-emerald-50 text-emerald-900 border-emerald-200"
+                                }`}
+                              >
+                                {info.expiryDate}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-500">
+                                {info.fefoStatus === "expiring_soon"
+                                  ? "Scad. ravvicinata"
+                                  : info.fefoStatus === "fefo_priority"
+                                    ? "Priorità FEFO"
+                                    : "Ottimale"}
+                              </span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 font-mono">
+                          {info.secondaryLot ? (
+                            <span className="text-[11px] bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded font-bold">
+                              ⚠️ Pronto: {info.secondaryLot.lotNumber} (Scad.{" "}
+                              {info.secondaryLot.expiryDate})
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">
+                              Singolo lotto
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {isEditing ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (
+                                      shelfLotDraft.trim() &&
+                                      shelfExpDraft.trim()
+                                    ) {
+                                      updateProductLotInfo(
+                                        prod.sku,
+                                        shelfLotDraft.trim(),
+                                        shelfExpDraft.trim(),
+                                      );
+                                      setFefoRefreshTick((t) => t + 1);
+                                    }
+                                    setEditingShelfProductId(null);
+                                  }}
+                                  className="px-2.5 py-1 bg-teal-600 text-white rounded-lg text-[10px] font-black cursor-pointer"
+                                >
+                                  Salva
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingShelfProductId(null)}
+                                  className="px-2 py-1 bg-slate-100 text-slate-700 rounded-lg text-[10px] font-bold cursor-pointer"
+                                >
+                                  Annulla
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                {info.secondaryLot && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      rotateToSecondaryLot(prod);
+                                      setFefoRefreshTick((t) => t + 1);
+                                    }}
+                                    className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-[10px] font-black cursor-pointer transition"
+                                    title="Passa al nuovo cartone"
+                                  >
+                                    Ruota → {info.secondaryLot.lotNumber}
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingShelfProductId(prod.id);
+                                    setShelfLotDraft(info.lotNumber);
+                                    setShelfExpDraft(info.expiryDate);
+                                  }}
+                                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg text-[10px] font-bold cursor-pointer transition"
+                                >
+                                  Modifica Lotto
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
