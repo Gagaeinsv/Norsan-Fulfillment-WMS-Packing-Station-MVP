@@ -1,3 +1,14 @@
+# 🚨 STRUMENTO DI EMERGENZA: FILTRO ORDINI SELLY / DHL (BOLZANO HUB)
+
+> ### ⚡ ACCESSO RAPIDO PER IL MAGAZZINO:
+> 👉 **[CLICCA QUI PER APRIRE IL FILTRO PDF ONLINE](https://raw.githack.com/Gagaeinsv/Norsan-Fulfillment-WMS-Packing-Station-MVP/main/dhl.html)** 👈
+>
+> In alternativa: scarica [`dhl.html`](https://raw.githubusercontent.com/Gagaeinsv/Norsan-Fulfillment-WMS-Packing-Station-MVP/main/dhl.html) e aprilo con doppio clic in Google Chrome.
+>
+> **Cosa fa**: Esclude gli ordini già spediti oggi su DHL, elimina le copie duplicate/triplicate di Selly ERP e genera il PDF pulito con **SOLI NUOVI ORDINI** da stampare e imballare.
+
+---
+
 # 📦 NORSAN & ZREEN Fulfillment WMS — Packing Station (Bolzano Hub)
 
 Sistema operativo di magazzino (**WMS Packing Station & Supervisor Control Tower**) progettato per l'Hub logistico **NORSAN S.r.l. / ZREEN** di Bolzano (Alto Adige, Italia).
