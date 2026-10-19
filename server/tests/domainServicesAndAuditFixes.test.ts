@@ -9,6 +9,7 @@ import {
 import {
   parseItalianAddress,
   parseFullAddressBlock,
+  areItalianAddressesMatching,
 } from "../../src/services/italianAddressParser";
 import {
   parseSellyOrdersCsv,
@@ -99,6 +100,42 @@ describe("Italian Address Parser & DHL Normalizer", () => {
     expect(block?.addressAddition).toContain("int. 3");
     expect(block?.zip).toBe("37121");
     expect(block?.city).toContain("Verona");
+  });
+
+  it("recognizes identical Italian addresses when 'Via' is omitted or comma is attached without space (Bolzano warehouse real case)", () => {
+    // Exact case from warehouse screen: 'Via Fabio Filzi 35' vs 'Fabio Filzi,35'
+    const a1 = parseItalianAddress("Via Fabio Filzi 35");
+    expect(a1.street).toBe("Via Fabio Filzi");
+    expect(a1.houseNumber).toBe("35");
+    expect(a1.status).toBe("valid");
+
+    const a2 = parseItalianAddress("Fabio Filzi,35");
+    expect(a2.street).toBe("Fabio Filzi");
+    expect(a2.houseNumber).toBe("35");
+    expect(a2.status).toBe("valid");
+
+    expect(
+      areItalianAddressesMatching(
+        "Via Fabio Filzi 35",
+        "Fabio Filzi,35",
+        "20063",
+        "20063",
+      ),
+    ).toBe(true);
+
+    // Other warehouse screen cases: S.pietro 10a, Via Dei Monti Parioli 49/a, Viale Camillo Golgi 66a
+    const a3 = parseItalianAddress("S.pietro 10a");
+    expect(a3.street).toBe("S.pietro");
+    expect(a3.houseNumber).toBe("10a");
+    expect(a3.status).toBe("valid");
+
+    const a4 = parseItalianAddress("Via Dei Monti Parioli 49/a");
+    expect(a4.houseNumber).toBe("49/a");
+    expect(a4.status).toBe("valid");
+
+    const a5 = parseItalianAddress("Viale Camillo Golgi 66a");
+    expect(a5.houseNumber).toBe("66a");
+    expect(a5.status).toBe("valid");
   });
 });
 

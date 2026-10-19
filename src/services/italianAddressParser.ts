@@ -188,9 +188,9 @@ export function parseItalianAddress(addressLine: string): ParsedItalianAddress {
       houseNumber = cleanLine(civicoPrefixMatch[1]);
       street = cleanLine(mainLine.substring(0, civicoPrefixMatch.index));
     } else {
-      // Pattern B: number at the end of the line, e.g. " 22", " 22/A", " 22 A", " 22-B", " 22 bis", " snc"
+      // Pattern B: number at the end of the line, e.g. " 22", ",35", ", 3", "10a", " 22/A", " 22 A", " 22-B", " 22 bis", " snc"
       const endNumberRegex =
-        /\s+([0-9]+(?:\s*[/\\-]\s*[a-zA-Z0-9]+|\s+[a-zA-Z]\b|\s+bis\b|\s+ter\b)?|snc|s\.n\.c\.)\s*$/i;
+        /(?:[\s,]+|[,\s]*n\.?\s*)([0-9]+(?:\s*[/\\-]\s*[a-zA-Z0-9]+|\s*[a-zA-Z]\b|\s+bis\b|\s+ter\b)?|snc|s\.n\.c\.)\s*$/i;
       const endMatch = mainLine.match(endNumberRegex);
 
       if (endMatch) {
@@ -328,3 +328,52 @@ export function parseFullAddressBlock(
     country,
   };
 }
+
+/**
+ * Normalizes an Italian street name for fuzzy comparison:
+ * - strips prefixes like 'via', 'viale', 'corso', 'c.so', 'piazza', 'p.zza', 'strada', 'contrada'
+ * - expands common abbreviations: 's.' -> 'san', 'st.' -> 'sant'
+ * - removes all punctuation and whitespace
+ */
+export function normalizeStreetForComparison(street: string): string {
+  if (!street) return "";
+  let s = street.toLowerCase().trim();
+  for (const prefix of STREET_PREFIXES) {
+    const escaped = prefix.replace(/\./g, "\\.");
+    const regex = new RegExp(`^${escaped}\\s+`, "i");
+    if (regex.test(s)) {
+      s = s.replace(regex, "");
+      break;
+    }
+  }
+  return s
+    .replace(/\bs\.\s*/gi, "san ")
+    .replace(/[^a-z0-9]/gi, "")
+    .trim();
+}
+
+/**
+ * Checks if two Italian addresses refer to the exact same physical destination,
+ * even if one omits 'Via', uses a comma without spaces (e.g. 'Fabio Filzi,35'), or has slight formatting differences.
+ */
+export function areItalianAddressesMatching(
+  addr1: string,
+  addr2: string,
+  cap1?: string,
+  cap2?: string,
+): boolean {
+  if (!addr1 || !addr2) return false;
+  if (cap1 && cap2 && cap1.trim() !== cap2.trim()) return false;
+
+  const p1 = parseItalianAddress(addr1);
+  const p2 = parseItalianAddress(addr2);
+
+  const normStreet1 = normalizeStreetForComparison(p1.street);
+  const normStreet2 = normalizeStreetForComparison(p2.street);
+
+  const normCivico1 = p1.houseNumber.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normCivico2 = p2.houseNumber.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  return normStreet1.length > 0 && normStreet1 === normStreet2 && normCivico1 === normCivico2;
+}
+
