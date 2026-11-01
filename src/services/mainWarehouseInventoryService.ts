@@ -26,70 +26,12 @@ export interface EnrichedInventoryItem extends WarehouseStockRecord {
   stockHealth: "aligned" | "discrepancy" | "overstock_expiry_risk" | "low_pallet_stock";
 }
 
-const STORAGE_KEY = "wms_main_inventory_v1";
+const STORAGE_KEY = "wms_inventory_prod_v1";
+const LEGACY_STORAGE_KEY = "wms_main_inventory_v1";
 
-const DEFAULT_STOCK_BY_SKU: Record<string, Omit<WarehouseStockRecord, "sku">> = {
-  "NOR-TOT-200-LEM": {
-    palletZone: "PALLET-A1",
-    unitsPerCarton: 20,
-    closedCartonsOnPallet: 38, // 760 pz
-    openUnitsOnPackingShelf: 24, // Tot: 784 pz
-    erpExpectedTotalUnits: 784,
-    monthlySalesVelocity: 420,
-    unitCostEur: 26.0,
-    lastCountedAt: "Oggi, 08:30",
-  },
-  "NOR-VEG-100-LEM": {
-    palletZone: "PALLET-A2",
-    unitsPerCarton: 12,
-    closedCartonsOnPallet: 14, // 168 pz
-    openUnitsOnPackingShelf: 10, // Tot: 178 pz
-    erpExpectedTotalUnits: 180, // -2 pz discrepancy (es. omaggio/rottura non scaricata)
-    monthlySalesVelocity: 110,
-    unitCostEur: 29.0,
-    lastCountedAt: "Ieri, 17:15",
-  },
-  "NOR-ARK-200-LEM": {
-    palletZone: "PALLET-A3",
-    unitsPerCarton: 20,
-    closedCartonsOnPallet: 22, // 440 pz
-    openUnitsOnPackingShelf: 16, // Tot: 456 pz
-    erpExpectedTotalUnits: 456,
-    monthlySalesVelocity: 190,
-    unitCostEur: 27.0,
-    lastCountedAt: "Oggi, 08:30",
-  },
-  "NOR-KID-OIL-150": {
-    palletZone: "PALLET-B1",
-    unitsPerCarton: 12,
-    closedCartonsOnPallet: 18, // 216 pz
-    openUnitsOnPackingShelf: 14, // Tot: 230 pz
-    erpExpectedTotalUnits: 230,
-    monthlySalesVelocity: 55, // ~4.2 mesi di scorta, ma scade a 12/2026 (2 mesi)! Rischio scadenza!
-    unitCostEur: 22.5,
-    lastCountedAt: "3 gg fa",
-  },
-  "NOR-TOT-200-NAT": {
-    palletZone: "PALLET-A4",
-    unitsPerCarton: 20,
-    closedCartonsOnPallet: 16, // 320 pz
-    openUnitsOnPackingShelf: 12, // Tot: 332 pz
-    erpExpectedTotalUnits: 332,
-    monthlySalesVelocity: 140,
-    unitCostEur: 26.0,
-    lastCountedAt: "Oggi, 08:30",
-  },
-  "NOR-VIT-D3K2-20": {
-    palletZone: "PALLET-B2",
-    unitsPerCarton: 24,
-    closedCartonsOnPallet: 2, // 48 pz (Scorta pallet bassa!)
-    openUnitsOnPackingShelf: 18, // Tot: 66 pz
-    erpExpectedTotalUnits: 66,
-    monthlySalesVelocity: 95,
-    unitCostEur: 24.0,
-    lastCountedAt: "Oggi, 09:00",
-  },
-};
+// Production mode: no fake/test stock preloaded.
+// All SKUs start at 0 until physical cycle count or inbound reception is recorded.
+const DEFAULT_STOCK_BY_SKU: Record<string, Omit<WarehouseStockRecord, "sku">> = {};
 
 let memoryInventory: Record<string, WarehouseStockRecord> = {};
 
@@ -99,26 +41,19 @@ function initDefaultRecord(product: Product): WarehouseStockRecord {
     return { sku: product.sku, ...preset };
   }
 
-  let hash = 0;
-  for (let i = 0; i < product.sku.length; i++) {
-    hash = (hash * 31 + product.sku.charCodeAt(i)) % 500;
-  }
   const unitsPerCarton = product.weightGrams >= 350 ? 20 : 24;
-  const closedCartonsOnPallet = (hash % 12) + 6;
-  const openUnitsOnPackingShelf = (hash % 10) + 8;
-  const total = closedCartonsOnPallet * unitsPerCarton + openUnitsOnPackingShelf;
-  const zonePrefix = product.brand === "ZREEN" ? "PALLET-Z" : "PALLET-C";
+  const zonePrefix = product.brand === "ZREEN" ? "PALLET-Z" : "PALLET-N";
 
   return {
     sku: product.sku,
-    palletZone: `${zonePrefix}${(hash % 6) + 1}`,
+    palletZone: `${zonePrefix}-${product.shelfLocation || "01"}`,
     unitsPerCarton,
-    closedCartonsOnPallet,
-    openUnitsOnPackingShelf,
-    erpExpectedTotalUnits: total,
-    monthlySalesVelocity: Math.max(35, (hash % 90) + 40),
+    closedCartonsOnPallet: 0,
+    openUnitsOnPackingShelf: 0,
+    erpExpectedTotalUnits: 0,
+    monthlySalesVelocity: 0,
     unitCostEur: product.brand === "ZREEN" ? 28.0 : 25.0,
-    lastCountedAt: "Settimana scorsa",
+    lastCountedAt: "Non conteggiato",
   };
 }
 
@@ -130,6 +65,9 @@ function loadInventoryMap(products: Product[]): Record<string, WarehouseStockRec
 
   if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
     try {
+      // Remove legacy mock inventory cache if present
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -158,11 +96,13 @@ function saveInventoryMap(map: Record<string, WarehouseStockRecord>) {
 
 export function computeMonthsUntilExpiry(expiryDate: string): number {
   const match = expiryDate.trim().match(/^(\d{1,2})\/(\d{4})$/);
-  if (!match) return 8;
+  if (!match) return 0;
   const month = parseInt(match[1], 10);
   const year = parseInt(match[2], 10);
-  // Reference date: October 2026
-  return Math.max(0, (year - 2026) * 12 + (month - 10));
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  return Math.max(0, (year - currentYear) * 12 + (month - currentMonth));
 }
 
 export function getWarehouseInventory(products: Product[]): EnrichedInventoryItem[] {
@@ -181,10 +121,14 @@ export function getWarehouseInventory(products: Product[]): EnrichedInventoryIte
         : 0;
 
     // Units that won't sell before expiry date at current monthly velocity
-    const maxSellableBeforeExpiry = Math.round(
-      monthsUntilExpiry * rec.monthlySalesVelocity,
-    );
-    const writeOffRiskUnits = Math.max(0, physicalTotalUnits - maxSellableBeforeExpiry);
+    const maxSellableBeforeExpiry =
+      rec.monthlySalesVelocity > 0
+        ? Math.round(monthsUntilExpiry * rec.monthlySalesVelocity)
+        : physicalTotalUnits;
+    const writeOffRiskUnits =
+      rec.monthlySalesVelocity > 0 && monthsUntilExpiry > 0
+        ? Math.max(0, physicalTotalUnits - maxSellableBeforeExpiry)
+        : 0;
     const writeOffRiskEur = Math.round(writeOffRiskUnits * rec.unitCostEur);
 
     let stockHealth: EnrichedInventoryItem["stockHealth"] = "aligned";
@@ -192,7 +136,11 @@ export function getWarehouseInventory(products: Product[]): EnrichedInventoryIte
       stockHealth = "overstock_expiry_risk";
     } else if (discrepancyUnits !== 0) {
       stockHealth = "discrepancy";
-    } else if (rec.closedCartonsOnPallet <= 3) {
+    } else if (
+      (rec.erpExpectedTotalUnits > 0 || rec.lastCountedAt !== "Non conteggiato") &&
+      rec.closedCartonsOnPallet <= 3 &&
+      physicalTotalUnits > 0
+    ) {
       stockHealth = "low_pallet_stock";
     }
 
@@ -272,7 +220,7 @@ export function receiveInboundPallet(
       ...existing,
       closedCartonsOnPallet: existing.closedCartonsOnPallet + cartonsAdded,
       erpExpectedTotalUnits: existing.erpExpectedTotalUnits + unitsAdded,
-      lastCountedAt: `Adesso (+${cartonsAdded} cartoni da Berlino)`,
+      lastCountedAt: `Adesso (+${cartonsAdded} cartoni ricevuti)`,
     };
     saveInventoryMap(map);
     if (newLotNumber && newExpiryDate) {

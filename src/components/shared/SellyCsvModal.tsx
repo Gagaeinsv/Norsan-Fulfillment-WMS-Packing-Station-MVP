@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
   Upload,
   AlertCircle,
@@ -6,7 +6,6 @@ import {
   X,
   FileSpreadsheet,
   PackageCheck,
-  RefreshCw,
 } from "lucide-react";
 import { Order, Product } from "../../types/wms";
 import { parseSellyOrdersCsv, SellyImportResult } from "../../services/sellyCsvImporter";
@@ -17,14 +16,6 @@ interface SellyCsvModalProps {
   onImportOrders: (newOrders: Order[], replaceExisting: boolean) => void;
   catalog: Product[];
 }
-
-const SAMPLE_SELLY_CSV = `Numero;Data;Cliente;Indirizzo;Citta;CAP;Prov;Corriere;Codice Articolo;Descrizione;Quantita;Prezzo;Note
-ORDVE2026121172;05/10/2026;Ana Martin;Via dell'Indipendenza 12;Bologna;40121;BO;DHL Paket;NOR-TOT-200-LEM;NORSAN Omega-3 Total Limone 200ml;1;27.00;Primo ordine cliente
-ORDVE2026121172;05/10/2026;Ana Martin;Via dell'Indipendenza 12;Bologna;40121;BO;DHL Paket;SPED-01;Spedizione Standard DHL;1;0.00;Primo ordine cliente
-ORDVE2026121185;05/10/2026;Marco Bianchi;Corso Buenos Aires 42;Milano;20124;MI;DHL Express;NOR-VEG-100-LEM;NORSAN Omega-3 Vegan 100ml;1;24.00;Consegna piano 3
-ORDVE2026121190;05/10/2026;Dott. Roberto Rossi;Via Aurelia 145;Roma;00165;RM;DHL Express;NOR-ARK-200-LEM;NORSAN Omega-3 Arktis Limone;2;58.00;URGENTE - Studio Medico
-ORDVE2026121190;05/10/2026;Dott. Roberto Rossi;Via Aurelia 145;Roma;00165;RM;DHL Express;NOR-VIT-D3K2-20;Vitamina D3+K2 Gocce 20ml;1;18.00;URGENTE - Studio Medico
-`;
 
 export const SellyCsvModal: React.FC<SellyCsvModalProps> = ({
   isOpen,
@@ -70,10 +61,6 @@ export const SellyCsvModal: React.FC<SellyCsvModalProps> = ({
       handleProcessCsv(content, file.name);
     };
     reader.readAsText(file);
-  };
-
-  const handleLoadSample = () => {
-    handleProcessCsv(SAMPLE_SELLY_CSV, "esempio_ordini_selly.csv");
   };
 
   const handleConfirmImport = () => {
@@ -142,17 +129,6 @@ export const SellyCsvModal: React.FC<SellyCsvModalProps> = ({
                 <span>File caricato: {fileName}</span>
               </div>
             )}
-          </div>
-
-          {/* Quick Actions Bar */}
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-400">Non hai un file a portata di mano?</span>
-            <button
-              onClick={handleLoadSample}
-              className="text-cyan-400 hover:text-cyan-300 font-bold underline flex items-center gap-1 cursor-pointer"
-            >
-              <RefreshCw className="w-3.5 h-3.5" /> Carica dataset di test Selly
-            </button>
           </div>
 
           {/* Preview Section */}

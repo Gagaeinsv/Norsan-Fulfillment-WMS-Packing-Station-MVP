@@ -6,7 +6,6 @@ import {
   CheckCircle,
   Package,
   Activity,
-  Zap,
   ArrowRight,
   Layers,
   Users,
@@ -101,7 +100,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   onAddSlot,
   onDeleteSlot,
   onResolveIssue,
-  onSimulateIncomingWebOrder,
+  onSimulateIncomingWebOrder: _onSimulateIncomingWebOrder,
   onSwitchToStation,
   onAddOperator,
   onUpdateOperator,
@@ -136,9 +135,9 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   const [countCartonsDraft, setCountCartonsDraft] = useState<number>(0);
   const [countShelfDraft, setCountShelfDraft] = useState<number>(0);
   const [inboundSku, setInboundSku] = useState<string>("NOR-TOT-200-LEM");
-  const [inboundCartons, setInboundCartons] = useState<number>(20);
-  const [inboundLot, setInboundLot] = useState<string>("L2702N");
-  const [inboundExpiry, setInboundExpiry] = useState<string>("11/2027");
+  const [inboundCartons, setInboundCartons] = useState<number>(1);
+  const [inboundLot, setInboundLot] = useState<string>("");
+  const [inboundExpiry, setInboundExpiry] = useState<string>("");
   const [inventorySearch, setInventorySearch] = useState<string>("");
 
   // Address Normalizer Modal State
@@ -439,15 +438,10 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
             </div>
           </div>
 
-          {/* Quick Web Ingestion Simulator Trigger */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={onSimulateIncomingWebOrder}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-norsan-600 hover:bg-norsan-700 text-white font-bold text-xs shadow-md transition active:scale-95 border border-norsan-700 cursor-pointer"
-            >
-              <Zap className="w-4 h-4 text-amber-300" />
-              <span>Simula Ordine norsan.it</span>
-            </button>
+            <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 border border-slate-300 px-3 py-1.5 rounded-xl">
+              Modalità Operativa Produzione
+            </span>
           </div>
         </div>
 
@@ -506,7 +500,12 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               Velocità Media
             </div>
             <div className="text-2xl font-black font-mono text-slate-900 mt-1">
-              46.5
+              {stations.some((s) => s.currentSpeedUPH > 0)
+                ? (
+                    stations.reduce((acc, s) => acc + s.currentSpeedUPH, 0) /
+                    stations.filter((s) => s.currentSpeedUPH > 0).length
+                  ).toFixed(1)
+                : "0"}
             </div>
             <div className="text-[10px] text-emerald-700 font-bold mt-1">
               UPH (Colli / ora)
@@ -1570,11 +1569,9 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                     <div className="flex items-center justify-between">
                       <span className="text-slate-600">Tempo Ciclo Medio:</span>
                       <strong className="font-mono text-slate-900">
-                        {st.id === "ST-02"
-                          ? "38 sec"
-                          : st.id === "ST-01"
-                            ? "42 sec"
-                            : "45 sec"}
+                        {st.ordersPackedToday > 0 && st.currentSpeedUPH > 0
+                          ? `${Math.round(3600 / st.currentSpeedUPH)} sec`
+                          : "—"}
                       </strong>
                     </div>
                     <div className="flex items-center justify-between">
@@ -1582,7 +1579,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                         Conformità Takt Time:
                       </span>
                       <strong className="text-emerald-700">
-                        96.4% in ritmo
+                        {st.ordersPackedToday > 0 ? "In ritmo ✓" : "In attesa"}
                       </strong>
                     </div>
                     <div className="flex items-center justify-between">

@@ -699,4 +699,16 @@ export function initDatabase() {
       "NEUTRA SENZA LOGO (AMAZON)",
     );
   }
+
+  // Purge any legacy demo/test orders from SQLite database on startup
+  try {
+    db.prepare(
+      "DELETE FROM order_items WHERE order_id LIKE 'ord-mvp-%' OR order_id LIKE 'ord-0%' OR order_id LIKE 'ord-web-%'",
+    ).run();
+    db.prepare(
+      "DELETE FROM orders WHERE id LIKE 'ord-mvp-%' OR id LIKE 'ord-0%' OR id LIKE 'ord-web-%'",
+    ).run();
+  } catch {
+    // ignore cleanup errors
+  }
 }

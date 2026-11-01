@@ -117,12 +117,22 @@ export function useWarehouseState() {
   ); // Serhii Haharin
   const [stations, setStations] =
     useState<WarehouseStation[]>(INITIAL_STATIONS);
+  const isLegacyDemoOrder = (o: Order) =>
+    !o ||
+    !o.id ||
+    o.id.startsWith("ord-mvp-") ||
+    o.id.startsWith("ord-0") ||
+    o.id.startsWith("ord-web-");
+
   const [orders, setOrders] = useState<Order[]>(() => {
     try {
-      const saved = localStorage.getItem("wms_orders");
+      localStorage.removeItem("wms_orders");
+      const saved = localStorage.getItem("wms_orders_prod_v1");
       if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) {
+          return parsed.filter((o: Order) => !isLegacyDemoOrder(o));
+        }
       }
     } catch {
       // fallback
@@ -132,17 +142,18 @@ export function useWarehouseState() {
   });
 
   useEffect(() => {
-    localStorage.setItem("wms_orders", JSON.stringify(orders));
+    localStorage.setItem("wms_orders_prod_v1", JSON.stringify(orders));
   }, [orders]);
 
   const [activeOrderId, setActiveOrderId] = useState<string>(() => {
-    const saved = localStorage.getItem("wms_active_order_id");
+    localStorage.removeItem("wms_active_order_id");
+    const saved = localStorage.getItem("wms_active_order_id_prod_v1");
     if (saved && orders.some((o) => o.id === saved)) return saved;
     return orders[0]?.id || "";
   });
 
   useEffect(() => {
-    localStorage.setItem("wms_active_order_id", activeOrderId);
+    localStorage.setItem("wms_active_order_id_prod_v1", activeOrderId);
   }, [activeOrderId]);
 
   const [stationConfigId, setStationConfigId] = useState<string>(() => {
@@ -229,13 +240,14 @@ export function useWarehouseState() {
       }
     });
 
-    // 3. Fetch production orders from SQLite backend
+    // 3. Fetch production orders from SQLite backend (excluding any legacy demo IDs)
     fetchOrdersApi().then((serverOrders) => {
-      if (serverOrders && Array.isArray(serverOrders) && serverOrders.length > 0) {
-        setOrders(serverOrders);
+      if (serverOrders && Array.isArray(serverOrders)) {
+        const cleanOrders = serverOrders.filter((o) => !isLegacyDemoOrder(o));
+        setOrders(cleanOrders);
         setActiveOrderId((prev) => {
-          if (prev && serverOrders.some((o) => o.id === prev)) return prev;
-          return serverOrders[0].id;
+          if (prev && cleanOrders.some((o) => o.id === prev)) return prev;
+          return cleanOrders[0]?.id || "";
         });
       }
     });
@@ -501,12 +513,12 @@ export function useWarehouseState() {
     currentOperator.role === "team_lead" ||
     currentOperator.role === "supervisor";
 
-  // KPIs
+  // KPIs (Production clean start at 0)
   const [kpis, setKpis] = useState<StationKPIs>({
-    totalPackedToday: 24,
-    unitsPerHour: 48.5,
+    totalPackedToday: 0,
+    unitsPerHour: 0,
     accuracyPercentage: 100,
-    errorsPrevented: 3,
+    errorsPrevented: 0,
     activeOrderTimeSeconds: 0,
   });
 
@@ -1362,8 +1374,10 @@ export function useWarehouseState() {
   const handleClearOrders = useCallback(() => {
     setOrders([]);
     setActiveOrderId("");
-    localStorage.setItem("wms_orders", "[]");
+    localStorage.removeItem("wms_orders");
+    localStorage.setItem("wms_orders_prod_v1", "[]");
     localStorage.removeItem("wms_active_order_id");
+    localStorage.removeItem("wms_active_order_id_prod_v1");
     clearPackedOrdersApi().catch(() => {});
     if (!isMuted) playScanSuccess();
     setLastScan({
@@ -1378,24 +1392,14 @@ export function useWarehouseState() {
   }, [isMuted, playScanSuccess]);
 
   const handleResetData = useCallback(() => {
-    if (orders.length > 0) {
-      if (
-        window.confirm(
-          "Attenzione: Vuoi azzerare la coda degli ordini per iniziare un nuovo turno di lavoro?",
-        )
-      ) {
-        handleClearOrders();
-      }
-    } else {
-      if (
-        window.confirm(
-          "La coda è vuota. Vuoi caricare gli ordini di prova per il training degli operatori?",
-        )
-      ) {
-        handleLoadDemoOrders();
-      }
+    if (
+      window.confirm(
+        "Attenzione: Vuoi azzerare la coda degli ordini per iniziare un nuovo turno di lavoro?",
+      )
+    ) {
+      handleClearOrders();
     }
-  }, [orders.length, handleClearOrders, handleLoadDemoOrders]);
+  }, [handleClearOrders]);
 
   const [pendingAutoScan, setPendingAutoScan] = useState<string | null>(null);
 
