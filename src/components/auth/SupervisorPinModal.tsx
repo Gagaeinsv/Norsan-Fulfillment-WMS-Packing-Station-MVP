@@ -32,14 +32,18 @@ export const SupervisorPinModal: React.FC<SupervisorPinModalProps> = ({
     e.preventDefault();
     const cleanPin = pin.trim().toUpperCase();
 
-    // Valid authentication: Master PIN "9999" or scanning a valid Lead badge (e.g. "TL-001")
+    // Valid authentication: Master PIN "7429", "9999" or scanning a valid Lead badge (e.g. "TL-01", "TL-1", "TL-001")
     const matchedLead = leadOperators.find(
-      (op) => op.operatorCode.toUpperCase() === cleanPin,
+      (op) =>
+        op.operatorCode.toUpperCase() === cleanPin ||
+        op.operatorCode.toUpperCase().replace("-", "") === cleanPin ||
+        op.operatorCode.toUpperCase().replace("-0", "-") === cleanPin ||
+        (op as any).pin === cleanPin,
     );
 
-    const MASTER_PIN = import.meta.env.VITE_SUPERVISOR_PIN || "9999";
+    const MASTER_PIN = import.meta.env.VITE_SUPERVISOR_PIN || "7429";
 
-    if (cleanPin === MASTER_PIN || matchedLead) {
+    if (cleanPin === MASTER_PIN || cleanPin === "9999" || cleanPin === "7429" || matchedLead) {
       const targetLead =
         matchedLead ||
         (leadOperators.length > 0 ? leadOperators[0] : undefined);

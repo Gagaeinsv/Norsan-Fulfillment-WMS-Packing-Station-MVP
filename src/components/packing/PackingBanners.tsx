@@ -16,6 +16,7 @@ interface PackingBannersProps {
   requiresGift: boolean;
   onToggleGift?: () => void;
   onTogglePhysicalDocument?: () => void;
+  dhlPrintTiming?: "on_scan" | "on_finish";
 }
 
 export const PackingBanners: React.FC<PackingBannersProps> = ({
@@ -23,8 +24,35 @@ export const PackingBanners: React.FC<PackingBannersProps> = ({
   requiresGift,
   onToggleGift,
   onTogglePhysicalDocument,
+  dhlPrintTiming = "on_scan",
 }) => (
   <>
+    {/* Workflow Mode Banner: Slip Scan -> Immediate DHL Print or On Box Close */}
+    <div
+      className={`px-3 py-1.5 rounded-xl flex items-center justify-between text-xs font-bold shadow-2xs border ${
+        dhlPrintTiming === "on_scan"
+          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-900"
+          : "bg-blue-500/10 border-blue-500/30 text-blue-900"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <span
+          className={`w-2 h-2 rounded-full animate-pulse ${
+            dhlPrintTiming === "on_scan" ? "bg-emerald-600" : "bg-blue-600"
+          }`}
+        />
+        <span>
+          {dhlPrintTiming === "on_scan"
+            ? "🖨️ Etichetta DHL inviata alla stampante termica • Preleva gli articoli illuminati e applica l'etichetta"
+            : "📦 Preleva gli articoli illuminati e componi le scatole • L'etichetta DHL verrà stampata a chiusura"}
+        </span>
+      </div>
+      <span className="font-mono text-[10px] text-slate-800 font-bold bg-white/80 px-2 py-0.5 rounded border border-slate-300">
+        DHL EXPRESS • {order.packageCount || 1}{" "}
+        {(order.packageCount || 1) === 1 ? "COLLO" : "COLLI"}
+      </span>
+    </div>
+
     {/* Amazon Marketplace — Obbligo Scatola Neutra Senza Logo & Esclusiva NORSAN */}
     {(order.source === "Amazon Marketplace" ||
       order.boxBranding === "neutral_unbranded" ||

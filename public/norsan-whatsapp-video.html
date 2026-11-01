@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VIDEO DEMO • NORSAN WhatsApp Bot Routine (Tutti i Giorni & Promemoria)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .wa-bg {
+      background-color: #efeae2;
+      background-image: radial-gradient(#d5cfc2 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+    .chat-scroll { scroll-behavior: smooth; }
+    .chat-scroll::-webkit-scrollbar { width: 4px; }
+    .chat-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 9999px; }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: translateY(10px) scale(0.96); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .msg-anim { animation: popIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    @keyframes slideDown {
+      0% { opacity: 0; transform: translateY(-100%); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .notif-anim { animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    @keyframes pulseTap {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.92); background-color: #bbf7d0; }
+      100% { transform: scale(1); }
+    }
+    .tap-highlight { animation: pulseTap 0.45s ease-in-out; }
+
+    @keyframes bounceDot {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+    .dot1 { animation: bounceDot 1.2s infinite ease-in-out both; animation-delay: -0.32s; }
+    .dot2 { animation: bounceDot 1.2s infinite ease-in-out both; animation-delay: -0.16s; }
+    .dot3 { animation: bounceDot 1.2s infinite ease-in-out both; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
+
+  <!-- TOP BAR -->
+  <header class="bg-slate-900/95 border-b border-slate-800 px-4 py-3 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="bg-[#1e3a5f] text-white font-black tracking-wider px-3 py-1 rounded-lg text-sm border border-sky-400/30">
+          NOR<span class="text-rose-400">S</span>AN
+        </div>
+        <div>
+          <h1 class="text-sm sm:text-base font-black text-white flex items-center gap-2">
+            <span>🎬 VIDEO SIMULAZIONE: WhatsApp Bot Routine (Giorno 1 ➔ Giorno 90)</span>
+          </h1>
+          <p class="text-xs text-slate-400">
+            Il cliente sceglie il proprio orario (Colazione, Pranzo, Cena o personalizzato) e riceve i promemoria su misura
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href="norsan-routine.html" class="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl border border-slate-700 transition">
+          ⬅ Torna al Progetto Completo
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN STAGE: VIDEO PLAYER + CHAPTER SIDEBAR -->
+  <main class="max-w-6xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center flex-1">
+
+    <!-- LEFT: TIMELINE CHAPTERS & CUSTOMER REMINDER TIME PICKER -->
+    <div class="lg:col-span-5 space-y-3">
+
+      <!-- Customer Custom Time Selector Card -->
+      <div class="bg-slate-900 border border-emerald-500/40 rounded-3xl p-4 space-y-2.5 shadow-lg">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-black uppercase tracking-wider text-emerald-400">
+            ⏰ Orario Scelto dal Cliente (Personalizzabile)
+          </span>
+          <span id="active-time-badge" class="text-xs font-mono font-black bg-emerald-500 text-slate-950 px-2.5 py-0.5 rounded-lg">
+            20:00 (Cena)
+          </span>
+        </div>
+        <p class="text-[11px] text-slate-300">
+          Nel Giorno 1 il cliente sceglie quando assumere l'Omega-3 (come le 3 icone ☀️/🌤️/🌙 nella scheda cartacea). Cambia qui per vedere come il video adatta tutti i promemoria:
+        </p>
+        <div class="grid grid-cols-4 gap-1.5 text-[11px] font-bold">
+          <button onclick="changeCustomerTime('08:00', 'Colazione ☀️')" id="tbtn-08" class="py-1.5 px-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">
+            ☀️ 08:00
+          </button>
+          <button onclick="changeCustomerTime('13:00', 'Pranzo 🍝')" id="tbtn-13" class="py-1.5 px-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">
+            🍝 13:00
+          </button>
+          <button onclick="changeCustomerTime('20:00', 'Cena 🌙')" id="tbtn-20" class="py-1.5 px-2 rounded-xl bg-emerald-500 text-slate-950 border border-emerald-400 transition">
+            🌙 20:00
+          </button>
+          <div class="flex items-center bg-slate-800 border border-slate-700 rounded-xl px-1.5">
+            <input type="time" id="custom-time-input" value="19:30" onchange="changeCustomerTime(this.value, 'Personalizzato ✏️')" class="bg-transparent text-white text-[11px] font-mono w-full focus:outline-none" title="Scegli qualsiasi orario"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chapters -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-black uppercase tracking-wider text-sky-400">
+            📋 Capitoli del Video (Clicca per saltare)
+          </span>
+          <span id="status-pill" class="text-[11px] font-mono bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-bold">
+            ▶ IN RIPRODUZIONE
+          </span>
+        </div>
+
+        <div class="space-y-1.5 text-xs" id="chapter-list">
+          <button onclick="jumpToScene(0)" id="ch-0" class="w-full text-left p-2.5 rounded-2xl border transition flex items-center justify-between">
+            <div>
+              <div class="font-black text-white">📅 GIORNO 1 • Il Cliente Sceglie Prodotto &amp; Orario</div>
+              <div class="text-[11px] text-slate-400">Scansione QR ➔ Scelta prodotto ➔ Scelta orario promemoria</div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">00:00</span>
+          </button>
+
+          <button onclick="jumpToScene(1)" id="ch-1" class="w-full text-left p-2.5 rounded-2xl border transition flex items-center justify-between">
+            <div>
+              <div class="font-black text-white">📅 GIORNO 3 • Promemoria all'Orario Scelto + Snooze</div>
+              <div class="text-[11px] text-slate-400">Notifica push + opzione "Posticipa" o "Cambia orario"</div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">00:15</span>
+          </button>
+
+          <button onclick="jumpToScene(2)" id="ch-2" class="w-full text-left p-2.5 rounded-2xl border transition flex items-center justify-between">
+            <div>
+              <div class="font-black text-white">📅 GIORNO 7 • Check Settimanale "Come ti senti?"</div>
+              <div class="text-[11px] text-slate-400">Faccine diario (😄/🙂/😐) + riepilogo grammi Omega-3</div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">00:28</span>
+          </button>
+
+          <button onclick="jumpToScene(3)" id="ch-3" class="w-full text-left p-2.5 rounded-2xl border transition flex items-center justify-between">
+            <div>
+              <div class="font-black text-white">📅 GIORNO 14 • Metà Flacone &amp; Regola "Agita"</div>
+              <div class="text-[11px] text-slate-400">Promemoria conservazione 4°C &amp; agitazione flacone</div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">00:40</span>
+          </button>
+
+          <button onclick="jumpToScene(4)" id="ch-4" class="w-full text-left p-2.5 rounded-2xl border transition flex items-center justify-between">
+            <div>
+              <div class="font-black text-rose-300">⚠️ GIORNO 20 • Alert Fine Flacone (5 Dosi Rimaste)</div>
+              <div class="text-[11px] text-slate-400">Riordino in 1-Click (-10%) prima di restare senza</div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">00:52</span>
+          </button>
+
+          <button onclick="jumpToScene(5)" id="ch-5" class="w-full text-left p-2.5 rounded-2xl border transition flex items-center justify-between">
+            <div>
+              <div class="font-black text-sky-300">🚚 GIORNO 22 • Consegna DHL da Bolzano</div>
+              <div class="text-[11px] text-slate-400">Il nuovo flacone arriva 3 giorni prima che finisca il vecchio</div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">01:05</span>
+          </button>
+
+          <button onclick="jumpToScene(6)" id="ch-6" class="w-full text-left p-2.5 rounded-2xl border transition flex items-center justify-between">
+            <div>
+              <div class="font-black text-purple-300">🩸 GIORNO 90 • 2° Test Analisi Acidi Grassi</div>
+              <div class="text-[11px] text-slate-400">Confronto Indice Omega-3 (4,8% ➔ 8,6%) + Omaggio</div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">01:16</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: SMARTPHONE VIDEO VIEWPORT -->
+    <div class="lg:col-span-7 flex flex-col items-center">
+
+      <!-- Scene Context Banner Above Phone -->
+      <div id="scene-banner" class="mb-3 px-4 py-2 rounded-2xl bg-gradient-to-r from-[#1e3a5f] to-emerald-900 border border-emerald-400/30 text-center shadow-lg w-full max-w-md">
+        <div id="scene-title" class="text-xs sm:text-sm font-black text-white">
+          GIORNO 1 • Scansione QR &amp; Scelta Orario Personalizzato
+        </div>
+        <div id="scene-subtitle" class="text-[11px] text-emerald-200">
+          È il cliente a decidere a che ora ricevere il promemoria ogni giorno
+        </div>
+      </div>
+
+      <!-- Smartphone Frame -->
+      <div class="relative w-full max-w-[395px] bg-slate-950 rounded-[44px] p-3 border-[5px] border-slate-700 shadow-2xl overflow-hidden">
+
+        <!-- iOS / Android Top Push Notification Overlay (Dynamic) -->
+        <div id="push-notif" class="hidden absolute top-4 left-4 right-4 z-40 bg-slate-900/95 backdrop-blur-md text-white p-3 rounded-2xl shadow-2xl border border-emerald-500/40 flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl bg-[#25D366] flex items-center justify-center font-black text-slate-950 shrink-0 text-sm">
+            WA
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between text-[10px] text-emerald-300 font-bold">
+              <span>WHATSAPP • PROMEMORIA CLIENTE</span>
+              <span id="push-time">20:00</span>
+            </div>
+            <div id="push-title" class="text-xs font-bold text-white truncate">Promemoria Giornaliero</div>
+            <div id="push-body" class="text-[11px] text-slate-200 leading-snug">Hai preso il tuo cucchiaio di Omega-3 oggi?</div>
+          </div>
+        </div>
+
+        <!-- Phone Status Bar -->
+        <div class="bg-[#075e54] text-white px-5 pt-2 pb-1 rounded-t-[32px] flex items-center justify-between text-[10px] font-semibold">
+          <span id="phone-clock">18:15</span>
+          <div class="flex items-center gap-1.5">
+            <span id="reminder-pill-top" class="bg-black/30 text-emerald-300 px-2 py-0.2 rounded-full font-mono text-[9px]">⏰ Sveglia: 20:00</span>
+            <span>5G</span>
+            <span>🔋 94%</span>
+          </div>
+        </div>
+
+        <!-- WhatsApp Header -->
+        <div class="bg-[#075e54] text-white px-3.5 py-2.5 flex items-center justify-between shadow-md">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-full bg-[#1e3a5f] border-2 border-white flex items-center justify-center font-black text-xs">
+              N<span class="text-rose-400">S</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-1 text-xs font-bold">
+                <span>NORSAN Italia Routine</span>
+                <span class="bg-emerald-400 text-slate-950 text-[8px] font-black px-1 rounded-full">✔</span>
+              </div>
+              <div id="wa-status" class="text-[10px] text-emerald-200">Account Business Ufficiale • online</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <span id="bottle-gauge" class="text-[10px] font-mono font-bold bg-black/25 px-2 py-0.5 rounded-full text-emerald-200">
+              🍾 100% (25 dosi)
+            </span>
+          </div>
+        </div>
+
+        <!-- Bottle Level Progress Strip -->
+        <div class="bg-slate-200 h-1.5 w-full overflow-hidden">
+          <div id="bottle-bar" class="bg-emerald-500 h-full transition-all duration-700" style="width: 100%;"></div>
+        </div>
+
+        <!-- WhatsApp Chat Stream -->
+        <div id="video-chat" class="wa-bg h-[435px] overflow-y-auto p-3 space-y-2.5 text-slate-900 text-xs chat-scroll relative">
+        </div>
+
+        <!-- Typing Indicator Bar -->
+        <div id="typing-bar" class="hidden wa-bg px-4 py-1.5 flex items-center gap-2">
+          <div class="bg-white rounded-full px-3 py-1.5 shadow border border-slate-200 inline-flex items-center gap-1">
+            <span class="w-1.5 h-1.5 bg-slate-500 rounded-full dot1"></span>
+            <span class="w-1.5 h-1.5 bg-slate-500 rounded-full dot2"></span>
+            <span class="w-1.5 h-1.5 bg-slate-500 rounded-full dot3"></span>
+          </div>
+          <span class="text-[10px] text-slate-500 font-medium">NORSAN sta scrivendo...</span>
+        </div>
+
+        <!-- Interactive / Animated Reply Buttons -->
+        <div id="video-replies" class="bg-[#f0f2f5] border-t border-slate-300 px-3 py-2.5 rounded-b-[32px] min-h-[64px] flex flex-wrap gap-1.5 items-center justify-center">
+        </div>
+      </div>
+
+      <!-- VIDEO CONTROLS BAR -->
+      <div class="mt-4 w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-2 shadow-xl">
+        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden cursor-pointer" onclick="scrubVideo(event)">
+          <div id="video-progress" class="bg-emerald-500 h-full transition-all duration-300" style="width: 5%;"></div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <button onclick="togglePlay()" id="btn-play" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-3.5 py-1.5 rounded-xl transition">
+              ⏸ Pausa
+            </button>
+            <button onclick="restartVideo()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-2.5 py-1.5 rounded-xl transition">
+              🔄 Riavvia
+            </button>
+          </div>
+
+          <span id="time-indicator" class="font-mono text-[11px] text-slate-400">
+            Scena 1 / 7
+          </span>
+
+          <div class="flex items-center gap-1">
+            <button onclick="setSpeed(1)" id="spd-1" class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[11px] font-bold">1x</button>
+            <button onclick="setSpeed(1.6)" id="spd-16" class="px-2 py-1 rounded bg-slate-800 text-slate-400 font-mono text-[11px]">1.6x</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    const chatEl = document.getElementById('video-chat');
+    const repliesEl = document.getElementById('video-replies');
+    const pushNotif = document.getElementById('push-notif');
+    const typingBar = document.getElementById('typing-bar');
+    const phoneClock = document.getElementById('phone-clock');
+    const reminderPillTop = document.getElementById('reminder-pill-top');
+    const bottleGauge = document.getElementById('bottle-gauge');
+    const bottleBar = document.getElementById('bottle-bar');
+    const sceneTitle = document.getElementById('scene-title');
+    const sceneSubtitle = document.getElementById('scene-subtitle');
+    const videoProgress = document.getElementById('video-progress');
+    const timeIndicator = document.getElementById('time-indicator');
+    const btnPlay = document.getElementById('btn-play');
+    const statusPill = document.getElementById('status-pill');
+    const activeTimeBadge = document.getElementById('active-time-badge');
+
+    let customerChosenTime = '20:00';
+    let customerChosenLabel = 'Cena 🌙';
+
+    let isPlaying = true;
+    let speedMultiplier = 1;
+    let currentSceneIndex = 0;
+    let stepTimers = [];
+
+    function addMinutes(timeStr, minsToAdd) {
+      const [hh, mm] = timeStr.split(':').map(Number);
+      const total = hh * 60 + mm + minsToAdd;
+      const nh = Math.floor((total % 1440) / 60);
+      const nm = total % 60;
+      return String(nh).padStart(2, '0') + ':' + String(nm).padStart(2, '0');
+    }
+
+    function changeCustomerTime(newTime, label) {
+      customerChosenTime = newTime;
+      customerChosenLabel = label;
+      activeTimeBadge.textContent = `${newTime} (${label})`;
+      reminderPillTop.textContent = `⏰ Sveglia: ${newTime}`;
+
+      ['08', '13', '20'].forEach(code => {
+        const b = document.getElementById('tbtn-' + code);
+        if (b) {
+          b.className = 'py-1.5 px-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition';
+        }
+      });
+      if (newTime === '08:00') document.getElementById('tbtn-08').className = 'py-1.5 px-2 rounded-xl bg-emerald-500 text-slate-950 border border-emerald-400 transition font-black';
+      if (newTime === '13:00') document.getElementById('tbtn-13').className = 'py-1.5 px-2 rounded-xl bg-emerald-500 text-slate-950 border border-emerald-400 transition font-black';
+      if (newTime === '20:00') document.getElementById('tbtn-20').className = 'py-1.5 px-2 rounded-xl bg-emerald-500 text-slate-950 border border-emerald-400 transition font-black';
+
+      jumpToScene(currentSceneIndex);
+    }
+
+    function buildScenes() {
+      const t0 = customerChosenTime;
+      const t1 = addMinutes(t0, 1);
+      const t2 = addMinutes(t0, 2);
+
+      let selectedTimeBtnIndex = 2;
+      if (t0 === '08:00') selectedTimeBtnIndex = 0;
+      else if (t0 === '13:00') selectedTimeBtnIndex = 1;
+      else if (t0 === '20:00') selectedTimeBtnIndex = 2;
+      else selectedTimeBtnIndex = 3;
+
+      return [
+        {
+          clock: '18:15',
+          bottleText: '🍾 100% (25/25 dosi)',
+          bottlePct: 100,
+          bottleColor: 'bg-emerald-500',
+          bannerTitle: 'GIORNO 1 • Il Cliente Sceglie Prodotto & Orario del Promemoria',
+          bannerSub: 'Dopo aver scansionato il QR, è il cliente a decidere a che ora vuole essere avvisato',
+          steps: [
+            { type: 'datechip', text: 'GIORNO 1 • ATTIVAZIONE & SCELTA ORARIO CLIENTE', delay: 200 },
+            { type: 'user', text: 'Ciao NORSAN! 👋 Ho appena attaccato lo sticker sul frigo e aperto la mia bottiglia per iniziare la mia Omega-3 Routine!', time: '18:15', delay: 500 },
+            { type: 'typing', delay: 900 },
+            { type: 'bot', text: '<strong>Benvenuto nella tua (Omega-3) Routine! 🥄✨</strong><br/>Quale prodotto NORSAN hai messo in frigorifero oggi?', time: '18:15', delay: 1800 },
+            { type: 'replies', options: ['🍋 Omega-3 Total (200ml)', '🌱 Omega-3 Vegano', '❄️ Omega-3 Arktis', '🧒 Omega-3 KIDS'], delay: 2000 },
+            { type: 'tap', index: 0, delay: 3000 },
+            { type: 'user', text: '🍋 Omega-3 Total (200ml)', time: '18:16', delay: 3400 },
+            { type: 'typing', delay: 3800 },
+            { type: 'bot', text: 'Perfetto! 🍋 <strong>A che ora preferisci ricevere il tuo promemoria quotidiano?</strong><br/><em>(Scegli il tuo pasto abituale oppure scrivi qualsiasi orario, es. 07:45 o 21:00)</em>', time: '18:16', delay: 4800 },
+            { type: 'replies', options: ['☀️ Colazione (08:00)', '🍝 Pranzo (13:00)', '🌙 Cena (20:00)', `✏️ Orario: ${t0}`], delay: 5100 },
+            { type: 'tap', index: selectedTimeBtnIndex, delay: 6400 },
+            { type: 'user', text: `⏰ Scelgo le ${t0} (${customerChosenLabel})`, time: '18:17', delay: 6900 },
+            { type: 'typing', delay: 7300 },
+            { type: 'bot', text: `<strong>Orario salvato sulle ${t0}! ✅</strong><br/>Ti manderò il promemoria ogni giorno alle <strong>${t0}</strong> (e potrai cambiarlo o posticiparlo quando vuoi).<br/><br/>❄️ <em>Ricorda: conserva sempre il flacone aperto in frigorifero (4°C)!</em>`, time: '18:17', delay: 8300 }
+          ],
+          duration: 11500
+        },
+        {
+          clock: t0,
+          bottleText: '🍾 88% (22/25 dosi)',
+          bottlePct: 88,
+          bottleColor: 'bg-emerald-500',
+          bannerTitle: `GIORNO 3 (ore ${t0}) • Promemoria all'Orario Scelto dal Cliente`,
+          bannerSub: 'Arriva la notifica esattamente all\'ora scelta + possibilità di posticipare o cambiare orario',
+          steps: [
+            { type: 'datechip', text: `GIORNO 3 • PROMEMORIA DELLE ${t0}`, delay: 200 },
+            { type: 'push', title: `🥄 Ore ${t0}: il tuo cucchiaio NORSAN!`, body: `Promemoria ${customerChosenLabel}: assumi 1 cucchiaio durante o dopo il pasto.`, time: t0, delay: 400 },
+            { type: 'bot', text: `<strong>Ecco il tuo promemoria delle ${t0}! 🥄</strong><br/>Giorno 3: hai preso il tuo cucchiaio di Omega-3 Total (8ml = 2g Omega-3)?`, time: t0, delay: 1800 },
+            { type: 'replies', options: ['✅ Preso adesso!', '⏰ Posticipa di 1 ora', '⚙️ Cambia orario fisso'], delay: 2100 },
+            { type: 'tap', index: 0, delay: 3400 },
+            { type: 'user', text: '✅ Preso adesso!', time: t1, delay: 3900 },
+            { type: 'typing', delay: 4300 },
+            { type: 'bot', text: '<strong>3 giorni su 3! 🔥</strong><br/><br/>💡 <strong>Consiglio della nutrizionista (Claudia Zannini):</strong><br/>Assumi sempre l\'olio insieme al pasto e <strong>non versarlo su cibi bollenti</strong> per proteggere gli acidi grassi EPA e DHA!', time: t1, delay: 5400 }
+          ],
+          duration: 8800
+        },
+        {
+          clock: t0,
+          bottleText: '🍾 72% (18/25 dosi)',
+          bottlePct: 72,
+          bottleColor: 'bg-emerald-500',
+          bannerTitle: `GIORNO 7 (ore ${t0}) • Check Settimanale "Come ti senti?"`,
+          bannerSub: 'Sostituisce le 3 faccine della scheda cartacea con un tap all\'orario scelto dal cliente',
+          steps: [
+            { type: 'datechip', text: `GIORNO 7 (${t0}) • 1° SETTIMANA COMPLETATA 🔥`, delay: 200 },
+            { type: 'push', title: `🔥 Ore ${t0}: 7 Giorni di fila!`, body: 'Hai completato la prima settimana! Come ti senti oggi?', time: t0, delay: 400 },
+            { type: 'bot', text: `<strong>Complimenti! 🎉 7 giorni consecutivi alle ${t0}!</strong><br/>Proprio come nella scheda del nostro diario: <strong>come ti senti oggi?</strong>`, time: t0, delay: 1800 },
+            { type: 'replies', options: ['😄 Pieno di energia', '🙂 Bene, regolare', '😐 Ancora uguale'], delay: 2100 },
+            { type: 'tap', index: 0, delay: 3400 },
+            { type: 'user', text: '😄 Pieno di energia', time: t2, delay: 3900 },
+            { type: 'typing', delay: 4300 },
+            { type: 'bot', text: '<strong>Fantastico! 😄📈</strong><br/>Hai già integrato <strong>14.000 mg di Omega-3</strong> questa settimana. La tua costanza sta riequilibrando il rapporto Omega-6/3!', time: t2, delay: 5400 }
+          ],
+          duration: 8500
+        },
+        {
+          clock: t0,
+          bottleText: '🍾 44% (11/25 dosi)',
+          bottlePct: 44,
+          bottleColor: 'bg-sky-500',
+          bannerTitle: `GIORNO 14 (ore ${t0}) • Metà Flacone & Promemoria "Agita"`,
+          bannerSub: 'Mantiene alta la costanza a metà mese esattamente all\'orario preferito dal cliente',
+          steps: [
+            { type: 'datechip', text: `GIORNO 14 (${t0}) • METÀ FLACONE`, delay: 200 },
+            { type: 'push', title: `🌊 Ore ${t0}: Giorno 14 della tua Routine!`, body: 'Ricorda di agitare bene il flacone prima di versare il cucchiaio.', time: t0, delay: 400 },
+            { type: 'bot', text: `<strong>Buonasera! 🌊 Giorno 14 (ore ${t0}): sei a oltre metà flacone!</strong><br/>Hai agitato bene la bottiglia dal frigo prima di prendere il cucchiaio oggi?`, time: t0, delay: 1800 },
+            { type: 'replies', options: ['✅ Agitato e preso!', '⏰ Posticipa di 30 min'], delay: 2100 },
+            { type: 'tap', index: 0, delay: 3300 },
+            { type: 'user', text: '✅ Agitato e preso!', time: t1, delay: 3800 },
+            { type: 'typing', delay: 4200 },
+            { type: 'bot', text: 'Perfetto! 👏 Ti restano <strong>11 dosi</strong> nel flacone. Tra 6 giorni ti avviserò prima che finisca!', time: t1, delay: 5200 }
+          ],
+          duration: 8200
+        },
+        {
+          clock: t0,
+          bottleText: '⚠️ 20% (5/25 dosi rimaste!)',
+          bottlePct: 20,
+          bottleColor: 'bg-rose-500',
+          bannerTitle: `⚠️ GIORNO 20 (ore ${t0}) • Alert Fine Flacone (5 Dosi) & Riordino 1-Click`,
+          bannerSub: '200ml ÷ 8ml = 25 giorni. Al Giorno 20 parte l\'ordine automatico verso l\'Hub di Bolzano!',
+          steps: [
+            { type: 'datechip', text: '⚠️ GIORNO 20 • SCORTA IN ESAURIMENTO (5 DOSI)', delay: 200 },
+            { type: 'push', title: '⚠️ Rimangono solo 5 cucchiai nel flacone!', body: 'Riordina ora da Bolzano con il -10% Routine per non interrompere.', time: t0, delay: 400 },
+            { type: 'bot', text: '<strong>⚠️ Avviso Scorta: Giorno 20 di 25!</strong><br/>Nella tua bottiglia di <strong>Omega-3 Total (200ml)</strong> rimangono solo <strong>5 cucchiai (5 giorni)</strong>.<br/><br/>Per portare l\'Indice Omega-3 oltre l\'8% servono 3–4 mesi continui. Spediamo oggi da <strong>Bolzano</strong> il nuovo flacone?', time: t0, delay: 1800 },
+            { type: 'replies', options: ['📦 Sì! 1x Total (-10% Routine)', '📦📦 Pacco 3x Total (Sped. Gratis)'], delay: 2100 },
+            { type: 'tap', index: 0, delay: 3600 },
+            { type: 'user', text: '📦 Sì! 1x Total (-10% Routine)', time: t1, delay: 4100 },
+            { type: 'typing', delay: 4500 },
+            { type: 'bot', text: '<strong>Ordine #ORDVE2026991 Confermato in 1 Click! 🚀</strong><br/>• Prodotto: <strong>1x NORSAN Omega-3 Total (Sconto Routine -10%)</strong><br/>• Partenza: <strong>Magazzino NORSAN Bolzano</strong><br/>• Corriere: <strong>DHL Express (Consegna 24/48h)</strong><br/><div class="mt-1.5 bg-emerald-600 text-white text-center font-bold py-1.5 rounded-lg">✅ Pagamento Rapido Approvato</div>', time: t1, delay: 5600 }
+          ],
+          duration: 9500
+        },
+        {
+          clock: '14:30',
+          bottleText: '🍾 Nuovo Flacone Consegnato!',
+          bottlePct: 100,
+          bottleColor: 'bg-emerald-500',
+          bannerTitle: '🚚 GIORNO 22 • Consegna DHL da Bolzano (Zero Giorni di Pausa)',
+          bannerSub: 'Il cliente riceve la nuova bottiglia 3 giorni prima di finire la vecchia',
+          steps: [
+            { type: 'datechip', text: '🚚 GIORNO 22 • CONSEGNA DHL BOLZANO', delay: 200 },
+            { type: 'push', title: '📦 DHL Express: Pacco NORSAN Consegnato!', body: 'Il tuo nuovo flacone fresco da Bolzano è arrivato.', time: '14:30', delay: 400 },
+            { type: 'bot', text: `<strong>📦 Il tuo nuovo flacone da Bolzano è stato consegnato!</strong><br/>Continua il tuo promemoria delle <strong>${t0}</strong>: finisci gli ultimi 3 cucchiai della bottiglia aperta e al <strong>Giorno 26</strong> apri quella nuova senza perdere nemmeno un giorno! 💪`, time: '14:30', delay: 1800 },
+            { type: 'replies', options: ['🙌 Pacco ricevuto, grazie!'], delay: 2100 },
+            { type: 'tap', index: 0, delay: 3400 },
+            { type: 'user', text: '🙌 Pacco ricevuto, grazie!', time: '14:32', delay: 3900 }
+          ],
+          duration: 6800
+        },
+        {
+          clock: t0,
+          bottleText: '🏆 90 Giorni Completati!',
+          bottlePct: 100,
+          bottleColor: 'bg-purple-500',
+          bannerTitle: '🩸 GIORNO 90 • 2° Test Analisi Acidi Grassi ("I successi sono misurabili")',
+          bannerSub: 'Confronta il 1° e il 2° test della scheda "Il Mio Profilo Omega-3" (Pag. 3 del libretto)',
+          steps: [
+            { type: 'datechip', text: '🏆 GIORNO 90 • CONTROLLO INDICE OMEGA-3', delay: 200 },
+            { type: 'push', title: '🩸 90 Giorni! Misuriamo i tuoi risultati!', body: 'Confronta la 1° e la 2° analisi degli acidi grassi.', time: t0, delay: 400 },
+            { type: 'bot', text: '<strong>🎉 Traguardo 90 Giorni Raggiunto!</strong><br/>Come scritto a pag. 3 del diario: <em>"I successi sono misurabili!"</em><br/><br/>📊 <strong>Il tuo Profilo Acidi Grassi:</strong><br/>• 1° Analisi (Giorno 1): <strong>Indice 4,8% (Carente 🔴)</strong><br/>• Obiettivo: <strong>&gt; 8,0% (Zona Ottimale 🟢)</strong><br/><br/>Qual è il risultato del tuo 2° test di controllo?', time: t0, delay: 1800 },
+            { type: 'replies', options: ['📈 Nuovo Indice: 8,6%!', '🧪 Ordina Kit Test Sangue'], delay: 2100 },
+            { type: 'tap', index: 0, delay: 3600 },
+            { type: 'user', text: '📈 Nuovo Indice: 8,6%!', time: t1, delay: 4100 },
+            { type: 'typing', delay: 4500 },
+            { type: 'bot', text: '<strong>RISULTATO STRAORDINARIO! 🏆 Da 4,8% ➔ 8,6%!</strong><br/><div class="my-2 bg-slate-100 p-2 rounded-xl border border-slate-300 text-[11px]"><div class="flex justify-between font-bold text-rose-600"><span>1° Test (Giorno 1)</span><span>4,8%</span></div><div class="w-full bg-slate-200 h-2 rounded-full my-1"><div class="bg-rose-500 h-2 rounded-full" style="width:48%"></div></div><div class="flex justify-between font-bold text-emerald-700 mt-1.5"><span>2° Test (Giorno 90)</span><span>8,6% ✔</span></div><div class="w-full bg-slate-200 h-2 rounded-full my-1"><div class="bg-emerald-500 h-2 rounded-full" style="width:86%"></div></div></div>Hai sbloccato il tuo <strong>Omaggio Fedeltà</strong> nel prossimo ordine da Bolzano! 🎁', time: t2, delay: 5600 }
+          ],
+          duration: 10500
+        }
+      ];
+    }
+
+    function clearTimers() {
+      stepTimers.forEach(t => clearTimeout(t));
+      stepTimers = [];
+    }
+
+    function updateChapterHighlight(idx, total) {
+      for (let i = 0; i < total; i++) {
+        const btn = document.getElementById('ch-' + i);
+        if (i === idx) {
+          btn.className = 'w-full text-left p-2.5 rounded-2xl border-2 border-emerald-400 bg-emerald-500/15 transition flex items-center justify-between shadow';
+        } else {
+          btn.className = 'w-full text-left p-2.5 rounded-2xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800/80 transition flex items-center justify-between opacity-75';
+        }
+      }
+      const pct = Math.round(((idx + 1) / total) * 100);
+      videoProgress.style.width = pct + '%';
+      timeIndicator.textContent = `Scena ${idx + 1} / ${total}`;
+    }
+
+    function appendDateChip(label) {
+      const div = document.createElement('div');
+      div.className = 'flex justify-center my-2 msg-anim';
+      div.innerHTML = `<span class="bg-[#e1f3fb] text-slate-700 font-bold text-[10px] px-3 py-1 rounded-full shadow-sm border border-sky-200">${label}</span>`;
+      chatEl.appendChild(div);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    function appendBubble(sender, html, time) {
+      typingBar.classList.add('hidden');
+      const wrap = document.createElement('div');
+      wrap.className = (sender === 'user' ? 'flex justify-end' : 'flex justify-start') + ' msg-anim';
+      const b = document.createElement('div');
+      b.className = sender === 'user'
+        ? 'bg-[#dcf8c6] text-slate-900 rounded-2xl rounded-tr-none px-3 py-2 max-w-[82%] shadow-sm space-y-1'
+        : 'bg-white text-slate-900 rounded-2xl rounded-tl-none px-3 py-2 max-w-[86%] shadow-sm space-y-1 border border-slate-200/80';
+      b.innerHTML = `<div>${html}</div><div class="text-[9px] text-slate-400 text-right">${time} ${sender === 'user' ? '✓✓' : ''}</div>`;
+      wrap.appendChild(b);
+      chatEl.appendChild(wrap);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    function showPush(title, body, time) {
+      document.getElementById('push-title').textContent = title;
+      document.getElementById('push-body').textContent = body;
+      document.getElementById('push-time').textContent = time;
+      pushNotif.classList.remove('hidden');
+      pushNotif.classList.add('notif-anim');
+      const t = setTimeout(() => {
+        pushNotif.classList.add('hidden');
+      }, 3200 / speedMultiplier);
+      stepTimers.push(t);
+    }
+
+    function renderReplies(options) {
+      repliesEl.innerHTML = '';
+      options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.id = 'rep-btn-' + i;
+        btn.className = 'bg-white text-[#075e54] border border-emerald-600/40 font-bold text-[11px] px-3 py-1.5 rounded-full shadow-sm transition';
+        btn.textContent = opt;
+        repliesEl.appendChild(btn);
+      });
+    }
+
+    function highlightTap(idx) {
+      const btn = document.getElementById('rep-btn-' + idx);
+      if (btn) {
+        btn.classList.add('tap-highlight', 'ring-4', 'ring-emerald-400');
+      }
+    }
+
+    function playScene(idx) {
+      clearTimers();
+      const scenes = buildScenes();
+      currentSceneIndex = idx;
+      const scene = scenes[idx];
+      updateChapterHighlight(idx, scenes.length);
+
+      phoneClock.textContent = scene.clock;
+      bottleGauge.textContent = scene.bottleText;
+      bottleBar.style.width = scene.bottlePct + '%';
+      bottleBar.className = scene.bottleColor + ' h-full transition-all duration-700';
+      sceneTitle.textContent = scene.bannerTitle;
+      sceneSubtitle.textContent = scene.bannerSub;
+      repliesEl.innerHTML = '<span class="text-[11px] text-slate-400">In attesa di risposta...</span>';
+      pushNotif.classList.add('hidden');
+      typingBar.classList.add('hidden');
+
+      if (idx === 0) {
+        chatEl.innerHTML = '';
+      }
+
+      scene.steps.forEach(step => {
+        const t = setTimeout(() => {
+          if (!isPlaying) return;
+          if (step.type === 'datechip') appendDateChip(step.text);
+          if (step.type === 'user') appendBubble('user', step.text, step.time);
+          if (step.type === 'bot') appendBubble('bot', step.text, step.time);
+          if (step.type === 'typing') {
+            typingBar.classList.remove('hidden');
+            chatEl.scrollTop = chatEl.scrollHeight;
+          }
+          if (step.type === 'push') showPush(step.title, step.body, step.time);
+          if (step.type === 'replies') renderReplies(step.options);
+          if (step.type === 'tap') highlightTap(step.index);
+        }, step.delay / speedMultiplier);
+        stepTimers.push(t);
+      });
+
+      const nextTimer = setTimeout(() => {
+        if (!isPlaying) return;
+        if (currentSceneIndex < scenes.length - 1) {
+          playScene(currentSceneIndex + 1);
+        } else {
+          statusPill.textContent = '✔ VIDEO COMPLETATO';
+          statusPill.className = 'text-[11px] font-mono bg-sky-500/20 text-sky-300 px-2.5 py-0.5 rounded-full border border-sky-500/30 font-bold';
+          btnPlay.textContent = '🔄 Rivedi Video';
+          isPlaying = false;
+        }
+      }, scene.duration / speedMultiplier);
+      stepTimers.push(nextTimer);
+    }
+
+    function jumpToScene(idx) {
+      isPlaying = true;
+      btnPlay.textContent = '⏸ Pausa';
+      statusPill.textContent = '▶ IN RIPRODUZIONE';
+      statusPill.className = 'text-[11px] font-mono bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-bold';
+      chatEl.innerHTML = '';
+      playScene(idx);
+    }
+
+    function togglePlay() {
+      const scenes = buildScenes();
+      if (!isPlaying && currentSceneIndex === scenes.length - 1) {
+        restartVideo();
+        return;
+      }
+      isPlaying = !isPlaying;
+      if (isPlaying) {
+        btnPlay.textContent = '⏸ Pausa';
+        statusPill.textContent = '▶ IN RIPRODUZIONE';
+        playScene(currentSceneIndex);
+      } else {
+        btnPlay.textContent = '▶ Play';
+        statusPill.textContent = '⏸ IN PAUSA';
+        clearTimers();
+      }
+    }
+
+    function restartVideo() {
+      chatEl.innerHTML = '';
+      jumpToScene(0);
+    }
+
+    function setSpeed(spd) {
+      speedMultiplier = spd;
+      document.getElementById('spd-1').className = spd === 1
+        ? 'px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[11px] font-bold'
+        : 'px-2 py-1 rounded bg-slate-800 text-slate-400 font-mono text-[11px]';
+      document.getElementById('spd-16').className = spd === 1.6
+        ? 'px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[11px] font-bold'
+        : 'px-2 py-1 rounded bg-slate-800 text-slate-400 font-mono text-[11px]';
+      playScene(currentSceneIndex);
+    }
+
+    function scrubVideo(e) {
+      const scenes = buildScenes();
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+      const targetScene = Math.min(scenes.length - 1, Math.floor(ratio * scenes.length));
+      jumpToScene(targetScene);
+    }
+
+    playScene(0);
+  </script>
+</body>
+</html>

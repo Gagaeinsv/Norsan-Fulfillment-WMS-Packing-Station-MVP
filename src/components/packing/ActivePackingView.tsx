@@ -16,11 +16,15 @@ import {
   ChevronRight,
   ShieldCheck,
   Repeat,
+  Package,
+  CheckCircle2,
 } from "lucide-react";
 import { Order, BoxType, ScanEvent, Product } from "../../types/wms";
 import { BOX_TYPES } from "../../data/norsanProducts";
 import { PackingBanners } from "./PackingBanners";
 import { PackingItemCard } from "./PackingItemCard";
+import { printOrderPackingSlip } from "../../services/orderSlipPrinter";
+import { printDhlThermalLabel } from "../../services/dhlLabelPrinter";
 
 interface ActivePackingViewProps {
   order: Order;
@@ -38,13 +42,17 @@ interface ActivePackingViewProps {
   onOpenBindModal?: (barcode: string) => void;
   onConfirmAllItems?: () => void;
   onUpdateItemLot?: (sku: string, lotNumber: string, expiryDate: string) => void;
+  onUpdatePackageCount?: (orderId: string, count: number) => void;
+  onCompleteOrder?: () => void;
+  dhlPrintTiming?: "on_scan" | "on_finish";
+  onToggleDhlPrintTiming?: () => void;
 }
 
 export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   order,
   onSimulateScan,
   onToggleFlyer,
-  onOpenLabelModal,
+  onOpenLabelModal: _onOpenLabelModal,
   onOpenIssueModal,
   onChangeBoxType,
   stationConfigId,
@@ -54,8 +62,12 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   onQuickSwitchOrder,
   onForceAddProduct,
   onOpenBindModal,
-  onConfirmAllItems,
+  onConfirmAllItems: _onConfirmAllItems,
   onUpdateItemLot,
+  onUpdatePackageCount,
+  onCompleteOrder,
+  dhlPrintTiming = "on_scan",
+  onToggleDhlPrintTiming,
 }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [kanbanAlertItem, setKanbanAlertItem] = useState<string | null>(null);
@@ -69,13 +81,22 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
 
   if (!order) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-white border border-slate-300 rounded-xl p-8 text-center">
-        <FileText className="w-12 h-12 text-slate-400 mb-3" />
-        <h3 className="text-lg font-black text-slate-800">
-          Nessun ordine selezionato in coda
+      <div className="flex flex-col items-center justify-center h-full bg-white border-2 border-slate-300 rounded-2xl p-8 text-center shadow-xs">
+        <div className="p-4 bg-cyan-50 text-cyan-700 rounded-3xl border border-cyan-200 mb-4 shadow-xs">
+          <Package className="w-12 h-12 text-cyan-600" />
+        </div>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold font-mono mb-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+          <span>Postazione Operativa Pronta • Lettore Barcode Attivo</span>
+        </div>
+        <h3 className="text-xl font-black text-slate-900 tracking-tight">
+          Nessun Ordine Attivo sul Banco
         </h3>
-        <p className="text-xs text-slate-500 mt-1">
-          Seleziona un ordine dalla coda a sinistra o scansiona una distinta per iniziare.
+        <p className="text-xs text-slate-500 mt-1.5 max-w-md leading-relaxed">
+          Scansiona il foglio d'ordine Selly (
+          <strong className="font-mono text-cyan-800">ORDVE...</strong> o{" "}
+          <strong className="font-mono text-cyan-800">INT...</strong>) con la
+          pistola ottica oppure carica una nuova distinta ordini da Selly ERP.
         </p>
       </div>
     );
@@ -195,6 +216,74 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
             ))}
           </select>
 
+          {/* Multi-Collo Box Counter */}
+          <div className="flex items-center gap-1 bg-white border-2 border-slate-300 rounded-xl px-2 py-1 shadow-2xs">
+            <Package className="w-3.5 h-3.5 text-blue-700" />
+            <span className="text-[11px] font-bold text-slate-600">Scatole:</span>
+            <button
+              type="button"
+              onClick={() =>
+                onUpdatePackageCount?.(
+                  order.id,
+                  Math.max(1, (order.packageCount || 1) - 1),
+                )
+              }
+              disabled={(order.packageCount || 1) <= 1}
+              className="w-5 h-5 flex items-center justify-center font-black text-xs text-slate-700 hover:bg-slate-100 rounded disabled:opacity-30 cursor-pointer"
+              title="Riduci numero scatole/colli"
+            >
+              -
+            </button>
+            <span className="font-mono font-black text-xs px-1 text-blue-900">
+              {order.packageCount || 1}{" "}
+              {(order.packageCount || 1) === 1 ? "collo" : "colli"}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const nextCount = (order.packageCount || 1) + 1;
+                onUpdatePackageCount?.(order.id, nextCount);
+                printDhlThermalLabel(order, nextCount);
+              }}
+              className="w-5 h-5 flex items-center justify-center font-black text-xs text-blue-700 hover:bg-blue-100 rounded cursor-pointer"
+              title="Aggiungi scatola e stampa subito la nuova etichetta DHL"
+            >
+              +
+            </button>
+          </div>
+
+          {/* DHL Print Timing Mode Switcher */}
+          {onToggleDhlPrintTiming && (
+            <button
+              type="button"
+              onClick={onToggleDhlPrintTiming}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition active:scale-95 cursor-pointer shadow-2xs ${
+                dhlPrintTiming === "on_scan"
+                  ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
+                  : "bg-blue-50 text-blue-800 border-blue-300 hover:bg-blue-100"
+              }`}
+              title="Cambia momento stampa: All'Avvio (subito allo scan bolla) oppure A Chiusura (a scatole pronte)"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>
+                {dhlPrintTiming === "on_scan"
+                  ? "DHL: All'Avvio"
+                  : "DHL: A Chiusura"}
+              </span>
+            </button>
+          )}
+
+          {/* Quick Print Paper Slip button */}
+          <button
+            type="button"
+            onClick={() => printOrderPackingSlip(order)}
+            className="flex items-center gap-1 text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 px-2.5 py-1.5 rounded-xl transition active:scale-95 shadow-2xs cursor-pointer"
+            title="Ristampa foglio distinta con Barcode per questo ordine"
+          >
+            <Printer className="w-3.5 h-3.5 text-slate-600" />
+            <span>Foglio Prelievo</span>
+          </button>
+
           {/* Weight */}
           <div className="flex items-center gap-1 text-xs font-bold text-slate-600 bg-slate-100 border border-slate-300 px-2.5 py-1.5 rounded-xl">
             <Scale className="w-3.5 h-3.5" />
@@ -259,6 +348,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
         requiresGift={!!requiresGift}
         onToggleGift={onToggleGift}
         onTogglePhysicalDocument={onTogglePhysicalDocument}
+        dhlPrintTiming={dhlPrintTiming}
       />
 
       {/* ── Active Scan Error / Candidate Action Banner ─────────────────────── */}
@@ -395,43 +485,27 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
             <span>Segnala Anomalia</span>
           </button>
 
-          {!isOrderFullyReady && onConfirmAllItems && (
-            <button
-              onClick={onConfirmAllItems}
-              className="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-black border border-blue-700 transition flex items-center gap-2 shadow-md cursor-pointer animate-pulse"
-              title="Valida tutti gli articoli letti dalla distinta cartacea (senza scansione barcode pezzo per pezzo)"
-            >
-              <ShieldCheck className="w-4 h-4 text-white" />
-              <span>Conferma Prelievo da Bolla (Tutto Ok)</span>
-            </button>
-          )}
+          {/* Direct DHL Thermal Label & Order Completion */}
+          <button
+            type="button"
+            onClick={() => printDhlThermalLabel(order, order.packageCount || 1)}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white font-bold text-xs border border-slate-700 transition shadow-xs cursor-pointer"
+            title="Ristampa l'etichetta termica DHL per questo ordine"
+          >
+            <Printer className="w-4 h-4 text-yellow-400" />
+            <span>Ristampa DHL ({(order.packageCount || 1) > 1 ? `${order.packageCount} colli` : "1 collo"})</span>
+          </button>
 
-          {isOrderFullyReady ? (
+          {onCompleteOrder && (
             <button
-              onClick={onOpenLabelModal}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-base font-black tracking-wide shadow-lg transition-all animate-pulse cursor-pointer"
+              type="button"
+              onClick={onCompleteOrder}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs transition shadow-md cursor-pointer"
+              title="Chiudi questo ordine e passa al prossimo (oppure scansiona semplicemente il prossimo foglio prelievo)"
             >
-              <Printer className="w-5 h-5 text-white" />
-              <span>STAMPA ETICHETTA {order.courier.toUpperCase()}</span>
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          ) : (
-            <button
-              disabled
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-100 text-slate-400 text-xs font-bold border border-slate-300 cursor-not-allowed"
-            >
-              <Printer className="w-4 h-4 text-slate-400" />
-              <span>
-                STAMPA BLOCCATA (
-                {!isProductsFullyScanned
-                  ? `${totalItemsScanned}/${totalItemsRequired} SCANSIONATI`
-                  : !isFlyersFullyScanned
-                  ? "VOLANTINI MANCANTI"
-                  : !isGiftConfirmed
-                  ? "CONFERMA OMAGGIO MANCANTE"
-                  : "CONFERMA DDT/FATTURA MANCANTE"}
-                )
-              </span>
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Completa & Prossimo Ordine</span>
+              <ChevronRight className="w-4 h-4" />
             </button>
           )}
         </div>

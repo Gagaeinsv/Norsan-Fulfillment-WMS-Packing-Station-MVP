@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NORSAN • La Mia Omega-3 Routine 2.0 (Nano-Sticker & WhatsApp Bot)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Caveat:wght@600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .font-hand { font-family: 'Caveat', cursive; }
+    .norsan-plaid {
+      background-color: #fdfbf7;
+      background-image:
+        linear-gradient(90deg, rgba(30, 58, 95, 0.14) 2px, transparent 2px),
+        linear-gradient(rgba(30, 58, 95, 0.14) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(30, 58, 95, 0.06) 8px, transparent 8px),
+        linear-gradient(rgba(30, 58, 95, 0.06) 8px, transparent 8px);
+      background-size: 48px 48px, 48px 48px, 24px 24px, 24px 24px;
+    }
+    .wa-bg {
+      background-color: #efeae2;
+      background-image: radial-gradient(#d6d0c4 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+    .chat-scroll::-webkit-scrollbar { width: 5px; }
+    .chat-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 9999px; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="bg-[#1e3a5f] text-white font-black tracking-wider px-3 py-1.5 rounded-lg text-sm border border-sky-400/30">
+          NOR<span class="text-rose-400">S</span>AN
+        </div>
+        <div>
+          <h1 class="text-sm sm:text-base font-bold text-white leading-tight">
+            La Mia (Omega-3) Routine 2.0 — Phygital &amp; WhatsApp Bot
+          </h1>
+          <p class="text-xs text-slate-400">
+            Evoluzione digitale dell'opuscolo cartaceo • Studiato per cucine italiane (Frigo da Incasso)
+          </p>
+        </div>
+      </div>
+
+      <!-- View Switcher Tabs -->
+      <div class="flex flex-wrap items-center gap-1.5 bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-bold">
+        <a href="norsan-whatsapp-video.html" class="px-3 py-1.5 rounded-lg bg-rose-500 hover:bg-rose-400 text-white transition flex items-center gap-1 shadow">
+          🎬 Guarda Video Animato (Giorni 1➔90)
+        </a>
+        <button onclick="switchTab('prototype')" id="tab-prototype" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 transition">
+          📱 1. Demo Live (Sticker + WhatsApp)
+        </button>
+        <button onclick="switchTab('comparison')" id="tab-comparison" class="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white transition">
+          📊 2. Dal Cartaceo al Digitale (SWOT)
+        </button>
+        <button onclick="switchTab('wms')" id="tab-wms" class="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white transition">
+          📦 3. Integrazione WMS Bolzano
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-4 sm:p-6">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: LIVE PROTOTYPE (STICKER + WHATSAPP) -->
+    <!-- ========================================== -->
+    <section id="view-prototype" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- LEFT COLUMN: PHYSICAL TOUCHPOINT (NO-MAGNET SOLUTION FOR ITALY) -->
+      <div class="lg:col-span-6 space-y-5">
+        <div class="bg-slate-800/90 border border-slate-700 rounded-3xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 font-bold">
+              Insight Mercato Italia 🇮🇹
+            </span>
+            <div class="flex gap-1.5 text-xs">
+              <button onclick="setPhysicalFormat('sticker')" id="btn-fmt-sticker" class="px-2.5 py-1 rounded-lg bg-sky-500 text-slate-950 font-bold">
+                Nano-Sticker Cucina
+              </button>
+              <button onclick="setPhysicalFormat('collar')" id="btn-fmt-collar" class="px-2.5 py-1 rounded-lg bg-slate-700 text-slate-300 font-semibold">
+                Collarino Bottiglia
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/70 rounded-2xl p-3.5 border border-slate-700/80 text-xs text-slate-300 leading-relaxed">
+            <strong class="text-white">Perché NON il classico magnete:</strong> In Italia oltre il <strong class="text-amber-300">75% dei frigoriferi è da incasso</strong> (rivestito con pannello in legno/laminato dove le calamite non attaccano).<br/>
+            <strong class="text-emerald-400">La Soluzione:</strong> <span id="format-desc"><strong>Nano-Pad Riposizionabile (Micro-Ventose senza colla)</strong> — si attacca su legno, laminato, vetro, piastrelle o direttamente all'interno della porta del frigo vicino alla bottiglia NORSAN. Non lascia residui ed è lavabile.</span>
+          </div>
+
+          <!-- PHYSICAL STICKER VISUAL MOCKUP (Inspired by Booklet Cover) -->
+          <div id="mockup-sticker" class="norsan-plaid text-slate-900 rounded-3xl p-6 shadow-2xl border-4 border-[#1e3a5f] relative overflow-hidden">
+            <!-- Top Badge -->
+            <div class="flex items-center justify-between mb-4">
+              <div class="bg-[#1e3a5f] text-white font-black tracking-widest px-3 py-1 rounded text-xs">
+                NOR<span class="text-rose-500">S</span>AN
+              </div>
+              <span class="font-hand text-lg text-[#1e3a5f] font-bold">
+                "A spoon of NORSAN a day..."
+              </span>
+              <div class="bg-rose-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-full shadow">
+                Nano-Pad Cucina
+              </div>
+            </div>
+
+            <!-- Notebook Label Title (Directly from Photo 1) -->
+            <div class="bg-[#f4f0dc] border-2 border-[#1e3a5f] rounded-xl p-3 text-center shadow-sm max-w-sm mx-auto mb-5">
+              <div class="text-xs font-bold tracking-widest text-slate-500 uppercase">Programma 25 Giorni</div>
+              <div class="text-lg sm:text-xl font-black tracking-wide text-[#1e3a5f]">
+                LA MIA (OMEGA-3) ROUTINE
+              </div>
+              <div class="text-[11px] text-slate-600 font-medium mt-0.5">
+                La forza sta nella ripetizione • 1 cucchiaio (8 ml) al giorno
+              </div>
+            </div>
+
+            <!-- Center Grid: 3 Golden Rules (from Booklet Page 5) + QR Code to WhatsApp -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center bg-white/95 backdrop-blur rounded-2xl p-4 border-2 border-[#1e3a5f]/20 shadow-md">
+              <!-- 3 Rules -->
+              <div class="sm:col-span-7 space-y-2.5 text-xs">
+                <div class="font-black text-[#1e3a5f] uppercase tracking-wider text-[11px]">
+                  I 3 Segreti di Efficacia NORSAN:
+                </div>
+                <div class="flex items-start gap-2.5">
+                  <span class="w-6 h-6 rounded-full bg-sky-100 text-[#1e3a5f] flex items-center justify-center font-black shrink-0">1</span>
+                  <div>
+                    <strong class="text-slate-900">Agita &amp; Assumi ai pasti</strong>
+                    <p class="text-[11px] text-slate-600">1 cucchiaio durante o dopo un pasto (mai su cibi bollenti).</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2.5">
+                  <span class="w-6 h-6 rounded-full bg-sky-100 text-[#1e3a5f] flex items-center justify-center font-black shrink-0">2</span>
+                  <div>
+                    <strong class="text-slate-900">Conserva in Frigorifero ❄️</strong>
+                    <p class="text-[11px] text-slate-600">Dopo l'apertura tieni il flacone ben chiuso in frigo (4°C).</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2.5">
+                  <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-black shrink-0">3</span>
+                  <div>
+                    <strong class="text-emerald-900">Attiva il Promemoria WhatsApp</strong>
+                    <p class="text-[11px] text-slate-600">Ti avvisa ogni giorno e al <strong>Giorno 20</strong> prima che finisca!</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- QR Code Trigger -->
+              <div class="sm:col-span-5 flex flex-col items-center justify-center bg-[#1e3a5f] text-white rounded-2xl p-3.5 text-center shadow-inner">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-300 mb-1.5">
+                  📲 Scansiona con la fotocamera
+                </div>
+                <!-- Stylized Interactive SVG QR Code -->
+                <div onclick="simulateQrScan()" class="bg-white p-2.5 rounded-xl cursor-pointer hover:scale-105 transition transform shadow-lg group" title="Clicca per simulare la scansione QR">
+                  <svg class="w-24 h-24 text-slate-900" viewBox="0 0 100 100" fill="currentColor">
+                    <rect x="8" y="8" width="26" height="26" fill="none" stroke="currentColor" stroke-width="6"/>
+                    <rect x="15" y="15" width="12" height="12"/>
+                    <rect x="66" y="8" width="26" height="26" fill="none" stroke="currentColor" stroke-width="6"/>
+                    <rect x="73" y="15" width="12" height="12"/>
+                    <rect x="8" y="66" width="26" height="26" fill="none" stroke="currentColor" stroke-width="6"/>
+                    <rect x="15" y="73" width="12" height="12"/>
+                    <rect x="42" y="12" width="6" height="6"/>
+                    <rect x="52" y="18" width="6" height="12"/>
+                    <rect x="42" y="34" width="16" height="6"/>
+                    <rect x="12" y="44" width="18" height="6"/>
+                    <rect x="38" y="44" width="24" height="24" rx="4" fill="#10b981"/>
+                    <text x="50" y="60" text-anchor="middle" fill="white" font-size="11" font-weight="bold">WA</text>
+                    <rect x="68" y="44" width="6" height="18"/>
+                    <rect x="80" y="50" width="12" height="6"/>
+                    <rect x="44" y="74" width="12" height="6"/>
+                    <rect x="64" y="70" width="18" height="6"/>
+                    <rect x="74" y="80" width="18" height="12"/>
+                    <rect x="44" y="86" width="18" height="6"/>
+                  </svg>
+                </div>
+                <button onclick="simulateQrScan()" class="mt-2 w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] py-1.5 px-2 rounded-lg transition shadow">
+                  ▶ Simula Scansione QR
+                </button>
+                <span class="text-[10px] text-slate-300 mt-1">Apre WhatsApp in 1 secondo</span>
+              </div>
+            </div>
+
+            <!-- Bottom Strip: Mini 25-day visual bar -->
+            <div class="mt-4 bg-white/90 rounded-xl p-2.5 border border-slate-300 flex items-center justify-between text-[11px]">
+              <span class="font-bold text-[#1e3a5f]">1 Flacone (200ml) = 25 Giorni</span>
+              <span class="bg-rose-100 text-rose-800 font-black px-2 py-0.5 rounded">
+                🔔 Giorno 20: Alert Riordino Automatico
+              </span>
+            </div>
+          </div>
+
+          <!-- COLLARINO BOTTIGLIA MOCKUP (Hidden by default) -->
+          <div id="mockup-collar" class="hidden norsan-plaid text-slate-900 rounded-3xl p-6 shadow-2xl border-4 border-emerald-700 text-center space-y-4">
+            <div class="inline-block bg-emerald-700 text-white text-xs font-black uppercase px-3 py-1 rounded-full">
+              Opzione B • Collarino da Bottiglia (Dentro il Frigo)
+            </div>
+            <div class="w-24 h-24 mx-auto rounded-full border-4 border-dashed border-slate-400 bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
+              Foro Tappo<br/>Ø 32mm
+            </div>
+            <h3 class="text-lg font-black text-[#1e3a5f]">LA MIA OMEGA-3 ROUTINE</h3>
+            <p class="text-xs text-slate-600 max-w-md mx-auto">
+              Resta agganciato direttamente al collo della bottiglia NORSAN in frigorifero. Ogni volta che il cliente prende la bottiglia, vede il QR Code per il diario WhatsApp e il riordino rapido in 1 click.
+            </p>
+            <button onclick="simulateQrScan()" class="bg-emerald-600 text-white font-black text-xs px-5 py-2.5 rounded-xl shadow hover:bg-emerald-500">
+              📲 Test Scansione QR dal Collarino
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: INTERACTIVE WHATSAPP BOT SIMULATOR -->
+      <div class="lg:col-span-6 space-y-4">
+        <div class="bg-slate-800/90 border border-slate-700 rounded-3xl p-4 sm:p-5">
+          <!-- Scenario Jump Buttons -->
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <span class="text-xs font-bold text-slate-300">
+              🎮 Testa gli Scenari del Bot WhatsApp:
+            </span>
+            <div class="flex flex-wrap gap-1.5 text-[11px] font-bold">
+              <button onclick="runScenario('onboarding')" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30">
+                1. Giorno 1 (Attivazione)
+              </button>
+              <button onclick="runScenario('daily')" class="px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/40 hover:bg-sky-500/30">
+                2. Giorno 7 (Check &amp; Ricetta)
+              </button>
+              <button onclick="runScenario('reorder')" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30">
+                3. Giorno 20 (Riordino 1-Click)
+              </button>
+              <button onclick="runScenario('bloodtest')" class="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30">
+                4. Giorno 90 (Analisi Indice)
+              </button>
+            </div>
+          </div>
+
+          <!-- Phone Frame -->
+          <div class="max-w-md mx-auto bg-slate-950 rounded-[36px] p-3 border-4 border-slate-700 shadow-2xl">
+            <!-- WhatsApp Top Header -->
+            <div class="bg-[#075e54] text-white rounded-t-[26px] px-4 py-3 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-[#1e3a5f] border-2 border-white flex items-center justify-center font-black text-xs">
+                  N<span class="text-rose-400">S</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-1 text-sm font-bold">
+                    <span>NORSAN Italia Routine</span>
+                    <span class="bg-emerald-400 text-slate-950 text-[9px] font-black px-1 rounded">✔</span>
+                  </div>
+                  <div class="text-[11px] text-emerald-200">Account Business Ufficiale • online</div>
+                </div>
+              </div>
+              <span class="text-xs bg-white/10 px-2 py-1 rounded-full font-mono" id="wa-day-badge">
+                Giorno 1/25
+              </span>
+            </div>
+
+            <!-- Chat Messages Container -->
+            <div id="chat-container" class="wa-bg h-[430px] overflow-y-auto p-3.5 space-y-3 text-slate-900 text-xs chat-scroll">
+              <!-- Populated dynamically by JS -->
+            </div>
+
+            <!-- Interactive Quick Reply Buttons Area -->
+            <div id="quick-replies" class="bg-[#f0f2f5] border-t border-slate-300 px-3 py-2.5 rounded-b-[26px] min-h-[64px] flex flex-wrap gap-1.5 items-center justify-center">
+              <!-- Populated dynamically by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: SWOT & DIGITAL EVOLUTION            -->
+    <!-- ========================================== -->
+    <section id="view-comparison" class="hidden space-y-6">
+      <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6">
+        <h2 class="text-xl font-black text-white mb-2">
+          Perché trasformare l'opuscolo cartaceo "La Mia Routine" in Nano-Sticker + WhatsApp Bot
+        </h2>
+        <p class="text-sm text-slate-300 mb-6">
+          Abbiamo mappato pagina per pagina il vecchio libretto cartaceo NORSAN convertendo ogni elemento in una funzione digitale misurabile ad alta conversione.
+        </p>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="border-b border-slate-700 text-slate-400 uppercase text-[11px]">
+                <th class="py-3 px-4">Elemento del Vecchio Libretto</th>
+                <th class="py-3 px-4">Problema del Formato Cartaceo (Debolezza)</th>
+                <th class="py-3 px-4 text-emerald-400">Nuova Soluzione (Nano-Sticker + WhatsApp Bot)</th>
+                <th class="py-3 px-4">Impatto KPI Business</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/70">
+              <tr>
+                <td class="py-3.5 px-4 font-bold text-white">
+                  1. "Scheda di Routine da staccare" (Pag. Centrale 1–31 gg)
+                </td>
+                <td class="py-3.5 px-4 text-slate-300">
+                  Il cliente deve staccare il foglio, cercare una penna e non può attaccarlo con una calamita perché i frigoriferi italiani sono incassati nel legno.
+                </td>
+                <td class="py-3.5 px-4 text-emerald-300 font-medium">
+                  <strong>Nano-Sticker Micro-Ventosa</strong> (aderisce su legno, vetro e laminato senza colla) + Check-in giornaliero con 1 tap su WhatsApp.
+                </td>
+                <td class="py-3.5 px-4 font-mono text-sky-300">
+                  +65% Attivazione Routine
+                </td>
+              </tr>
+              <tr>
+                <td class="py-3.5 px-4 font-bold text-white">
+                  2. Fine Flacone (200ml = 25 giorni a 8ml/dì)
+                </td>
+                <td class="py-3.5 px-4 text-slate-300">
+                  La scheda cartacea ha 31 giorni ma il flacone finisce al giorno 25. Nessun link di riacquisto: il cliente rimane senza olio e interrompe la cura.
+                </td>
+                <td class="py-3.5 px-4 text-emerald-300 font-medium">
+                  <strong>Trigger Automatico Giorno 20 su WhatsApp:</strong> notifica quando restano 5 dosi + link carrello precompilato (consegna Bolzano in 48h).
+                </td>
+                <td class="py-3.5 px-4 font-mono text-emerald-400 font-bold">
+                  +35% Tasso di Riordino (LTV)
+                </td>
+              </tr>
+              <tr>
+                <td class="py-3.5 px-4 font-bold text-white">
+                  3. "Il Mio Profilo Omega-3" &amp; Analisi Sangue (Pag. 3)
+                </td>
+                <td class="py-3.5 px-4 text-slate-300">
+                  Scheda cartacea per scrivere 1° e 2° test degli acidi grassi (a distanza di 3–4 mesi). Dopo 4 mesi il libretto è perso.
+                </td>
+                <td class="py-3.5 px-4 text-emerald-300 font-medium">
+                  <strong>Passaporto Digitale Omega-3 in chat:</strong> salva il 1° valore (es. 4.2%) e al Giorno 90 ricorda di fare il 2° test per vedere il progresso.
+                </td>
+                <td class="py-3.5 px-4 font-mono text-sky-300">
+                  Retention a 90–120 giorni
+                </td>
+              </tr>
+              <tr>
+                <td class="py-3.5 px-4 font-bold text-white">
+                  4. Consigli Nutrizionista &amp; Ricette (Pag. 4–5)
+                </td>
+                <td class="py-3.5 px-4 text-slate-300">
+                  Muro di testo letto una sola volta. Costo tipografico elevato per un libretto multipagina.
+                </td>
+                <td class="py-3.5 px-4 text-emerald-300 font-medium">
+                  <strong>Pillole micro-contenuto su WhatsApp</strong> (es. Giorno 3: come mescolarlo nello smoothie; Giorno 10: perché non scaldarlo).
+                </td>
+                <td class="py-3.5 px-4 font-mono text-sky-300">
+                  -60% Costo Stampa Kit
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: WMS BOLZANO INTEGRATION             -->
+    <!-- ========================================== -->
+    <section id="view-wms" class="hidden space-y-6">
+      <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 space-y-4">
+        <div class="inline-block bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-xs font-bold px-3 py-1 rounded-full">
+          Poka-Yoke Operativo • Hub Logistico Bolzano
+        </div>
+        <h2 class="text-xl font-black text-white">
+          Come funziona in magazzino durante l'imballaggio (Zero Errori)
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs sm:text-sm">
+          <div class="bg-slate-900/80 border border-slate-700 p-4 rounded-2xl space-y-2">
+            <div class="text-emerald-400 font-black">PASSO 1 • Regola Automatica WMS</div>
+            <p class="text-slate-300">
+              Quando Selly ERP / WooCommerce invia un ordine con tag <code class="bg-slate-800 px-1.5 py-0.5 rounded text-amber-300">Primo Ordine</code> (oppure acquisto Kit Iniziale + Cucchiaino Dosatore), la WMS di Bolzano attiva automaticamente il requisito obbligatorio <strong>Nano-Sticker Routine QR</strong>.
+            </p>
+          </div>
+          <div class="bg-slate-900/80 border border-slate-700 p-4 rounded-2xl space-y-2">
+            <div class="text-sky-400 font-black">PASSO 2 • Scansione al Tavolo Packing</div>
+            <p class="text-slate-300">
+              L'operatore al tavolo vede a schermo l'avviso insieme al cucchiaino dosatore: inserisce lo sticker nella scatola (o il collarino sulla bottiglia) e conferma con un bip dello scanner prima che venga stampata l'etichetta DHL.
+            </p>
+          </div>
+          <div class="bg-slate-900/80 border border-slate-700 p-4 rounded-2xl space-y-2">
+            <div class="text-rose-400 font-black">PASSO 3 • Chiusura del Cerchio al Giorno 20</div>
+            <p class="text-slate-300">
+              Quando il cliente clicca <strong>"Riordina in 1 Click"</strong> su WhatsApp al Giorno 20, l'ordine entra già validato e normalizzato nella coda della WMS di Bolzano, pronto per la spedizione immediata.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    function switchTab(tab) {
+      ['prototype', 'comparison', 'wms'].forEach(t => {
+        document.getElementById('view-' + t).classList.add('hidden');
+        const btn = document.getElementById('tab-' + t);
+        btn.className = 'px-3 py-1.5 rounded-lg text-slate-300 hover:text-white transition';
+      });
+      document.getElementById('view-' + tab).classList.remove('hidden');
+      document.getElementById('tab-' + tab).className = 'px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 transition font-bold';
+    }
+
+    function setPhysicalFormat(fmt) {
+      const sticker = document.getElementById('mockup-sticker');
+      const collar = document.getElementById('mockup-collar');
+      const btnSticker = document.getElementById('btn-fmt-sticker');
+      const btnCollar = document.getElementById('btn-fmt-collar');
+      const desc = document.getElementById('format-desc');
+
+      if (fmt === 'sticker') {
+        sticker.classList.remove('hidden');
+        collar.classList.add('hidden');
+        btnSticker.className = 'px-2.5 py-1 rounded-lg bg-sky-500 text-slate-950 font-bold';
+        btnCollar.className = 'px-2.5 py-1 rounded-lg bg-slate-700 text-slate-300 font-semibold';
+        desc.innerHTML = '<strong>Nano-Pad Riposizionabile (Micro-Ventose senza colla)</strong> — si attacca su legno, laminato, vetro, piastrelle o direttamente all\'interno della porta del frigo vicino alla bottiglia NORSAN. Non lascia residui ed è lavabile.';
+      } else {
+        sticker.classList.add('hidden');
+        collar.classList.remove('hidden');
+        btnCollar.className = 'px-2.5 py-1 rounded-lg bg-sky-500 text-slate-950 font-bold';
+        btnSticker.className = 'px-2.5 py-1 rounded-lg bg-slate-300 font-semibold';
+        desc.innerHTML = '<strong>Collarino Smart sul Collo della Bottiglia</strong> — zero adesivi sui mobili: rimane appeso direttamente alla bottiglia NORSAN dentro il frigorifero da incasso.';
+      }
+    }
+
+    const chatEl = document.getElementById('chat-container');
+    const repliesEl = document.getElementById('quick-replies');
+    const dayBadge = document.getElementById('wa-day-badge');
+
+    function addBubble(sender, html, time = '09:15') {
+      const wrapper = document.createElement('div');
+      wrapper.className = sender === 'user' ? 'flex justify-end' : 'flex justify-start';
+      const bubble = document.createElement('div');
+      bubble.className = sender === 'user'
+        ? 'bg-[#dcf8c6] text-slate-900 rounded-2xl rounded-tr-none px-3.5 py-2 max-w-[82%] shadow-sm space-y-1'
+        : 'bg-white text-slate-900 rounded-2xl rounded-tl-none px-3.5 py-2.5 max-w-[86%] shadow-sm space-y-1.5 border border-slate-200/70';
+      bubble.innerHTML = `<div>${html}</div><div class="text-[9px] text-slate-400 text-right">${time} ${sender === 'user' ? '✓✓' : ''}</div>`;
+      wrapper.appendChild(bubble);
+      chatEl.appendChild(wrapper);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    function setQuickReplies(buttons) {
+      repliesEl.innerHTML = '';
+      buttons.forEach(b => {
+        const btn = document.createElement('button');
+        btn.className = 'bg-white hover:bg-emerald-50 text-[#075e54] border border-emerald-600/40 font-bold text-xs px-3 py-1.5 rounded-full shadow-sm transition';
+        btn.textContent = b.label;
+        btn.onclick = b.onClick;
+        repliesEl.appendChild(btn);
+      });
+    }
+
+    function simulateQrScan() {
+      runScenario('onboarding');
+    }
+
+    function runScenario(type) {
+      chatEl.innerHTML = '';
+      if (type === 'onboarding') {
+        dayBadge.textContent = 'Giorno 1/25';
+        addBubble('user', 'Ciao NORSAN! 👋 Ho appena attaccato lo sticker e aperto la mia bottiglia per iniziare la mia Omega-3 Routine!', '08:30');
+        setTimeout(() => {
+          addBubble('bot', `
+            <strong>Benvenuto nella tua (Omega-3) Routine! 🥄✨</strong><br/>
+            Come diciamo sempre in NORSAN: <em>"La forza sta nella ripetizione"</em>.<br/><br/>
+            Configuriamo il tuo <strong>Profilo Omega-3</strong> in 10 secondi: quale prodotto hai messo in frigorifero oggi?
+          `, '08:30');
+          setQuickReplies([
+            { label: '🍋 Omega-3 Total (200ml)', onClick: () => selectProduct('Omega-3 Total (200ml)') },
+            { label: '🌱 Omega-3 Vegano (100ml)', onClick: () => selectProduct('Omega-3 Vegano (100ml)') },
+            { label: '❄️ Omega-3 Arktis (200ml)', onClick: () => selectProduct('Omega-3 Arktis (200ml)') },
+            { label: '🧒 Omega-3 KIDS', onClick: () => selectProduct('Omega-3 KIDS') }
+          ]);
+        }, 250);
+      }
+
+      if (type === 'daily') {
+        dayBadge.textContent = 'Giorno 7/25 🔥';
+        addBubble('bot', `
+          <strong>Buongiorno! ☀️ Giorno 7 della tua Routine!</strong><br/>
+          Ricorda: agita la bottiglia dal frigo e prendi <strong>1 cucchiaio (8ml = 2g di Omega-3)</strong> durante o dopo il pasto.<br/><br/>
+          Hai già preso il tuo cucchiaio oggi?
+        `, '13:00');
+        setQuickReplies([
+          { label: '✅ Preso adesso!', onClick: () => {
+            addBubble('user', '✅ Preso adesso!', '13:02');
+            addBubble('bot', `
+              <strong>Ottimo lavoro! 🔥 7 giorni su 7 completati!</strong><br/>
+              Come ti senti oggi? (Proprio come nella scheda del nostro diario!)
+            `, '13:02');
+            setQuickReplies([
+              { label: '😄 Pieno di energia', onClick: () => showTip('😄 Pieno di energia') },
+              { label: '🙂 Bene, regolare', onClick: () => showTip('🙂 Bene, regolare') },
+              { label: '🍹 Dammi un consiglio / ricetta', onClick: () => showTip('🍹 Dammi un consiglio / ricetta') }
+            ]);
+          }},
+          { label: '⏰ Ricordamelo a cena (20:00)', onClick: () => {
+            addBubble('user', '⏰ Ricordamelo a cena (20:00)', '13:02');
+            addBubble('bot', 'Perfetto! Ti manderò un piccolo promemoria stasera alle 20:00. 🌙', '13:02');
+          }}
+        ]);
+      }
+
+      if (type === 'reorder') {
+        dayBadge.textContent = 'Giorno 20/25 ⚠️';
+        addBubble('bot', `
+          <strong>⚠️ Avviso Scorta: Giorno 20 di 25!</strong><br/>
+          Stai andando benissimo con la tua costanza! 👏<br/><br/>
+          Nella tua bottiglia di <strong>Omega-3 Total (200ml)</strong> rimangono circa <strong>5 cucchiai (5 giorni)</strong>.<br/>
+          Per raggiungere un <strong>Indice Omega-3 ottimale (>8%)</strong> servono 3–4 mesi senza interruzioni.<br/><br/>
+          Vuoi che spediamo oggi dal nostro magazzino di <strong>Bolzano</strong> il nuovo flacone fresco così non resti senza?
+        `, '09:00');
+        setQuickReplies([
+          { label: '📦 Sì! Riordina 1x Total (-10% Routine)', onClick: () => confirmOrder('1x Omega-3 Total (Sconto Routine -10%)') },
+          { label: '📦📦 Pacco Risparmio 3x Total (Sped. Gratis)', onClick: () => confirmOrder('Pacco 3x Omega-3 Total (Spedizione Gratuita)') }
+        ]);
+      }
+
+      if (type === 'bloodtest') {
+        dayBadge.textContent = 'Giorno 90 🩸';
+        addBubble('bot', `
+          <strong>🎉 Traguardo 90 Giorni Raggiunto!</strong><br/>
+          Come scritto nel diario NORSAN: <em>"I successi sono misurabili!"</em><br/><br/>
+          📊 <strong>Il tuo Profilo Acidi Grassi:</strong><br/>
+          • 1° Analisi (Inizio): <strong>Indice Omega-3 = 4,8%</strong> (Basso)<br/>
+          • Obiettivo dopo 90 gg: <strong>> 8,0%</strong> (Zona Ottimale)<br/><br/>
+          Hai già fatto il 2° test di controllo o vuoi inserire i nuovi valori?
+        `, '10:15');
+        setQuickReplies([
+          { label: '📈 Inserisci risultato 2° Test (es. 8,6%)', onClick: () => {
+            addBubble('user', 'Il mio nuovo Indice Omega-3 è 8,6%! 🎉', '10:17');
+            addBubble('bot', `
+              <strong>RISULTATO STRAORDINARIO! 🏆 Da 4,8% a 8,6%!</strong><br/>
+              Sei entrato ufficialmente nella fascia protettiva ottimale. La tua costanza giorno per giorno ha cambiato l'equilibrio cellulare!<br/><br/>
+              Ti abbiamo sbloccato un <strong>Omaggio Fedeltà</strong> nel tuo prossimo ordine da Bolzano. 🎁
+            `, '10:17');
+            setQuickReplies([
+              { label: '🎁 Riscatta Omaggio & Continua Routine', onClick: () => runScenario('reorder') }
+            ]);
+          }},
+          { label: '🧪 Ordina Kit Test Acidi Grassi a domicilio', onClick: () => confirmOrder('Kit Analisi Acidi Grassi NORSAN') }
+        ]);
+      }
+    }
+
+    function selectProduct(prod) {
+      addBubble('user', prod, '08:31');
+      addBubble('bot', `
+        Perfetto: <strong>${prod}</strong> salvato! ❄️<br/>
+        A che ora preferisci ricevere il tuo promemoria veloce sul cellulare?
+      `, '08:31');
+      setQuickReplies([
+        { label: '☀️ Colazione (08:00)', onClick: () => finishOnboarding('08:00') },
+        { label: '🍝 Pranzo (13:00)', onClick: () => finishOnboarding('13:00') },
+        { label: '🌙 Cena (20:00)', onClick: () => finishOnboarding('20:00') }
+      ]);
+    }
+
+    function finishOnboarding(hour) {
+      addBubble('user', `Alle ${hour}`, '08:32');
+      addBubble('bot', `
+        <strong>Tutto pronto! ✅</strong><br/>
+        • Ti scriverò ogni giorno alle <strong>${hour}</strong>.<br/>
+        • Al <strong>Giorno 20</strong> ti avviserò quando la bottiglia sta per finire.<br/><br/>
+        <em>Consiglio del Giorno 1:</em> non versare mai l'olio su pietanze bollenti per proteggere i preziosi acidi grassi EPA e DHA!
+      `, '08:32');
+      setQuickReplies([
+        { label: '⏩ Vai al Giorno 7 (Vedi Check-in)', onClick: () => runScenario('daily') },
+        { label: '⏩ Vai al Giorno 20 (Vedi Riordino)', onClick: () => runScenario('reorder') }
+      ]);
+    }
+
+    function showTip(choice) {
+      addBubble('user', choice, '13:03');
+      addBubble('bot', `
+        <strong>💡 Il consiglio della nutrizionista Claudia Zannini:</strong><br/>
+        Prova a mescolare il tuo cucchiaio di NORSAN Total nell'insalata tiepida, nello yogurt greco o in uno smoothie di frutta! L'assunzione insieme ad altri grassi sani ne massimizza l'assorbimento.
+      `, '13:03');
+      setQuickReplies([
+        { label: '⏩ Simula Giorno 20 (Bottiglia quasi finita)', onClick: () => runScenario('reorder') }
+      ]);
+    }
+
+    function confirmOrder(item) {
+      addBubble('user', item, '09:02');
+      addBubble('bot', `
+        <strong>Ordine Pronto in 1 Click! 🚀</strong><br/>
+        📦 Articolo: <strong>${item}</strong><br/>
+        🚚 Spedizione: <strong>Hub NORSAN Bolzano (DHL Express 24/48h)</strong><br/><br/>
+        Clicca qui sotto per confermare con Apple Pay / Carta / Contrassegno senza inserire password:
+        <div class="mt-2 bg-emerald-600 text-white text-center font-black py-2 rounded-xl">
+          🔒 Confermato • Ordine inviato a WMS Bolzano
+        </div>
+      `, '09:02');
+      setQuickReplies([
+        { label: '⏩ Vedi Traguardo Giorno 90 (Analisi Sangue)', onClick: () => runScenario('bloodtest') },
+        { label: '🔄 Ricomincia dal Giorno 1', onClick: () => runScenario('onboarding') }
+      ]);
+    }
+
+    runScenario('onboarding');
+  </script>
+</body>
+</html>

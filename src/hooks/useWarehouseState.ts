@@ -21,6 +21,14 @@ import {
   addNewSlot,
   deleteSlot,
   updateProductImageApi,
+  fetchOrdersApi,
+  saveBulkOrdersApi,
+  updateOrderStatusApi,
+  updateOrderItemScannedApi,
+  updateOrderBoxApi,
+  updatePackageCountApi,
+  fetchOperatorsApi,
+  clearPackedOrdersApi,
 } from "../services/api";
 import {
   WarehouseSlotData,
@@ -35,6 +43,7 @@ import {
   clearOrderLeds,
 } from "../services/p2lClient";
 import { getProductLotInfo } from "../services/lotTraceabilityService";
+import { printDhlThermalLabel } from "../services/dhlLabelPrinter";
 
 function resolveProduct(
   rawCode: string,
@@ -111,14 +120,15 @@ export function useWarehouseState() {
   const [orders, setOrders] = useState<Order[]>(() => {
     try {
       const saved = localStorage.getItem("wms_orders");
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       // fallback
     }
-    return INITIAL_ORDERS;
+    // Clean production start: start with saved orders or empty queue ready for Selly ERP sync
+    return [];
   });
 
   useEffect(() => {
@@ -128,7 +138,7 @@ export function useWarehouseState() {
   const [activeOrderId, setActiveOrderId] = useState<string>(() => {
     const saved = localStorage.getItem("wms_active_order_id");
     if (saved && orders.some((o) => o.id === saved)) return saved;
-    return orders[0]?.id || INITIAL_ORDERS[0].id;
+    return orders[0]?.id || "";
   });
 
   useEffect(() => {
@@ -165,6 +175,19 @@ export function useWarehouseState() {
   });
   const [slotsList, setSlotsList] = useState<WarehouseSlotData[]>([]);
 
+  // DHL Print Timing Preference: "on_scan" (immediate on slip scan) or "on_finish" (on box close)
+  const [dhlPrintTiming, setDhlPrintTiming] = useState<"on_scan" | "on_finish">(() => {
+    return (localStorage.getItem("wms_dhl_print_timing") as "on_scan" | "on_finish") || "on_scan";
+  });
+
+  const toggleDhlPrintTiming = useCallback(() => {
+    setDhlPrintTiming((prev) => {
+      const next = prev === "on_scan" ? "on_finish" : "on_scan";
+      localStorage.setItem("wms_dhl_print_timing", next);
+      return next;
+    });
+  }, []);
+
   // Modals for Selly ERP CSV import and Barcode Binding
   const [isSellyModalOpen, setIsSellyModalOpen] = useState(false);
   const [isBindModalOpen, setIsBindModalOpen] = useState(false);
@@ -173,6 +196,8 @@ export function useWarehouseState() {
   // Load live DB data from SQLite backend on mount
   useEffect(() => {
     const customImgs = getCustomProductImages();
+
+    // 1. Fetch catalog products
     fetchProducts().then((prods) => {
       if (prods && prods.length > 0) {
         const merged = prods.map((p) => {
@@ -190,6 +215,8 @@ export function useWarehouseState() {
         setProductsList(merged);
       }
     });
+
+    // 2. Fetch warehouse slots
     fetchWarehouseSlots().then((slots) => {
       if (slots && slots.length > 0) {
         const mergedSlots = slots.map((s) => {
@@ -199,6 +226,30 @@ export function useWarehouseState() {
           return s;
         });
         setSlotsList(mergedSlots);
+      }
+    });
+
+    // 3. Fetch production orders from SQLite backend
+    fetchOrdersApi().then((serverOrders) => {
+      if (serverOrders && Array.isArray(serverOrders) && serverOrders.length > 0) {
+        setOrders(serverOrders);
+        setActiveOrderId((prev) => {
+          if (prev && serverOrders.some((o) => o.id === prev)) return prev;
+          return serverOrders[0].id;
+        });
+      }
+    });
+
+    // 4. Fetch registered warehouse staff from SQLite backend
+    fetchOperatorsApi().then((serverOps) => {
+      if (serverOps && Array.isArray(serverOps) && serverOps.length > 0) {
+        setOperators(serverOps);
+        setCurrentOperator((prev) => {
+          const matched = serverOps.find(
+            (o) => o.id === prev.id || o.operatorCode === prev.operatorCode,
+          );
+          return matched || serverOps[0];
+        });
       }
     });
   }, []);
@@ -427,18 +478,7 @@ export function useWarehouseState() {
   }, []);
 
   // Issues queue
-  const [issues, setIssues] = useState<IssueTicket[]>([
-    {
-      id: "iss-1",
-      orderNumber: "ORD-2026-8809",
-      stationId: "ST-01",
-      operatorName: "Matteo Rossi",
-      type: "Scorta esaurita sullo scaffale",
-      note: "Slot S2-A (Total Limone 200ml) richiede bancale di rifornimento",
-      timestamp: Date.now() - 1000 * 60 * 18,
-      status: "pending",
-    },
-  ]);
+  const [issues, setIssues] = useState<IssueTicket[]>([]);
 
   // Modals & Security state
   const [isRackGuideOpen, setIsRackGuideOpen] = useState(false);
@@ -592,34 +632,17 @@ export function useWarehouseState() {
     );
     clearOrderLeds(activeOrder); // Turn off Pick-to-Light LEDs
 
-    const flyersOk = activeOrder.marketingFlyers.every((f) => f.isIncluded);
-    const giftOk =
-      !activeOrder.retentionGift ||
-      activeOrder.retentionGift === "none" ||
-      !!activeOrder.giftConfirmed;
-    const docOk =
-      !activeOrder.requiresPhysicalDocument ||
-      !!activeOrder.physicalDocumentConfirmed;
-
-    if (flyersOk && giftOk && docOk) {
-      if (!isMuted) playOrderComplete();
-      setIsLabelModalOpen(true);
-    } else {
-      if (!isMuted) playItemComplete();
-      const missingParts: string[] = [];
-      if (!flyersOk) missingParts.push("Volantino");
-      if (!giftOk) missingParts.push("Omaggio Fedeltà");
-      if (!docOk) missingParts.push("Fattura/DDT Cartaceo");
-      setLastScan({
-        id: Math.random().toString(),
-        rawCode: activeOrder.orderNumber,
-        resultType: "product_match",
-        status: "info",
-        title: "Articoli Confermati da Bolla ✓",
-        message: `Prodotti validati. Conferma ora: ${missingParts.join(", ")} per sbloccare la stampa etichetta.`,
-        timestamp: Date.now(),
-      });
-    }
+    if (!isMuted) playOrderComplete();
+    printDhlThermalLabel(activeOrder, activeOrder.packageCount || 1);
+    setLastScan({
+      id: Math.random().toString(),
+      rawCode: activeOrder.orderNumber,
+      resultType: "product_match",
+      status: "success",
+      title: "Articoli & Bolla Confermati ✓",
+      message: `Articoli verificati e confermati. Etichetta DHL inviata al termo-printer. Scansiona la prossima bolla per avanzare.`,
+      timestamp: Date.now(),
+    });
   }, [activeOrder, isMuted, playOrderComplete, playItemComplete]);
 
   // Simulate Incoming Web Order from norsan.it
@@ -716,10 +739,15 @@ export function useWarehouseState() {
     (code: string, quantityToAdd: number = 1) => {
       const rawCode = code.trim().toUpperCase();
 
-      // 0. Check if it's an Operator Badge Barcode (e.g. "OP-042", "OP-018", "TL-001")
-      const matchedOperator = operators.find(
-        (op) => op.operatorCode.toUpperCase() === rawCode,
-      );
+      // 0. Check if it's an Operator Badge Barcode (e.g. "OP-01", "OP-02", "TL-01")
+      const matchedOperator = operators.find((op) => {
+        const opCode = op.operatorCode.toUpperCase();
+        return (
+          opCode === rawCode ||
+          opCode.replace("-", "") === rawCode ||
+          rawCode === opCode.replace("-0", "-")
+        );
+      });
       if (matchedOperator) {
         setCurrentOperator(matchedOperator);
         if (
@@ -751,32 +779,158 @@ export function useWarehouseState() {
       );
 
       if (matchedOrder) {
-        setActiveOrderId(matchedOrder.id);
+        // If there was a previous order active and not yet packed, finalize it as packed
+        if (activeOrder && activeOrder.id !== matchedOrder.id && activeOrder.status !== "packed") {
+          updateOrderStatusApi(activeOrder.id, "packed").catch(() => {});
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === activeOrder.id
+                ? { ...o, status: "packed", packingCompletedAt: Date.now() }
+                : o,
+            ),
+          );
+        }
+
+        // Close any open modal
+        setIsLabelModalOpen(false);
+
         if (matchedOrder.status === "packed") {
-          if (!isMuted) playScanError();
+          // If already packed, re-print DHL label for convenience
+          setActiveOrderId(matchedOrder.id);
+          const colli = matchedOrder.packageCount || 1;
+          printDhlThermalLabel(matchedOrder, colli);
+          if (!isMuted) playScanSuccess();
           setLastScan({
             id: Math.random().toString(),
             rawCode,
             resultType: "order_switch",
-            status: "warning",
-            title: "Attenzione: Ordine Già Imballato",
-            message: `L'ordine ${matchedOrder.orderNumber} per ${matchedOrder.customerName} risulta già completato.`,
+            status: "info",
+            title: "Ristampa Etichetta DHL (Ordine Concluso)",
+            message: `Ristampa etichetta DHL (${colli} ${colli === 1 ? "collo" : "colli"}) inviata per l'ordine completato ${matchedOrder.orderNumber}.`,
             timestamp: Date.now(),
           });
           return;
         }
-        lightActiveOrder(matchedOrder); // Pick-to-Light: trigger LED shelf lighting
+
+        // Auto-fulfill order items with FEFO lot traceability (no individual product scan required by management)
+        const completedItems = matchedOrder.items.map((it) => {
+          const lotInfo = getProductLotInfo(it.product);
+          return {
+            ...it,
+            quantityScanned: it.quantityRequired,
+            status: "completed" as const,
+            lotNumber: it.lotNumber || lotInfo.lotNumber,
+            expiryDate: it.expiryDate || lotInfo.expiryDate,
+          };
+        });
+
+        const completedFlyers = matchedOrder.marketingFlyers.map((f) => ({
+          ...f,
+          isIncluded: true,
+        }));
+
+        // Volumetric box estimation: standard BOX-L holds up to 10 bottles. If >10 items, auto-calculate 2 colli
+        const totalUnits = matchedOrder.items.reduce(
+          (sum, it) => sum + it.quantityRequired,
+          0,
+        );
+        const calculatedColli =
+          matchedOrder.packageCount && matchedOrder.packageCount > 1
+            ? matchedOrder.packageCount
+            : totalUnits > 10
+              ? Math.ceil(totalUnits / 8)
+              : 1;
+
+        const fulfilledOrder: Order = {
+          ...matchedOrder,
+          status: "packing",
+          packageCount: calculatedColli,
+          items: completedItems,
+          marketingFlyers: completedFlyers,
+          giftConfirmed: true,
+          physicalDocumentConfirmed: true,
+        };
+
+        // Update state and active order
+        setOrders((prev) =>
+          prev.map((o) => (o.id === matchedOrder.id ? fulfilledOrder : o)),
+        );
+        setActiveOrderId(matchedOrder.id);
+
+        // Async sync to SQLite backend
+        updateOrderStatusApi(matchedOrder.id, "packing").catch(() => {});
+
+        // Light Pick-to-Light LEDs for the active order
+        lightActiveOrder(fulfilledOrder);
+
+        // DHL THERMAL LABEL PRINT: on slip scan or on finish depending on preference
+        const colli = fulfilledOrder.packageCount || 1;
+        if (dhlPrintTiming === "on_scan") {
+          printDhlThermalLabel(fulfilledOrder, colli);
+        }
+
         if (!isMuted) playScanSuccess();
+
         setLastScan({
           id: Math.random().toString(),
           rawCode,
           resultType: "order_switch",
-          status: "info",
-          title: "Foglio d'Ordine Caricato • Pick-to-Light Attivo",
-          message: `Aperto ordine ${matchedOrder.orderNumber} per ${matchedOrder.customerName} (${matchedOrder.customerCity}) • Scaffali illuminati`,
+          status: "success",
+          title:
+            dhlPrintTiming === "on_scan"
+              ? "Bolla Scansionata • Etichetta DHL In Stampa 🖨️"
+              : "Bolla Scansionata • Pick-to-Light Attivo",
+          message:
+            dhlPrintTiming === "on_scan"
+              ? `Ordine ${matchedOrder.orderNumber} (${matchedOrder.customerName}) caricato. Stampa etichetta DHL (${colli} ${colli === 1 ? "collo" : "colli"}) inviata al termo-printer. Scaffali illuminati.`
+              : `Ordine ${matchedOrder.orderNumber} (${matchedOrder.customerName}) caricato. Scaffali illuminati. L'etichetta DHL verrà stampata a fine inscatolamento.`,
           timestamp: Date.now(),
         });
         return;
+      }
+
+      // 1.5. Hardware Scanner Command Barcodes on Packing Bench Table
+      if (
+        rawCode === "+COLLO" ||
+        rawCode === "ADD-BOX" ||
+        rawCode === "+1-COLLO" ||
+        rawCode === "EXTRA-BOX"
+      ) {
+        if (activeOrder) {
+          const currentCount = activeOrder.packageCount || 1;
+          const newCount = currentCount + 1;
+          handleUpdatePackageCount(activeOrder.id, newCount);
+          printDhlThermalLabel(activeOrder, newCount);
+          if (!isMuted) playScanSuccess();
+          setLastScan({
+            id: Math.random().toString(),
+            rawCode,
+            resultType: "command",
+            status: "success",
+            title: `Aggiunto Collo ${newCount} • Etichetta In Stampa 📦`,
+            message: `Aggiunta scatola aggiuntiva a ${activeOrder.orderNumber}. Stampata etichetta DHL per il Collo ${newCount} di ${newCount}.`,
+            timestamp: Date.now(),
+          });
+          return;
+        }
+      }
+
+      if (rawCode === "PRINT-DHL" || rawCode === "STAMPA-DHL") {
+        if (activeOrder) {
+          const colli = activeOrder.packageCount || 1;
+          printDhlThermalLabel(activeOrder, colli);
+          if (!isMuted) playScanSuccess();
+          setLastScan({
+            id: Math.random().toString(),
+            rawCode,
+            resultType: "command",
+            status: "info",
+            title: "Stampa Etichetta DHL Avviata 🖨️",
+            message: `Inviata ristampa per ${activeOrder.orderNumber} (${colli} ${colli === 1 ? "collo" : "colli"}).`,
+            timestamp: Date.now(),
+          });
+          return;
+        }
       }
 
       if (!activeOrder) {
@@ -1030,6 +1184,14 @@ export function useWarehouseState() {
         }),
       );
 
+      // Async sync to SQLite backend
+      updateOrderItemScannedApi(
+        activeOrder.id,
+        matchedProduct.id,
+        newScannedQty,
+        isItemDone ? "completed" : "in_progress",
+      ).catch(() => {});
+
       // Check if entire order is now 100% complete (strict Poka-Yoke item-by-item check)
       const itemsDone = activeOrder.items.every((it, idx) => {
         const scanned = idx === itemIndex ? newScannedQty : it.quantityScanned;
@@ -1048,14 +1210,13 @@ export function useWarehouseState() {
       if (isOrderDone) {
         if (!isMuted) playOrderComplete();
         clearOrderLeds(activeOrder); // Turn off all shelf LEDs
-        setIsLabelModalOpen(true);
         setLastScan({
           id: Math.random().toString(),
           rawCode: code,
           resultType: "product_match",
           status: "success",
-          title: "ORDINE COMPLETATO AL 100%",
-          message: `Tutti i prodotti e volantini verificati! Pronto per la stampa dell'etichetta ${activeOrder.courier}.`,
+          title: "ORDINE COMPLETATO ✓",
+          message: `Tutti i prodotti verificati. L'etichetta DHL è già stata stampata all'avvio. Scansiona il prossimo foglio per avanzare.`,
           timestamp: Date.now(),
           matchedProduct,
         });
@@ -1106,8 +1267,8 @@ export function useWarehouseState() {
   );
 
   // Hook for global keyboard scanner interception (paused when blocking modals are open)
+  // Note: isLabelModalOpen does NOT block the scanner so operator can scan the next order slip immediately
   const isAnyModalBlockingScanner =
-    isLabelModalOpen ||
     isIssueModalOpen ||
     isOperatorAuthOpen ||
     isSupervisorPinModalOpen ||
@@ -1127,6 +1288,11 @@ export function useWarehouseState() {
       return;
     }
 
+    // If timing is set to print on finish, print the DHL label now with exact final package count
+    if (dhlPrintTiming === "on_finish") {
+      printDhlThermalLabel(activeOrder, activeOrder.packageCount || 1);
+    }
+
     const completedOrderId = activeOrder.id;
 
     // Mark current order as packed
@@ -1138,6 +1304,9 @@ export function useWarehouseState() {
         return o;
       }),
     );
+
+    // Sync packed status to backend SQLite
+    updateOrderStatusApi(completedOrderId, "packed").catch(() => {});
 
     // Update KPI
     setKpis((prev) => ({
@@ -1174,14 +1343,59 @@ export function useWarehouseState() {
     }
   };
 
-  const handleResetData = () => {
-    localStorage.removeItem("wms_orders");
-    localStorage.removeItem("wms_active_order_id");
-    localStorage.removeItem("wms_custom_barcode_bindings");
+  const handleLoadDemoOrders = useCallback(() => {
     setOrders(INITIAL_ORDERS);
-    setActiveOrderId(INITIAL_ORDERS[0].id);
-    setLastScan(null);
-  };
+    setActiveOrderId(INITIAL_ORDERS[0]?.id || "");
+    saveBulkOrdersApi(INITIAL_ORDERS, true).catch(() => {});
+    if (!isMuted) playScanSuccess();
+    setLastScan({
+      id: Math.random().toString(),
+      rawCode: "DEMO-LOAD",
+      resultType: "order_switch",
+      status: "info",
+      title: "Modalità Simulazione / Formazione",
+      message: `Caricati ${INITIAL_ORDERS.length} ordini dimostrativi per il training degli operatori.`,
+      timestamp: Date.now(),
+    });
+  }, [isMuted, playScanSuccess]);
+
+  const handleClearOrders = useCallback(() => {
+    setOrders([]);
+    setActiveOrderId("");
+    localStorage.setItem("wms_orders", "[]");
+    localStorage.removeItem("wms_active_order_id");
+    clearPackedOrdersApi().catch(() => {});
+    if (!isMuted) playScanSuccess();
+    setLastScan({
+      id: Math.random().toString(),
+      rawCode: "QUEUE-CLEARED",
+      resultType: "command",
+      status: "info",
+      title: "Coda Ordini Azzerata",
+      message: "Postazione pronta per nuova distinta Selly ERP.",
+      timestamp: Date.now(),
+    });
+  }, [isMuted, playScanSuccess]);
+
+  const handleResetData = useCallback(() => {
+    if (orders.length > 0) {
+      if (
+        window.confirm(
+          "Attenzione: Vuoi azzerare la coda degli ordini per iniziare un nuovo turno di lavoro?",
+        )
+      ) {
+        handleClearOrders();
+      }
+    } else {
+      if (
+        window.confirm(
+          "La coda è vuota. Vuoi caricare gli ordini di prova per il training degli operatori?",
+        )
+      ) {
+        handleLoadDemoOrders();
+      }
+    }
+  }, [orders.length, handleClearOrders, handleLoadDemoOrders]);
 
   const [pendingAutoScan, setPendingAutoScan] = useState<string | null>(null);
 
@@ -1303,6 +1517,12 @@ export function useWarehouseState() {
         setOrders((prev) => [...newOrders, ...prev]);
         if (newOrders.length > 0) setActiveOrderId(newOrders[0].id);
       }
+
+      // Persist to SQLite backend
+      saveBulkOrdersApi(newOrders, replaceExisting).catch((err) => {
+        console.warn("[WMS] Could not persist Selly orders to backend:", err);
+      });
+
       if (!isMuted) playScanSuccess();
       setLastScan({
         id: Math.random().toString(),
@@ -1319,19 +1539,45 @@ export function useWarehouseState() {
 
   const handleChangeBoxType = (boxType: BoxType) => {
     const matchedBox = BOX_TYPES.find((b) => b.id === boxType);
+    const boxBranding = matchedBox ? matchedBox.branding : "norsan_logo";
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id === activeOrderId) {
           return {
             ...o,
             boxRecommendation: boxType,
-            boxBranding: matchedBox ? matchedBox.branding : o.boxBranding,
+            boxBranding,
           };
         }
         return o;
       }),
     );
+
+    // Sync to SQLite backend
+    if (activeOrderId) {
+      updateOrderBoxApi(activeOrderId, boxType, boxBranding).catch(() => {});
+    }
   };
+
+  const handleUpdatePackageCount = useCallback(
+    (orderId: string, count: number) => {
+      const validCount = Math.max(1, count);
+      setOrders((prev) =>
+        prev.map((o) => {
+          if (o.id === orderId) {
+            return {
+              ...o,
+              packageCount: validCount,
+            };
+          }
+          return o;
+        }),
+      );
+      updatePackageCountApi(orderId, validCount).catch(() => {});
+      if (!isMuted) playScanSuccess();
+    },
+    [isMuted, playScanSuccess],
+  );
 
   const handleSubmitIssue = (type: string, note: string) => {
     const newIssue: IssueTicket = {
@@ -1499,7 +1745,10 @@ export function useWarehouseState() {
     handleBarcodeScanned,
     handleCompleteAndNext,
     handleResetData,
+    handleLoadDemoOrders,
+    handleClearOrders,
     handleChangeBoxType,
+    handleUpdatePackageCount,
     handleSwitchToStation,
     handleToggleView,
     handleSupervisorPinSuccess,
@@ -1516,5 +1765,7 @@ export function useWarehouseState() {
     leadOperators,
     isTeamLead,
     activeOrder,
+    dhlPrintTiming,
+    toggleDhlPrintTiming,
   };
 }

@@ -95,6 +95,22 @@ export function initDatabase() {
       FOREIGN KEY (product_id) REFERENCES products(id)
     );
 
+    CREATE TABLE IF NOT EXISTS operators (
+      id TEXT PRIMARY KEY,
+      operator_code TEXT UNIQUE NOT NULL,
+      pin TEXT NOT NULL,
+      name TEXT NOT NULL,
+      role TEXT NOT NULL, -- 'packer' | 'team_lead' | 'supervisor'
+      station_id TEXT NOT NULL,
+      shift TEXT NOT NULL,
+      avatar_url TEXT,
+      packed_today INTEGER NOT NULL DEFAULT 0,
+      accuracy REAL NOT NULL DEFAULT 100.0,
+      uph REAL NOT NULL DEFAULT 0.0,
+      errors_prevented INTEGER NOT NULL DEFAULT 0,
+      is_active INTEGER NOT NULL DEFAULT 1
+    );
+
     CREATE TABLE IF NOT EXISTS scan_audit_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       operator_code TEXT NOT NULL,
@@ -107,6 +123,90 @@ export function initDatabase() {
       timestamp INTEGER NOT NULL
     );
   `);
+
+  // Migration helper for new order fields in SQLite
+  try {
+    db.exec(`
+      ALTER TABLE orders ADD COLUMN is_subscription INTEGER DEFAULT 0;
+      ALTER TABLE orders ADD COLUMN subscription_cycle INTEGER DEFAULT 1;
+      ALTER TABLE orders ADD COLUMN retention_gift TEXT DEFAULT 'none';
+      ALTER TABLE orders ADD COLUMN requires_physical_doc INTEGER DEFAULT 0;
+      ALTER TABLE orders ADD COLUMN gift_confirmed INTEGER DEFAULT 0;
+      ALTER TABLE orders ADD COLUMN physical_doc_confirmed INTEGER DEFAULT 0;
+      ALTER TABLE orders ADD COLUMN marketing_flyers_json TEXT DEFAULT '[]';
+      ALTER TABLE orders ADD COLUMN package_count INTEGER DEFAULT 1;
+    `);
+  } catch {
+    // Columns already exist
+  }
+
+  // Seed or sync Operators in SQLite
+  const insertOp = db.prepare(`
+    INSERT OR REPLACE INTO operators (
+      id, operator_code, pin, name, role, station_id, shift, avatar_url, packed_today, accuracy, uph, errors_prevented, is_active
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  insertOp.run(
+    "op-01",
+    "OP-01",
+    "0001",
+    "Operatore 01",
+    "packer",
+    "ST-01",
+    "Turno Mattina (07:00 - 15:30)",
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+    0,
+    100.0,
+    0.0,
+    0,
+    1,
+  );
+  insertOp.run(
+    "op-02",
+    "OP-02",
+    "0002",
+    "Operatore 02",
+    "packer",
+    "ST-02",
+    "Turno Mattina (07:00 - 15:30)",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
+    0,
+    100.0,
+    0.0,
+    0,
+    1,
+  );
+  insertOp.run(
+    "op-03",
+    "OP-03",
+    "0003",
+    "Operatore 03",
+    "packer",
+    "ST-03",
+    "Turno Mattina (07:00 - 15:30)",
+    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80",
+    0,
+    100.0,
+    0.0,
+    0,
+    1,
+  );
+  insertOp.run(
+    "tl-01",
+    "TL-01",
+    "7429",
+    "Team Lead 01",
+    "team_lead",
+    "SUP-HUB",
+    "Supervisione & Controllo Spedizioni",
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
+    0,
+    100.0,
+    0.0,
+    0,
+    1,
+  );
 
   // Repopulate 10 slots per shelf level (A through J)
   const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];

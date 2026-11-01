@@ -70,6 +70,7 @@ export function App() {
     handleCompleteAndNext,
     handleResetData,
     handleChangeBoxType,
+    handleUpdatePackageCount,
     handleSwitchToStation,
     handleToggleView,
     handleSupervisorPinSuccess,
@@ -86,6 +87,8 @@ export function App() {
     leadOperators,
     isTeamLead,
     activeOrder,
+    dhlPrintTiming,
+    toggleDhlPrintTiming,
   } = state;
 
   // If terminal is locked, display Kiosk Login Screen
@@ -158,6 +161,10 @@ export function App() {
               onOpenLabelModal={() => setIsLabelModalOpen(true)}
               onOpenIssueModal={() => setIsIssueModalOpen(true)}
               onChangeBoxType={handleChangeBoxType}
+              onUpdatePackageCount={handleUpdatePackageCount}
+              onCompleteOrder={handleCompleteAndNext}
+              dhlPrintTiming={dhlPrintTiming}
+              onToggleDhlPrintTiming={toggleDhlPrintTiming}
               stationConfigId={stationConfigId}
               onToggleGift={handleToggleGift}
               onTogglePhysicalDocument={handleTogglePhysicalDocument}
@@ -253,6 +260,7 @@ export function App() {
           isOpen={isLabelModalOpen}
           onClose={() => setIsLabelModalOpen(false)}
           onCompleteAndNext={handleCompleteAndNext}
+          onUpdatePackageCount={handleUpdatePackageCount}
         />
       )}
 

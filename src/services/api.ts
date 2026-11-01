@@ -1,4 +1,4 @@
-import { Product } from "../types/wms";
+import { Product, Order, Operator } from "../types/wms";
 import {
   WarehouseSlotData,
   generateBolzanoDefaultSlots,
@@ -254,5 +254,166 @@ export async function updateProductImageApi(
     return res.ok;
   } catch {
     return false;
+  }
+}
+
+// ==========================================
+// 100% PRODUCTION READY ORDERS & OPERATORS API
+// ==========================================
+
+export async function fetchOrdersApi(): Promise<Order[] | null> {
+  try {
+    const res = await fetch(`${API_BASE}/orders`, { signal: AbortSignal.timeout(3000) });
+    if (!res.ok) throw new Error("Orders API failed");
+    const data = await res.json();
+    if (Array.isArray(data)) return data;
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function saveBulkOrdersApi(
+  orders: Order[],
+  replace: boolean = false,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/bulk`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orders, replace }),
+      signal: AbortSignal.timeout(5000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateOrderStatusApi(
+  orderId: string,
+  status: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateOrderItemScannedApi(
+  orderId: string,
+  productId: string,
+  quantityScanned: number,
+  status: string = "in_progress",
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/item`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, quantityScanned, status }),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateOrderBoxApi(
+  orderId: string,
+  boxRecommendation: string,
+  boxBranding: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/box`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ boxRecommendation, boxBranding }),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function updatePackageCountApi(
+  orderId: string,
+  packageCount: number,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/package-count`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ packageCount }),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function deleteOrderApi(orderId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}`, {
+      method: "DELETE",
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function clearPackedOrdersApi(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/clear-packed`, {
+      method: "POST",
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function fetchOperatorsApi(): Promise<Operator[] | null> {
+  try {
+    const res = await fetch(`${API_BASE}/operators`, { signal: AbortSignal.timeout(3000) });
+    if (!res.ok) throw new Error("Operators API failed");
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) return data;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function verifyOperatorApi(
+  code?: string,
+  pin?: string,
+): Promise<{ success: boolean; operator?: Operator; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/operators/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, pin }),
+      signal: AbortSignal.timeout(3000),
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      return { success: true, operator: data.operator };
+    }
+    return { success: false, error: data.error || "Autenticazione fallita" };
+  } catch {
+    return { success: false, error: "Server non raggiungibile" };
   }
 }

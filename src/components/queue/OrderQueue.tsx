@@ -1,6 +1,17 @@
 import React, { useState, useMemo } from "react";
-import { FileText, CheckCircle2, Truck, Repeat, FileSpreadsheet } from "lucide-react";
+import {
+  FileText,
+  CheckCircle2,
+  Truck,
+  Repeat,
+  FileSpreadsheet,
+  Printer,
+} from "lucide-react";
 import { Order } from "../../types/wms";
+import {
+  printBatchPackingSlips,
+  printOrderPackingSlip,
+} from "../../services/orderSlipPrinter";
 
 interface OrderQueueProps {
   orders: Order[];
@@ -97,7 +108,25 @@ export const OrderQueue: React.FC<OrderQueueProps> = ({
             {activeFilter === "amazon" ? "Ordini Amazon" : "Coda Ordini"} ({displayedOrders.length})
           </h3>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {displayedOrders.some((o) => o.status !== "packed") && (
+            <button
+              onClick={() =>
+                printBatchPackingSlips(
+                  displayedOrders.filter((o) => o.status !== "packed"),
+                )
+              }
+              className="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 px-2 py-0.5 rounded transition active:scale-95 flex items-center gap-1 cursor-pointer shadow-2xs"
+              title="Stampa fogli prelievo cartacei con Barcode (schema Team Lead)"
+            >
+              <Printer className="w-3 h-3 text-slate-700" />
+              <span>
+                Stampa Fogli (
+                {displayedOrders.filter((o) => o.status !== "packed").length})
+              </span>
+            </button>
+          )}
+
           {onOpenSellyModal && (
             <button
               onClick={onOpenSellyModal}
@@ -108,9 +137,6 @@ export const OrderQueue: React.FC<OrderQueueProps> = ({
               <span>+ Selly CSV</span>
             </button>
           )}
-          <span className="text-[10px] text-slate-600 font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-            Bolzano Hub
-          </span>
         </div>
       </div>
 
@@ -200,90 +226,128 @@ export const OrderQueue: React.FC<OrderQueueProps> = ({
         )}
       </div>
 
-      {/* Orders List */}
+      {/* Orders List or Empty State */}
       <div className="space-y-2 overflow-y-auto flex-1 pr-1">
-        {displayedOrders.map((order) => {
-          const isActive = order.id === activeOrderId;
-          const totalUnits = order.items.reduce(
-            (s, i) => s + i.quantityRequired,
-            0,
-          );
-          const scannedUnits = order.items.reduce(
-            (s, i) => s + i.quantityScanned,
-            0,
-          );
-          const isPacked = order.status === "packed";
-
-          let borderClass =
-            "border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-400 text-slate-700";
-          if (isActive) {
-            borderClass =
-              "border-2 border-norsan-600 bg-cyan-50/50 shadow-md ring-2 ring-norsan-600/20 text-slate-900";
-          } else if (isPacked) {
-            borderClass = "border-emerald-200 bg-emerald-50/50 opacity-80";
-          }
-
-          return (
-            <div
-              key={order.id}
-              onClick={() => onSelectOrder(order.id)}
-              className={`p-3 rounded-xl border cursor-pointer transition-all ${borderClass}`}
-            >
-              <div className="flex items-center justify-between gap-1 mb-1">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="font-mono text-xs font-black text-norsan-800">
-                    {order.orderNumber}
-                  </span>
-                  {(order.source === "Amazon Marketplace" ||
-                    order.boxBranding === "neutral_unbranded") && (
-                    <span className="text-[9px] font-black bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded border border-amber-600 flex items-center gap-0.5 shrink-0">
-                      <span>📦</span>
-                      <span>AMAZON</span>
-                    </span>
-                  )}
-                </div>
-                {isPacked ? (
-                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 flex items-center gap-0.5">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />{" "}
-                    SPEDITO
-                  </span>
-                ) : (
-                  <span className="text-[10px] font-mono font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-300">
-                    {scannedUnits}/{totalUnits} pz
-                  </span>
-                )}
-              </div>
-
-              <div className="text-xs font-bold text-slate-900 truncate flex items-center gap-1.5">
-                {order.customerName}
-                {order.isSubscription && (
-                  <span
-                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-indigo-200 bg-indigo-100 text-indigo-800 text-[9px] font-black tracking-wider uppercase"
-                    title={`Abbonamento - Ciclo ${order.subscriptionCycle || 1}`}
-                  >
-                    <Repeat className="w-2.5 h-2.5" /> Abb. #
-                    {order.subscriptionCycle || 1}
-                  </span>
-                )}
-              </div>
-
-              <div className="text-[11px] text-slate-600 flex items-center justify-between mt-1">
-                <span className="truncate">{order.customerCity}</span>
-                <div className="flex items-center gap-1">
-                  {order.boxBranding === "neutral_unbranded" && (
-                    <span className="text-[9px] font-bold text-amber-900 bg-amber-100 px-1 py-0.5 rounded border border-amber-300" title="Scatola neutra obbligatoria">
-                      BOX NEUTRA
-                    </span>
-                  )}
-                  <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 flex items-center gap-0.5">
-                    <Truck className="w-3 h-3 text-amber-600" />{" "}
-                    {order.courier.replace("DHL ", "")}
-                  </span>
-                </div>
-              </div>
+        {displayedOrders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-6 text-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl h-64 my-auto">
+            <div className="p-3 bg-cyan-50 text-cyan-700 rounded-2xl border border-cyan-200 mb-3 shadow-xs">
+              <FileSpreadsheet className="w-7 h-7" />
             </div>
-          );
-        })}
+            <div className="text-xs font-black text-slate-800">
+              Nessun ordine in questa vista
+            </div>
+            <div className="text-[11px] text-slate-500 mt-1 max-w-[200px] leading-relaxed">
+              Tutti gli ordini sono stati imballati o in attesa di sincronizzazione da Selly ERP.
+            </div>
+            {onOpenSellyModal && (
+              <button
+                type="button"
+                onClick={onOpenSellyModal}
+                className="mt-4 px-3.5 py-2 bg-cyan-700 hover:bg-cyan-600 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>Importa CSV Selly</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          displayedOrders.map((order) => {
+            const isActive = order.id === activeOrderId;
+            const totalUnits = order.items.reduce(
+              (s, i) => s + i.quantityRequired,
+              0,
+            );
+            const scannedUnits = order.items.reduce(
+              (s, i) => s + i.quantityScanned,
+              0,
+            );
+            const isPacked = order.status === "packed";
+
+            let borderClass =
+              "border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-400 text-slate-700";
+            if (isActive) {
+              borderClass =
+                "border-2 border-norsan-600 bg-cyan-50/50 shadow-md ring-2 ring-norsan-600/20 text-slate-900";
+            } else if (isPacked) {
+              borderClass = "border-emerald-200 bg-emerald-50/50 opacity-80";
+            }
+
+            return (
+              <div
+                key={order.id}
+                onClick={() => onSelectOrder(order.id)}
+                className={`p-3 rounded-xl border cursor-pointer transition-all ${borderClass}`}
+              >
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="font-mono text-xs font-black text-norsan-800">
+                      {order.orderNumber}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        printOrderPackingSlip(order);
+                      }}
+                      className="p-1 rounded-md hover:bg-slate-200 text-slate-400 hover:text-slate-800 transition cursor-pointer"
+                      title="Stampa distinta cartacea con Barcode per questo ordine"
+                    >
+                      <Printer className="w-3 h-3" />
+                    </button>
+                    {(order.source === "Amazon Marketplace" ||
+                      order.boxBranding === "neutral_unbranded") && (
+                      <span className="text-[9px] font-black bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded border border-amber-600 flex items-center gap-0.5 shrink-0">
+                        <span>📦</span>
+                        <span>AMAZON</span>
+                      </span>
+                    )}
+                  </div>
+                  {isPacked ? (
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 flex items-center gap-0.5">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />{" "}
+                      SPEDITO
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-mono font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-300">
+                      {scannedUnits}/{totalUnits} pz
+                    </span>
+                  )}
+                </div>
+
+                <div className="text-xs font-bold text-slate-900 truncate flex items-center gap-1.5">
+                  {order.customerName}
+                  {order.isSubscription && (
+                    <span
+                      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-indigo-200 bg-indigo-100 text-indigo-800 text-[9px] font-black tracking-wider uppercase"
+                      title={`Abbonamento - Ciclo ${order.subscriptionCycle || 1}`}
+                    >
+                      <Repeat className="w-2.5 h-2.5" /> Abb. #
+                      {order.subscriptionCycle || 1}
+                    </span>
+                  )}
+                </div>
+
+                <div className="text-[11px] text-slate-600 flex items-center justify-between mt-1">
+                  <span className="truncate">{order.customerCity}</span>
+                  <div className="flex items-center gap-1">
+                    {order.boxBranding === "neutral_unbranded" && (
+                      <span
+                        className="text-[9px] font-bold text-amber-900 bg-amber-100 px-1 py-0.5 rounded border border-amber-300"
+                        title="Scatola neutra obbligatoria"
+                      >
+                        BOX NEUTRA
+                      </span>
+                    )}
+                    <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 flex items-center gap-0.5">
+                      <Truck className="w-3 h-3 text-amber-600" />{" "}
+                      {order.courier.replace("DHL ", "")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

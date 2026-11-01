@@ -7,6 +7,7 @@ import {
   ShieldAlert,
   Package,
   Layers,
+  Sparkles,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Order } from "../../types/wms";
@@ -18,33 +19,194 @@ interface ShippingLabelModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCompleteAndNext: () => void;
+  onUpdatePackageCount?: (orderId: string, count: number) => void;
 }
+
+interface SingleLabelProps {
+  order: Order;
+  colloIdx: number;
+  totalColli: number;
+  totalWeightKg: string;
+  colloWeightKg: string;
+}
+
+const SingleDHLCard: React.FC<SingleLabelProps> = ({
+  order,
+  colloIdx,
+  totalColli,
+  totalWeightKg,
+  colloWeightKg,
+}) => {
+  const isFragile = order.items.some((i) => i.product.fragile);
+  const totalUnits = order.items.reduce((s, i) => s + i.quantityScanned, 0);
+
+  const trackingText =
+    totalColli > 1
+      ? `${order.trackingNumber || "JJD0000302488"}-${String(colloIdx + 1).padStart(2, "0")}`
+      : order.trackingNumber || "JJD0000302488";
+
+  const { bars, totalModules } = getCode128Bars(trackingText);
+
+  return (
+    <div className="w-full max-w-md bg-white text-black p-5 rounded-2xl shadow-xl border-4 border-yellow-400 font-sans select-text mx-auto my-2">
+      {/* DHL Header Banner */}
+      <div className="bg-yellow-400 p-2.5 rounded-lg flex items-center justify-between border-b-2 border-red-600">
+        <div className="flex items-center gap-1.5">
+          <span className="font-black text-2xl tracking-tighter text-red-600 font-sans italic">
+            DHL
+          </span>
+          <span className="text-xs font-black uppercase tracking-wider text-black ml-2">
+            {order.courier}
+          </span>
+        </div>
+        <span className="text-xs font-mono font-bold bg-black text-yellow-400 px-2 py-0.5 rounded">
+          DOMESTIC EXPRESS
+        </span>
+      </div>
+
+      {/* Routing / AWB Code */}
+      <div className="mt-3 border-b-2 border-black pb-2 flex items-center justify-between">
+        <div>
+          <div className="text-[9px] uppercase font-bold text-gray-600">
+            Routing Code
+          </div>
+          <div className="text-xl font-black font-mono tracking-wider">
+            {order.customerCountry}-{order.customerProvince || "REG"}-
+            {order.customerZip}
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[9px] uppercase font-bold text-gray-600">
+            Collo / Peso
+          </div>
+          <div className="text-sm font-bold font-mono">
+            {totalColli > 1
+              ? `Collo ${colloIdx + 1} di ${totalColli} • ${colloWeightKg} kg`
+              : `1 collo • ${totalWeightKg} kg`}
+          </div>
+        </div>
+      </div>
+
+      {/* Shipper & Receiver Section */}
+      <div className="mt-3 grid grid-cols-2 gap-3 border-b-2 border-black pb-3 text-xs">
+        {/* Shipper (From) */}
+        <div className="border-r border-gray-300 pr-2">
+          <div className="text-[9px] uppercase font-bold text-gray-500">
+            Mittente (Shipper):
+          </div>
+          <div className="font-bold text-[11px] text-gray-900 mt-0.5">
+            NORSAN S.r.l.
+          </div>
+          <div className="text-[10px] text-gray-700 leading-tight">
+            Via Macello 30 / Schlachthofstraße
+            <br />
+            39100 Bolzano (BZ) - ITALY
+            <br />
+            Tel: +39 0471 123456
+          </div>
+        </div>
+
+        {/* Consignee (To) */}
+        <div>
+          <div className="text-[9px] uppercase font-bold text-gray-500">
+            Destinatario (To):
+          </div>
+          <div className="font-bold text-sm text-black mt-0.5">
+            {order.customerName}
+          </div>
+          <div className="text-xs text-gray-800 leading-tight mt-0.5">
+            {order.addressDetails?.street
+              ? `${order.addressDetails.street} ${order.addressDetails.houseNumber || ""}`
+              : order.customerAddress}
+            {order.addressDetails?.addressAddition && (
+              <div className="font-semibold text-gray-700">
+                {order.addressDetails.addressAddition}
+              </div>
+            )}
+            <br />
+            {order.customerZip} {order.customerCity} ({order.customerProvince})
+            <br />
+            {order.customerCountry === "IT" ? "ITALIA" : order.customerCountry}
+          </div>
+        </div>
+      </div>
+
+      {/* Barcode & Tracking Number */}
+      <div className="mt-3 text-center space-y-1">
+        <div className="text-[9px] font-bold text-gray-500 uppercase flex items-center justify-center gap-2">
+          <span>Waybill / Tracking Number</span>
+          {totalColli > 1 && (
+            <span className="bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.2 rounded">
+              PIECE {colloIdx + 1}/{totalColli}
+            </span>
+          )}
+        </div>
+        <div className="font-mono text-sm font-black tracking-widest bg-gray-100 py-1 rounded">
+          {trackingText}
+        </div>
+
+        {/* Genuine Code 128-B Barcode Visual */}
+        <div className="py-2 flex items-center justify-center bg-white rounded-sm">
+          <svg
+            viewBox={`0 0 ${totalModules} 52`}
+            className="w-full h-14 max-w-[340px]"
+            preserveAspectRatio="none"
+          >
+            <rect width={totalModules} height={52} fill="#ffffff" />
+            <g fill="#000000">
+              {bars.map((bar, idx) => (
+                <rect key={idx} x={bar.x} y={2} width={bar.width} height={48} />
+              ))}
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      {/* Footer tags */}
+      <div className="mt-2 pt-2 border-t border-dashed border-gray-400 flex flex-col gap-1 text-[9px] font-bold text-gray-700">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1 text-red-600">
+            {isFragile && (
+              <>
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>CONTIENE VETRO / FRAGILE</span>
+              </>
+            )}
+          </div>
+          <div className="font-mono">
+            Rif. Ordine: {order.orderNumber} ({totalUnits} pz)
+            {totalColli > 1 && ` [Collo ${colloIdx + 1}/${totalColli}]`}
+          </div>
+        </div>
+        <div className="text-[8px] font-mono text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 truncate">
+          Tracciabilità Lotti FEFO:{" "}
+          {order.items
+            .map((i) => {
+              const lot = getProductLotInfo(i.product);
+              return `${i.product.sku}: ${i.lotNumber || lot.lotNumber} (${i.expiryDate || lot.expiryDate})`;
+            })
+            .join(" • ")}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
   order,
   isOpen,
   onClose,
   onCompleteAndNext,
+  onUpdatePackageCount,
 }) => {
-  const [packageCount, setPackageCount] = useState<number>(order.packageCount || 1);
+  const [packageCount, setPackageCount] = useState<number>(
+    order.packageCount || 1,
+  );
   const [activeColloIdx, setActiveColloIdx] = useState<number>(0);
-
-  useEffect(() => {
-    if (isOpen) {
-      setPackageCount(order.packageCount || 1);
-      setActiveColloIdx(0);
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.6 },
-      });
-    }
-  }, [isOpen, order]);
-
-  if (!isOpen) return null;
-
-  const totalUnits = order.items.reduce((s, i) => s + i.quantityScanned, 0);
-  const isFragile = order.items.some((i) => i.product.fragile);
+  const [autoPrintEnabled, setAutoPrintEnabled] = useState<boolean>(() => {
+    return localStorage.getItem("wms_autoprint_dhl") !== "false";
+  });
+  const [autoPrintStatus, setAutoPrintStatus] = useState<string | null>(null);
 
   const totalWeightKg = (
     (order.items.reduce(
@@ -61,9 +223,53 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
     window.print();
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      setPackageCount(order.packageCount || 1);
+      setActiveColloIdx(0);
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.6 },
+      });
+
+      // Immediate Auto-print when order is completed
+      if (autoPrintEnabled) {
+        setAutoPrintStatus("Stampa etichetta DHL inviata automaticamente...");
+        const timer = setTimeout(() => {
+          handlePrint();
+        }, 350);
+        return () => clearTimeout(timer);
+      } else {
+        setAutoPrintStatus(null);
+      }
+    }
+  }, [isOpen, order, autoPrintEnabled]);
+
+  // Fast keyboard navigation: pressing Enter completes and moves to next order
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        onCompleteAndNext();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onCompleteAndNext]);
+
+  const toggleAutoPrint = () => {
+    const nextVal = !autoPrintEnabled;
+    setAutoPrintEnabled(nextVal);
+    localStorage.setItem("wms_autoprint_dhl", nextVal.toString());
+  };
+
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none">
-      <div className="bg-white border-2 border-slate-300 rounded-3xl w-full max-w-2xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-white border-2 border-slate-300 rounded-3xl w-full max-w-2xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-150">
         {/* Modal Top Bar */}
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -72,28 +278,27 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-                Ordine Verificato al 100% • Etichetta Spedizione Pronta
+                <span>Ordine Verificato ✓ • Etichetta DHL Generata</span>
               </h2>
               <p className="text-xs text-slate-500">
-                Tutti i prodotti corrispondono al foglio d'ordine{" "}
-                {order.orderNumber}
+                Distinta d'ordine {order.orderNumber} ({order.customerName})
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
+            className="p-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Multi-Collo Configuration Bar */}
-        <div className="bg-blue-50/80 px-6 py-3 border-b border-blue-200 flex flex-wrap items-center justify-between gap-3">
+        <div className="bg-blue-50/90 px-6 py-2.5 border-b border-blue-200 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Package className="w-4 h-4 text-blue-700" />
             <span className="text-xs font-black text-blue-900">
-              Numero di Scatole / Colli (Multi-box):
+              Numero di Scatole / Colli:
             </span>
             <div className="flex items-center gap-1 bg-white border border-blue-300 rounded-xl p-0.5 shadow-2xs">
               <button
@@ -102,7 +307,9 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
                   if (packageCount > 1) {
                     const newCount = packageCount - 1;
                     setPackageCount(newCount);
-                    if (activeColloIdx >= newCount) setActiveColloIdx(newCount - 1);
+                    onUpdatePackageCount?.(order.id, newCount);
+                    if (activeColloIdx >= newCount)
+                      setActiveColloIdx(newCount - 1);
                   }
                 }}
                 disabled={packageCount <= 1}
@@ -115,7 +322,11 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
               </span>
               <button
                 type="button"
-                onClick={() => setPackageCount(packageCount + 1)}
+                onClick={() => {
+                  const newCount = packageCount + 1;
+                  setPackageCount(newCount);
+                  onUpdatePackageCount?.(order.id, newCount);
+                }}
                 className="w-7 h-7 flex items-center justify-center font-black text-sm text-slate-700 hover:bg-slate-100 rounded-lg transition cursor-pointer"
               >
                 +
@@ -123,195 +334,101 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
             </div>
           </div>
 
-          {packageCount > 1 && (
-            <div className="flex items-center gap-1.5 text-xs font-bold text-blue-800">
-              <Layers className="w-3.5 h-3.5" />
-              <span>Anteprima Collo:</span>
-              <div className="flex gap-1">
-                {Array.from({ length: packageCount }).map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveColloIdx(idx)}
-                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition ${
-                      activeColloIdx === idx
-                        ? "bg-blue-600 text-white border-blue-700"
-                        : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
-                    }`}
-                  >
-                    {idx + 1}/{packageCount}
-                  </button>
-                ))}
+          <div className="flex items-center gap-3">
+            {packageCount > 1 && (
+              <div className="flex items-center gap-1.5 text-xs font-bold text-blue-800">
+                <Layers className="w-3.5 h-3.5" />
+                <span>Anteprima:</span>
+                <div className="flex gap-1">
+                  {Array.from({ length: packageCount }).map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveColloIdx(idx)}
+                      className={`px-2 py-0.5 rounded text-[11px] font-bold border transition cursor-pointer ${
+                        activeColloIdx === idx
+                          ? "bg-blue-600 text-white border-blue-700"
+                          : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                      }`}
+                    >
+                      {idx + 1}/{packageCount}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Auto-print toggle */}
+            <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer select-none bg-white px-2 py-1 rounded-lg border border-blue-200">
+              <input
+                type="checkbox"
+                checked={autoPrintEnabled}
+                onChange={toggleAutoPrint}
+                className="rounded text-blue-600 focus:ring-blue-500"
+              />
+              <span>Stampa Auto</span>
+            </label>
+          </div>
         </div>
 
-        {/* Printable DHL Thermal Label Card */}
-        <div className="p-6 overflow-y-auto flex-1 flex flex-col items-center justify-center bg-slate-100">
-          <div
-            id="printable-dhl-label"
-            className="w-full max-w-md bg-white text-black p-5 rounded-2xl shadow-xl border-4 border-yellow-400 font-sans select-text"
-          >
-            {/* DHL Header Banner */}
-            <div className="bg-yellow-400 p-2.5 rounded-lg flex items-center justify-between border-b-2 border-red-600">
-              <div className="flex items-center gap-1.5">
-                <span className="font-black text-2xl tracking-tighter text-red-600 font-sans italic">
-                  DHL
-                </span>
-                <span className="text-xs font-black uppercase tracking-wider text-black ml-2">
-                  {order.courier}
-                </span>
-              </div>
-              <span className="text-xs font-mono font-bold bg-black text-yellow-400 px-2 py-0.5 rounded">
-                DOMESTIC EXPRESS
-              </span>
-            </div>
-
-            {/* Routing / AWB Code */}
-            <div className="mt-3 border-b-2 border-black pb-2 flex items-center justify-between">
-              <div>
-                <div className="text-[9px] uppercase font-bold text-gray-600">
-                  Routing Code
-                </div>
-                <div className="text-xl font-black font-mono tracking-wider">
-                  {order.customerCountry}-{order.customerProvince || "REG"}-
-                  {order.customerZip}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-[9px] uppercase font-bold text-gray-600">
-                  Collo / Peso
-                </div>
-                <div className="text-sm font-bold font-mono">
-                  {packageCount > 1
-                    ? `Collo ${activeColloIdx + 1} di ${packageCount} • ${colloWeightKg} kg`
-                    : `1 collo • ${totalWeightKg} kg`}
-                </div>
-              </div>
-            </div>
-
-            {/* Shipper & Receiver Section */}
-            <div className="mt-3 grid grid-cols-2 gap-3 border-b-2 border-black pb-3 text-xs">
-              {/* Shipper (From) */}
-              <div className="border-r border-gray-300 pr-2">
-                <div className="text-[9px] uppercase font-bold text-gray-500">
-                  Mittente (Shipper):
-                </div>
-                <div className="font-bold text-[11px] text-gray-900 mt-0.5">
-                  NORSAN S.r.l.
-                </div>
-                <div className="text-[10px] text-gray-700 leading-tight">
-                  Via Macello 30 / Schlachthofstraße
-                  <br />
-                  39100 Bolzano (BZ) - ITALY
-                  <br />
-                  Tel: +39 0471 123456
-                </div>
-              </div>
-
-              {/* Consignee (To) */}
-              <div>
-                <div className="text-[9px] uppercase font-bold text-gray-500">
-                  Destinatario (To):
-                </div>
-                <div className="font-bold text-sm text-black mt-0.5">
-                  {order.customerName}
-                </div>
-                <div className="text-xs text-gray-800 leading-tight mt-0.5">
-                  {order.addressDetails?.street
-                    ? `${order.addressDetails.street} ${order.addressDetails.houseNumber || ""}`
-                    : order.customerAddress}
-                  {order.addressDetails?.addressAddition && (
-                    <div className="font-semibold text-gray-700">
-                      {order.addressDetails.addressAddition}
-                    </div>
-                  )}
-                  <br />
-                  {order.customerZip} {order.customerCity} (
-                  {order.customerProvince})
-                  <br />
-                  {order.customerCountry === "IT"
-                    ? "ITALIA"
-                    : order.customerCountry}
-                </div>
-              </div>
-            </div>
-
-            {/* Barcode & Tracking Number */}
-            <div className="mt-3 text-center space-y-1">
-              <div className="text-[9px] font-bold text-gray-500 uppercase flex items-center justify-center gap-2">
-                <span>Waybill / Tracking Number</span>
-                {packageCount > 1 && (
-                  <span className="bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.2 rounded">
-                    PIECE {activeColloIdx + 1}/{packageCount}
-                  </span>
-                )}
-              </div>
-              <div className="font-mono text-sm font-black tracking-widest bg-gray-100 py-1 rounded">
-                {packageCount > 1
-                  ? `${order.trackingNumber || "JJD0000302488"}-${String(activeColloIdx + 1).padStart(2, "0")}`
-                  : order.trackingNumber || "JJD0000302488"}
-              </div>
-
-              {/* Genuine Code 128-B Barcode Visual */}
-              <div className="py-2 flex items-center justify-center bg-white rounded-sm">
-                {(() => {
-                  const trackingText =
-                    packageCount > 1
-                      ? `${order.trackingNumber || "JJD0000302488"}-${String(activeColloIdx + 1).padStart(2, "0")}`
-                      : order.trackingNumber || "JJD0000302488";
-                  const { bars, totalModules } = getCode128Bars(trackingText);
-                  return (
-                    <svg
-                      viewBox={`0 0 ${totalModules} 52`}
-                      className="w-full h-14 max-w-[340px]"
-                      preserveAspectRatio="none"
-                    >
-                      <rect width={totalModules} height={52} fill="#ffffff" />
-                      <g fill="#000000">
-                        {bars.map((bar, idx) => (
-                          <rect
-                            key={idx}
-                            x={bar.x}
-                            y={2}
-                            width={bar.width}
-                            height={48}
-                          />
-                        ))}
-                      </g>
-                    </svg>
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* Footer tags */}
-            <div className="mt-2 pt-2 border-t border-dashed border-gray-400 flex flex-col gap-1 text-[9px] font-bold text-gray-700">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 text-red-600">
-                  {isFragile && (
-                    <>
-                      <ShieldAlert className="w-3.5 h-3.5" />
-                      <span>CONTIENE VETRO / FRAGILE</span>
-                    </>
-                  )}
-                </div>
-                <div className="font-mono">
-                  Rif. Ordine: {order.orderNumber} ({totalUnits} pz)
-                  {packageCount > 1 && ` [Collo ${activeColloIdx + 1}/${packageCount}]`}
-                </div>
-              </div>
-              <div className="text-[8px] font-mono text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 truncate">
-                Tracciabilità Lotti FEFO:{" "}
-                {order.items
-                  .map((i) => {
-                    const lot = getProductLotInfo(i.product);
-                    return `${i.product.sku}: ${i.lotNumber || lot.lotNumber} (${i.expiryDate || lot.expiryDate})`;
-                  })
-                  .join(" • ")}
-              </div>
-            </div>
+        {/* Status Notification */}
+        {autoPrintStatus && (
+          <div className="bg-emerald-50 border-b border-emerald-200 px-6 py-1.5 text-xs text-emerald-800 font-bold flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+            <span>{autoPrintStatus}</span>
           </div>
+        )}
+
+        {/* Printable DHL Thermal Label Card (Screen Preview) */}
+        <div className="p-4 overflow-y-auto flex-1 flex flex-col items-center justify-center bg-slate-100">
+          <div id="screen-dhl-label">
+            <SingleDHLCard
+              order={order}
+              colloIdx={activeColloIdx}
+              totalColli={packageCount}
+              totalWeightKg={totalWeightKg}
+              colloWeightKg={colloWeightKg}
+            />
+          </div>
+        </div>
+
+        {/* Hidden Print Container: Prints ALL colli labels sequentially on paper */}
+        <div className="hidden print:block" id="all-colli-print-container">
+          <style>{`
+            @media print {
+              body * {
+                visibility: hidden !important;
+              }
+              #all-colli-print-container,
+              #all-colli-print-container * {
+                visibility: visible !important;
+              }
+              #all-colli-print-container {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+              }
+              .collo-print-page {
+                page-break-after: always !important;
+                break-after: page !important;
+              }
+              .collo-print-page:last-child {
+                page-break-after: auto !important;
+                break-after: auto !important;
+              }
+            }
+          `}</style>
+          {Array.from({ length: packageCount }).map((_, idx) => (
+            <div key={idx} className="collo-print-page">
+              <SingleDHLCard
+                order={order}
+                colloIdx={idx}
+                totalColli={packageCount}
+                totalWeightKg={totalWeightKg}
+                colloWeightKg={colloWeightKg}
+              />
+            </div>
+          ))}
         </div>
 
         {/* Modal Footer Controls */}
@@ -323,16 +440,17 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
             <Printer className="w-4 h-4 text-blue-700" />
             <span>
               {packageCount > 1
-                ? `Stampa Tutte le ${packageCount} Etichette DHL`
-                : "Stampa Etichetta Termica (A6)"}
+                ? `Ristampa Tutte le ${packageCount} Etichette DHL`
+                : "Ristampa Etichetta DHL (A6)"}
             </span>
           </button>
 
           <button
             onClick={onCompleteAndNext}
             className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm transition active:scale-95 shadow-md cursor-pointer"
+            title="Premi Invio (Enter) per avanzare immediatamente al prossimo ordine"
           >
-            <span>Conferma & Prossimo Ordine</span>
+            <span>Conferma & Prossimo Ordine (Enter ↵)</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

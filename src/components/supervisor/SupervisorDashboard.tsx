@@ -39,6 +39,10 @@ import {
   printAmazonPackingSlip,
   printBatchAmazonPackingSlips,
 } from "../../services/amazonSlipPrinter";
+import {
+  printOrderPackingSlip,
+  printBatchPackingSlips,
+} from "../../services/orderSlipPrinter";
 import { getCode128Bars } from "../../services/barcodeGenerator";
 import {
   getProductLotInfo,
@@ -822,6 +826,17 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
+              {sellyOrders.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => printBatchPackingSlips(sellyOrders)}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl transition active:scale-95 shadow cursor-pointer"
+                  title="Stampa tutte le distinte di prelievo A4 con barcode per il banco imballaggio"
+                >
+                  <Printer className="w-3.5 h-3.5 text-white" />
+                  <span>Stampa Distinte Ordini ({sellyOrders.length})</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleSyncSellyNow}
@@ -917,9 +932,9 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => printAmazonPackingSlip(o)}
+                        onClick={() => printOrderPackingSlip(o)}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition active:scale-95 shadow-xs cursor-pointer"
-                        title="Stampa distinta di prelievo / bolla d'ordine in formato A4"
+                        title="Stampa distinta di prelievo / bolla d'ordine in formato A4 con barcode per scan"
                       >
                         <FileText className="w-3.5 h-3.5 text-blue-400" />
                         <span>Stampa Bolla</span>

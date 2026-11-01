@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import {
   X,
   Barcode,
@@ -12,6 +12,7 @@ import {
   UserCheck,
   Globe,
   BookOpen,
+  Package,
 } from "lucide-react";
 import { Order, Operator } from "../../types/wms";
 import { NORSAN_PRODUCTS, MARKETING_FLYERS } from "../../data/norsanProducts";
@@ -327,6 +328,43 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
                 </div>
                 <span className="text-[9px] font-black px-2 py-0.5 rounded bg-amber-600 text-white">
                   AMAZON
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Section 5.5: Bench Command Barcodes */}
+          <div>
+            <div className="text-[11px] font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Package className="w-3.5 h-3.5 text-blue-600" />
+              <span>Comandi Barcode da Tavolo (Poka-Yoke)</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => onScan("+COLLO")}
+                className="p-2 bg-blue-50 hover:bg-blue-100 border-2 border-blue-300 rounded-xl text-left text-xs transition active:scale-95 shadow-xs flex items-center justify-between cursor-pointer"
+              >
+                <div>
+                  <div className="font-bold text-blue-900">+1 Scatola</div>
+                  <div className="text-[10px] font-mono text-blue-700">+COLLO</div>
+                </div>
+                <span className="text-[9px] font-black bg-blue-600 text-white px-1.5 py-0.5 rounded">
+                  SCAN
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onScan("PRINT-DHL")}
+                className="p-2 bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-300 rounded-xl text-left text-xs transition active:scale-95 shadow-xs flex items-center justify-between cursor-pointer"
+              >
+                <div>
+                  <div className="font-bold text-yellow-950">Stampa DHL</div>
+                  <div className="text-[10px] font-mono text-yellow-800">PRINT-DHL</div>
+                </div>
+                <span className="text-[9px] font-black bg-yellow-500 text-slate-950 px-1.5 py-0.5 rounded">
+                  SCAN
                 </span>
               </button>
             </div>
