@@ -1,5 +1,13 @@
 import { Product } from "../types/wms";
-import { getProductLotInfo, updateProductLotInfo } from "./lotTraceabilityService";
+import {
+  getProductLotInfo,
+  updateProductLotInfo,
+  hydrateLotsFromServer,
+} from "./lotTraceabilityService";
+import {
+  fetchInventoryAndLotsApi,
+  upsertInventoryRecordApi,
+} from "./api";
 
 export interface WarehouseStockRecord {
   sku: string;
@@ -181,6 +189,7 @@ export function recordPhysicalCount(
       lastCountedAt: "Adesso (Verificato)",
     };
     saveInventoryMap(map);
+    upsertInventoryRecordApi(map[sku]).catch(() => {});
   }
   return getWarehouseInventory(products);
 }
@@ -201,6 +210,7 @@ export function transferCartonsToPackingShelf(
       lastCountedAt: "Adesso (Kanban Pallet → Scaffale)",
     };
     saveInventoryMap(map);
+    upsertInventoryRecordApi(map[sku]).catch(() => {});
   }
   return getWarehouseInventory(products);
 }
@@ -223,9 +233,70 @@ export function receiveInboundPallet(
       lastCountedAt: `Adesso (+${cartonsAdded} cartoni ricevuti)`,
     };
     saveInventoryMap(map);
+    upsertInventoryRecordApi(map[sku]).catch(() => {});
     if (newLotNumber && newExpiryDate) {
       updateProductLotInfo(sku, newLotNumber, newExpiryDate);
     }
   }
   return getWarehouseInventory(products);
+}
+
+export function deductPackedOrderFromShelf(
+  products: Product[],
+  items: { sku: string; quantity: number }[],
+): void {
+  const map = loadInventoryMap(products);
+  let changed = false;
+  for (const it of items) {
+    const existing = map[it.sku];
+    if (existing && it.quantity > 0) {
+      map[it.sku] = {
+        ...existing,
+        openUnitsOnPackingShelf: Math.max(
+          0,
+          existing.openUnitsOnPackingShelf - it.quantity,
+        ),
+        erpExpectedTotalUnits: Math.max(
+          0,
+          existing.erpExpectedTotalUnits - it.quantity,
+        ),
+      };
+      changed = true;
+      upsertInventoryRecordApi(map[it.sku]).catch(() => {});
+    }
+  }
+  if (changed) {
+    saveInventoryMap(map);
+  }
+}
+
+export async function syncInventoryFromBackend(
+  products: Product[],
+): Promise<boolean> {
+  const data = await fetchInventoryAndLotsApi();
+  if (!data) return false;
+
+  if (Array.isArray(data.lots) && data.lots.length > 0) {
+    hydrateLotsFromServer(data.lots);
+  }
+
+  if (Array.isArray(data.stock) && data.stock.length > 0) {
+    const map = loadInventoryMap(products);
+    for (const r of data.stock) {
+      if (!r.sku) continue;
+      map[r.sku] = {
+        sku: r.sku,
+        palletZone: r.pallet_zone || map[r.sku]?.palletZone || "PALLET-01",
+        unitsPerCarton: r.units_per_carton ?? map[r.sku]?.unitsPerCarton ?? 20,
+        closedCartonsOnPallet: r.closed_cartons_on_pallet ?? 0,
+        openUnitsOnPackingShelf: r.open_units_on_packing_shelf ?? 0,
+        erpExpectedTotalUnits: r.erp_expected_total_units ?? 0,
+        monthlySalesVelocity: r.monthly_sales_velocity ?? 0,
+        unitCostEur: r.unit_cost_eur ?? 25.0,
+        lastCountedAt: r.last_counted_at || "Non conteggiato",
+      };
+    }
+    saveInventoryMap(map);
+  }
+  return true;
 }

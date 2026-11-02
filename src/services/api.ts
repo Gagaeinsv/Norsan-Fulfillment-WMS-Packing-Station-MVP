@@ -293,12 +293,14 @@ export async function saveBulkOrdersApi(
 export async function updateOrderStatusApi(
   orderId: string,
   status: string,
+  operatorId?: string,
+  stationId?: string,
 ): Promise<boolean> {
   try {
     const res = await fetch(`${API_BASE}/orders/${orderId}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, operatorId, stationId }),
       signal: AbortSignal.timeout(3000),
     });
     return res.ok;
@@ -415,5 +417,88 @@ export async function verifyOperatorApi(
     return { success: false, error: data.error || "Autenticazione fallita" };
   } catch {
     return { success: false, error: "Server non raggiungibile" };
+  }
+}
+
+export async function createOperatorApi(operator: Operator): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/operators`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(operator),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateOperatorApi(operator: Operator): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/operators/${operator.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(operator),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function deleteOperatorApi(operatorId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/operators/${operatorId}`, {
+      method: "DELETE",
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function fetchInventoryAndLotsApi(): Promise<{
+  stock: any[];
+  lots: any[];
+} | null> {
+  try {
+    const res = await fetch(`${API_BASE}/inventory`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function upsertInventoryRecordApi(rec: any): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/inventory/upsert`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(rec),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function upsertLotRecordApi(lot: any): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/lots/upsert`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(lot),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
   }
 }

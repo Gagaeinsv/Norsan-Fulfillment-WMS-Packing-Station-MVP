@@ -28,8 +28,15 @@ import {
   updateOrderBoxApi,
   updatePackageCountApi,
   fetchOperatorsApi,
+  createOperatorApi,
+  updateOperatorApi,
+  deleteOperatorApi,
   clearPackedOrdersApi,
 } from "../services/api";
+import {
+  deductPackedOrderFromShelf,
+  syncInventoryFromBackend,
+} from "../services/mainWarehouseInventoryService";
 import {
   WarehouseSlotData,
   generateBolzanoDefaultSlots,
@@ -264,6 +271,30 @@ export function useWarehouseState() {
         });
       }
     });
+
+    // 5. Sync Inventory & FEFO Lots from SQLite backend
+    syncInventoryFromBackend(NORSAN_PRODUCTS).catch(() => {});
+
+    // 6. Multi-Station Live Sync Polling (every 5 seconds) across ST-01..ST-03 & SUP-HUB
+    const syncTimer = setInterval(() => {
+      fetchOrdersApi().then((serverOrders) => {
+        if (serverOrders && Array.isArray(serverOrders)) {
+          const cleanOrders = serverOrders.filter((o) => !isLegacyDemoOrder(o));
+          setOrders((prev) => {
+            if (cleanOrders.length === 0 && prev.length > 0) return prev;
+            return cleanOrders;
+          });
+        }
+      });
+      fetchOperatorsApi().then((serverOps) => {
+        if (serverOps && Array.isArray(serverOps) && serverOps.length > 0) {
+          setOperators(serverOps);
+        }
+      });
+      syncInventoryFromBackend(NORSAN_PRODUCTS).catch(() => {});
+    }, 5000);
+
+    return () => clearInterval(syncTimer);
   }, []);
 
   // Update product photo (Team Lead feature)
@@ -456,21 +487,24 @@ export function useWarehouseState() {
     }
   }, []);
 
-  // Add a new operator
+  // Add a new operator (persisted to SQLite backend)
   const handleAddOperator = useCallback((newOp: Operator) => {
     setOperators((prev) => [...prev, newOp]);
+    createOperatorApi(newOp).catch(() => {});
   }, []);
 
-  // Update an existing operator / lead
+  // Update an existing operator / lead (persisted to SQLite backend)
   const handleUpdateOperator = useCallback((updatedOp: Operator) => {
     setOperators((prev) =>
       prev.map((op) => (op.id === updatedOp.id ? updatedOp : op)),
     );
     setCurrentOperator((prev) => (prev.id === updatedOp.id ? updatedOp : prev));
+    updateOperatorApi(updatedOp).catch(() => {});
   }, []);
 
-  // Delete an operator (with active operator safety)
+  // Delete an operator (with active operator safety + SQLite persistence)
   const handleDeleteOperator = useCallback((opId: string) => {
+    deleteOperatorApi(opId).catch(() => {});
     setOperators((prev) => {
       const remaining = prev.filter((op) => op.id !== opId);
       setCurrentOperator((current) => {
@@ -791,9 +825,21 @@ export function useWarehouseState() {
       );
 
       if (matchedOrder) {
-        // If there was a previous order active and not yet packed, finalize it as packed
+        // If there was a previous order active and not yet packed, finalize it as packed and deduct shelf stock
         if (activeOrder && activeOrder.id !== matchedOrder.id && activeOrder.status !== "packed") {
-          updateOrderStatusApi(activeOrder.id, "packed").catch(() => {});
+          deductPackedOrderFromShelf(
+            productsList,
+            activeOrder.items.map((it) => ({
+              sku: it.product.sku,
+              quantity: it.quantityRequired,
+            })),
+          );
+          updateOrderStatusApi(
+            activeOrder.id,
+            "packed",
+            currentOperator.id,
+            stationConfigId,
+          ).catch(() => {});
           setOrders((prev) =>
             prev.map((o) =>
               o.id === activeOrder.id
@@ -869,8 +915,13 @@ export function useWarehouseState() {
         );
         setActiveOrderId(matchedOrder.id);
 
-        // Async sync to SQLite backend
-        updateOrderStatusApi(matchedOrder.id, "packing").catch(() => {});
+        // Async sync to SQLite backend with station assignment
+        updateOrderStatusApi(
+          matchedOrder.id,
+          "packing",
+          currentOperator.id,
+          stationConfigId,
+        ).catch(() => {});
 
         // Light Pick-to-Light LEDs for the active order
         lightActiveOrder(fulfilledOrder);
@@ -912,15 +963,23 @@ export function useWarehouseState() {
           const currentCount = activeOrder.packageCount || 1;
           const newCount = currentCount + 1;
           handleUpdatePackageCount(activeOrder.id, newCount);
-          printDhlThermalLabel(activeOrder, newCount);
+          if (dhlPrintTiming === "on_scan") {
+            printDhlThermalLabel(activeOrder, newCount, newCount - 1);
+          }
           if (!isMuted) playScanSuccess();
           setLastScan({
             id: Math.random().toString(),
             rawCode,
             resultType: "command",
             status: "success",
-            title: `Aggiunto Collo ${newCount} • Etichetta In Stampa 📦`,
-            message: `Aggiunta scatola aggiuntiva a ${activeOrder.orderNumber}. Stampata etichetta DHL per il Collo ${newCount} di ${newCount}.`,
+            title:
+              dhlPrintTiming === "on_scan"
+                ? `Aggiunto Collo ${newCount} • Etichetta Collo ${newCount}/${newCount} In Stampa 📦`
+                : `Aggiunto Collo ${newCount} (Stampa a Chiusura) 📦`,
+            message:
+              dhlPrintTiming === "on_scan"
+                ? `Aggiunta scatola aggiuntiva a ${activeOrder.orderNumber}. Stampata solo l'etichetta del nuovo Collo ${newCount} di ${newCount}.`
+                : `Contatore aggiornato a ${newCount} colli per ${activeOrder.orderNumber}.`,
             timestamp: Date.now(),
           });
           return;
@@ -1317,8 +1376,20 @@ export function useWarehouseState() {
       }),
     );
 
-    // Sync packed status to backend SQLite
-    updateOrderStatusApi(completedOrderId, "packed").catch(() => {});
+    // Deduct packed items from packing shelf stock & sync packed status to SQLite
+    deductPackedOrderFromShelf(
+      productsList,
+      activeOrder.items.map((it) => ({
+        sku: it.product.sku,
+        quantity: it.quantityRequired,
+      })),
+    );
+    updateOrderStatusApi(
+      completedOrderId,
+      "packed",
+      currentOperator.id,
+      stationConfigId,
+    ).catch(() => {});
 
     // Update KPI
     setKpis((prev) => ({

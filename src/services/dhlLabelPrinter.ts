@@ -142,10 +142,13 @@ function generateSingleDhlHtml(
 /**
  * Print DHL Thermal Shipping Label(s) for an order immediately.
  * Opens print preview formatted for 100mm x 150mm thermal paper.
+ * If onlyColloIndex (0-based) is provided, prints ONLY that specific parcel label
+ * (e.g. when adding an extra box via +COLLO without re-printing box 1).
  */
 export function printDhlThermalLabel(
   order: Order,
   packageCount?: number,
+  onlyColloIndex?: number,
 ): void {
   const colli = Math.max(1, packageCount ?? order.packageCount ?? 1);
 
@@ -157,9 +160,14 @@ export function printDhlThermalLabel(
     return;
   }
 
-  const pagesHtml = Array.from({ length: colli })
-    .map((_, idx) => generateSingleDhlHtml(order, idx, colli))
-    .join("\n");
+  const pagesHtml =
+    typeof onlyColloIndex === "number" &&
+    onlyColloIndex >= 0 &&
+    onlyColloIndex < colli
+      ? generateSingleDhlHtml(order, onlyColloIndex, colli)
+      : Array.from({ length: colli })
+          .map((_, idx) => generateSingleDhlHtml(order, idx, colli))
+          .join("\n");
 
   const html = `<!DOCTYPE html>
 <html lang="it">

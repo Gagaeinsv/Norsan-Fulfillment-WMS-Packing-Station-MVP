@@ -243,10 +243,12 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
               onClick={() => {
                 const nextCount = (order.packageCount || 1) + 1;
                 onUpdatePackageCount?.(order.id, nextCount);
-                printDhlThermalLabel(order, nextCount);
+                if (dhlPrintTiming === "on_scan") {
+                  printDhlThermalLabel(order, nextCount, nextCount - 1);
+                }
               }}
               className="w-5 h-5 flex items-center justify-center font-black text-xs text-blue-700 hover:bg-blue-100 rounded cursor-pointer"
-              title="Aggiungi scatola e stampa subito la nuova etichetta DHL"
+              title="Aggiungi scatola (stampa solo l'etichetta del nuovo collo)"
             >
               +
             </button>

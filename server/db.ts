@@ -122,6 +122,28 @@ export function initDatabase() {
       product_id TEXT,
       timestamp INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS inventory_stock (
+      sku TEXT PRIMARY KEY,
+      pallet_zone TEXT NOT NULL,
+      units_per_carton INTEGER NOT NULL DEFAULT 20,
+      closed_cartons_on_pallet INTEGER NOT NULL DEFAULT 0,
+      open_units_on_packing_shelf INTEGER NOT NULL DEFAULT 0,
+      erp_expected_total_units INTEGER NOT NULL DEFAULT 0,
+      monthly_sales_velocity INTEGER NOT NULL DEFAULT 0,
+      unit_cost_eur REAL NOT NULL DEFAULT 25.0,
+      last_counted_at TEXT NOT NULL DEFAULT 'Non conteggiato'
+    );
+
+    CREATE TABLE IF NOT EXISTS product_lots (
+      sku TEXT PRIMARY KEY,
+      lot_number TEXT NOT NULL DEFAULT 'NON ASSEGNATO',
+      expiry_date TEXT NOT NULL DEFAULT '--/----',
+      secondary_lot_number TEXT,
+      secondary_expiry_date TEXT,
+      fefo_status TEXT NOT NULL DEFAULT 'optimal',
+      fefo_note TEXT
+    );
   `);
 
   // Migration helper for new order fields in SQLite
@@ -135,14 +157,15 @@ export function initDatabase() {
       ALTER TABLE orders ADD COLUMN physical_doc_confirmed INTEGER DEFAULT 0;
       ALTER TABLE orders ADD COLUMN marketing_flyers_json TEXT DEFAULT '[]';
       ALTER TABLE orders ADD COLUMN package_count INTEGER DEFAULT 1;
+      ALTER TABLE orders ADD COLUMN assigned_station_id TEXT;
     `);
   } catch {
     // Columns already exist
   }
 
-  // Seed or sync Operators in SQLite
+  // Seed default Operators in SQLite (INSERT OR IGNORE preserves updated names and shift stats)
   const insertOp = db.prepare(`
-    INSERT OR REPLACE INTO operators (
+    INSERT OR IGNORE INTO operators (
       id, operator_code, pin, name, role, station_id, shift, avatar_url, packed_today, accuracy, uph, errors_prevented, is_active
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);

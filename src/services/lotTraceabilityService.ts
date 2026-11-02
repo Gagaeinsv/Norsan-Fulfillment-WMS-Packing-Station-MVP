@@ -1,4 +1,5 @@
 import { Product } from "../types/wms";
+import { upsertLotRecordApi } from "./api";
 
 export interface ProductLotInfo {
   sku: string;
@@ -104,6 +105,7 @@ export function updateProductLotInfo(
 
   map[sku] = updated;
   saveLots(map);
+  upsertLotRecordApi(updated).catch(() => {});
   return updated;
 }
 
@@ -133,7 +135,31 @@ export function rotateToSecondaryLot(productOrSku: Product | string): ProductLot
 
   map[sku] = promoted;
   saveLots(map);
+  upsertLotRecordApi(promoted).catch(() => {});
   return promoted;
+}
+
+export function hydrateLotsFromServer(rows: any[]): void {
+  if (!Array.isArray(rows) || rows.length === 0) return;
+  const map = loadSavedLots();
+  for (const r of rows) {
+    if (!r.sku) continue;
+    map[r.sku] = {
+      sku: r.sku,
+      lotNumber: r.lot_number || "NON ASSEGNATO",
+      expiryDate: r.expiry_date || "--/----",
+      secondaryLot:
+        r.secondary_lot_number && r.secondary_expiry_date
+          ? {
+              lotNumber: r.secondary_lot_number,
+              expiryDate: r.secondary_expiry_date,
+            }
+          : undefined,
+      fefoStatus: r.fefo_status || "optimal",
+      fefoNote: r.fefo_note || undefined,
+    };
+  }
+  saveLots(map);
 }
 
 export function resetAllShelfLots(): void {

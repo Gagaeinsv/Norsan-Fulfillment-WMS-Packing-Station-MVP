@@ -263,6 +263,85 @@ app.post("/api/operators/verify", (req, res) => {
   }
 });
 
+// Create a new operator in SQLite
+app.post("/api/operators", (req, res) => {
+  const op = req.body || {};
+  if (!op.id || !op.operatorCode || !op.name) {
+    return res.status(400).json({ error: "id, operatorCode e name obbligatori" });
+  }
+  try {
+    db.prepare(
+      `
+      INSERT OR REPLACE INTO operators (
+        id, operator_code, pin, name, role, station_id, shift, avatar_url, packed_today, accuracy, uph, errors_prevented, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+    `,
+    ).run(
+      op.id,
+      String(op.operatorCode).trim().toUpperCase(),
+      op.pin || String(op.operatorCode).replace(/[^0-9]/g, "").padStart(4, "0") || "0000",
+      op.name,
+      op.role || "packer",
+      op.stationId || "ST-01",
+      op.shift || "Turno Mattina (07:00 - 15:30)",
+      op.avatarUrl || "",
+      op.packedToday || 0,
+      op.accuracy ?? 100.0,
+      op.uph || 0.0,
+      op.errorsPrevented || 0,
+    );
+    res.json({ success: true, operator: op });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update an existing operator in SQLite
+app.put("/api/operators/:id", (req, res) => {
+  const { id } = req.params;
+  const op = req.body || {};
+  try {
+    db.prepare(
+      `
+      UPDATE operators
+      SET operator_code = COALESCE(?, operator_code),
+          name = COALESCE(?, name),
+          role = COALESCE(?, role),
+          station_id = COALESCE(?, station_id),
+          shift = COALESCE(?, shift),
+          avatar_url = COALESCE(?, avatar_url),
+          packed_today = COALESCE(?, packed_today),
+          uph = COALESCE(?, uph)
+      WHERE id = ?
+    `,
+    ).run(
+      op.operatorCode ? String(op.operatorCode).trim().toUpperCase() : null,
+      op.name ?? null,
+      op.role ?? null,
+      op.stationId ?? null,
+      op.shift ?? null,
+      op.avatarUrl ?? null,
+      typeof op.packedToday === "number" ? op.packedToday : null,
+      typeof op.uph === "number" ? op.uph : null,
+      id,
+    );
+    res.json({ success: true, id });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Soft-delete an operator in SQLite
+app.delete("/api/operators/:id", (req, res) => {
+  const { id } = req.params;
+  try {
+    db.prepare("UPDATE operators SET is_active = 0 WHERE id = ?").run(id);
+    res.json({ success: true, id });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Get all orders from SQLite with nested items & flyers
 app.get("/api/orders", (_req, res) => {
   try {
@@ -462,17 +541,137 @@ app.post("/api/orders/bulk", (req, res) => {
   }
 });
 
-// Update order status (packing, packed, shipped)
+// Update order status (packing, packed, shipped) with automatic shelf stock deduction & operator stats update
 app.patch("/api/orders/:id/status", (req, res) => {
   const { id } = req.params;
-  const { status } = req.body || {};
+  const { status, operatorId, stationId } = req.body || {};
   if (!status) {
     return res.status(400).json({ error: "Status obbligatorio" });
   }
 
   try {
-    db.prepare("UPDATE orders SET status = ? WHERE id = ?").run(status, id);
+    const existing = db
+      .prepare("SELECT status FROM orders WHERE id = ?")
+      .get(id) as { status: string } | undefined;
+
+    const tx = db.transaction(() => {
+      if (stationId && status === "packing") {
+        db.prepare(
+          "UPDATE orders SET status = ?, assigned_station_id = ? WHERE id = ?",
+        ).run(status, stationId, id);
+      } else {
+        db.prepare("UPDATE orders SET status = ? WHERE id = ?").run(status, id);
+      }
+
+      // If transitioning to 'packed' for the first time, deduct shelf stock & increment operator packed_today
+      if (status === "packed" && existing && existing.status !== "packed") {
+        const items = db
+          .prepare(
+            `
+            SELECT oi.quantity_required, p.sku
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = ?
+          `,
+          )
+          .all(id) as { quantity_required: number; sku: string }[];
+
+        for (const item of items) {
+          db.prepare(
+            `
+            UPDATE inventory_stock
+            SET open_units_on_packing_shelf = MAX(0, open_units_on_packing_shelf - ?),
+                erp_expected_total_units = MAX(0, erp_expected_total_units - ?)
+            WHERE sku = ?
+          `,
+          ).run(item.quantity_required, item.quantity_required, item.sku);
+        }
+
+        if (operatorId) {
+          db.prepare(
+            `
+            UPDATE operators
+            SET packed_today = packed_today + 1
+            WHERE id = ? OR operator_code = ?
+          `,
+          ).run(operatorId, operatorId);
+        }
+      }
+    });
+
+    tx();
     res.json({ success: true, id, status });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- INVENTORY & FEFO LOTS MULTI-STATION SYNC API ---
+
+app.get("/api/inventory", (_req, res) => {
+  try {
+    const stock = db.prepare("SELECT * FROM inventory_stock").all();
+    const lots = db.prepare("SELECT * FROM product_lots").all();
+    res.json({ stock, lots });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/inventory/upsert", (req, res) => {
+  const rec = req.body || {};
+  if (!rec.sku) {
+    return res.status(400).json({ error: "sku obbligatorio" });
+  }
+  try {
+    db.prepare(
+      `
+      INSERT OR REPLACE INTO inventory_stock (
+        sku, pallet_zone, units_per_carton, closed_cartons_on_pallet,
+        open_units_on_packing_shelf, erp_expected_total_units,
+        monthly_sales_velocity, unit_cost_eur, last_counted_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    ).run(
+      rec.sku,
+      rec.palletZone || "PALLET-01",
+      rec.unitsPerCarton ?? 20,
+      rec.closedCartonsOnPallet ?? 0,
+      rec.openUnitsOnPackingShelf ?? 0,
+      rec.erpExpectedTotalUnits ?? 0,
+      rec.monthlySalesVelocity ?? 0,
+      rec.unitCostEur ?? 25.0,
+      rec.lastCountedAt || "Adesso",
+    );
+    res.json({ success: true, sku: rec.sku });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/lots/upsert", (req, res) => {
+  const lot = req.body || {};
+  if (!lot.sku) {
+    return res.status(400).json({ error: "sku obbligatorio" });
+  }
+  try {
+    db.prepare(
+      `
+      INSERT OR REPLACE INTO product_lots (
+        sku, lot_number, expiry_date, secondary_lot_number,
+        secondary_expiry_date, fefo_status, fefo_note
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+    ).run(
+      lot.sku,
+      lot.lotNumber || "NON ASSEGNATO",
+      lot.expiryDate || "--/----",
+      lot.secondaryLot?.lotNumber || null,
+      lot.secondaryLot?.expiryDate || null,
+      lot.fefoStatus || "optimal",
+      lot.fefoNote || null,
+    );
+    res.json({ success: true, sku: lot.sku });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
