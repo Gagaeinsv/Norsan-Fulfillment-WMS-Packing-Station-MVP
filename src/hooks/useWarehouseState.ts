@@ -51,6 +51,7 @@ import {
 } from "../services/p2lClient";
 import { getProductLotInfo } from "../services/lotTraceabilityService";
 import { printDhlThermalLabel } from "../services/dhlLabelPrinter";
+import { WMS_PHASE_CONFIG } from "../config/wmsPhaseConfig";
 
 function resolveProduct(
   rawCode: string,
@@ -272,8 +273,10 @@ export function useWarehouseState() {
       }
     });
 
-    // 5. Sync Inventory & FEFO Lots from SQLite backend
-    syncInventoryFromBackend(NORSAN_PRODUCTS).catch(() => {});
+    // 5. Sync Inventory & FEFO Lots from SQLite backend (only when Phase 2-3 Ecosystem is enabled)
+    if (WMS_PHASE_CONFIG.ENABLE_WAREHOUSE_INVENTORY_ERP) {
+      syncInventoryFromBackend(NORSAN_PRODUCTS).catch(() => {});
+    }
 
     // 6. Multi-Station Live Sync Polling (every 5 seconds) across ST-01..ST-03 & SUP-HUB
     const syncTimer = setInterval(() => {
@@ -291,7 +294,9 @@ export function useWarehouseState() {
           setOperators(serverOps);
         }
       });
-      syncInventoryFromBackend(NORSAN_PRODUCTS).catch(() => {});
+      if (WMS_PHASE_CONFIG.ENABLE_WAREHOUSE_INVENTORY_ERP) {
+        syncInventoryFromBackend(NORSAN_PRODUCTS).catch(() => {});
+      }
     }, 5000);
 
     return () => clearInterval(syncTimer);
@@ -825,15 +830,17 @@ export function useWarehouseState() {
       );
 
       if (matchedOrder) {
-        // If there was a previous order active and not yet packed, finalize it as packed and deduct shelf stock
+        // If there was a previous order active and not yet packed, finalize it as packed
         if (activeOrder && activeOrder.id !== matchedOrder.id && activeOrder.status !== "packed") {
-          deductPackedOrderFromShelf(
-            productsList,
-            activeOrder.items.map((it) => ({
-              sku: it.product.sku,
-              quantity: it.quantityRequired,
-            })),
-          );
+          if (WMS_PHASE_CONFIG.ENABLE_WAREHOUSE_INVENTORY_ERP) {
+            deductPackedOrderFromShelf(
+              productsList,
+              activeOrder.items.map((it) => ({
+                sku: it.product.sku,
+                quantity: it.quantityRequired,
+              })),
+            );
+          }
           updateOrderStatusApi(
             activeOrder.id,
             "packed",
@@ -1376,14 +1383,16 @@ export function useWarehouseState() {
       }),
     );
 
-    // Deduct packed items from packing shelf stock & sync packed status to SQLite
-    deductPackedOrderFromShelf(
-      productsList,
-      activeOrder.items.map((it) => ({
-        sku: it.product.sku,
-        quantity: it.quantityRequired,
-      })),
-    );
+    // Deduct packed items from packing shelf stock (if Phase 2-3 enabled) & sync packed status to SQLite
+    if (WMS_PHASE_CONFIG.ENABLE_WAREHOUSE_INVENTORY_ERP) {
+      deductPackedOrderFromShelf(
+        productsList,
+        activeOrder.items.map((it) => ({
+          sku: it.product.sku,
+          quantity: it.quantityRequired,
+        })),
+      );
+    }
     updateOrderStatusApi(
       completedOrderId,
       "packed",

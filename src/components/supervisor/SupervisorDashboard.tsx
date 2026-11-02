@@ -54,6 +54,7 @@ import {
   transferCartonsToPackingShelf,
   receiveInboundPallet,
 } from "../../services/mainWarehouseInventoryService";
+import { WMS_PHASE_CONFIG } from "../../config/wmsPhaseConfig";
 
 interface SupervisorDashboardProps {
   stations: WarehouseStation[];
@@ -603,41 +604,54 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           <span>⚙️ Gestione Scaffali & Slotting (5S)</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab("lean")}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-            activeTab === "lean"
-              ? "bg-emerald-700 text-white shadow-sm"
-              : "bg-white text-emerald-800 hover:text-emerald-950 border border-emerald-300"
-          }`}
-        >
-          <TrendingUp className="w-4 h-4 text-emerald-400" />
-          <span>📈 Metriche Lean & 5S Kaizen</span>
-        </button>
+        {!WMS_PHASE_CONFIG.PHASE_1_PACKING_STATION_ONLY && (
+          <>
+            <button
+              onClick={() => setActiveTab("lean")}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                activeTab === "lean"
+                  ? "bg-emerald-700 text-white shadow-sm"
+                  : "bg-white text-emerald-800 hover:text-emerald-950 border border-emerald-300"
+              }`}
+            >
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <span>📈 Metriche Lean & 5S Kaizen</span>
+            </button>
 
-        <button
-          onClick={() => setActiveTab("fefo")}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-            activeTab === "fefo"
-              ? "bg-teal-700 text-white shadow-sm"
-              : "bg-white text-teal-800 hover:text-teal-950 border border-teal-300"
-          }`}
-        >
-          <CheckCircle className="w-4 h-4 text-teal-500" />
-          <span>🧪 Lotti, Scadenze FEFO & Richiamo</span>
-        </button>
+            <button
+              onClick={() => setActiveTab("fefo")}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                activeTab === "fefo"
+                  ? "bg-teal-700 text-white shadow-sm"
+                  : "bg-white text-teal-800 hover:text-teal-950 border border-teal-300"
+              }`}
+            >
+              <CheckCircle className="w-4 h-4 text-teal-500" />
+              <span>🧪 Lotti, Scadenze FEFO & Richiamo</span>
+            </button>
 
-        <button
-          onClick={() => setActiveTab("inventory")}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-            activeTab === "inventory"
-              ? "bg-indigo-700 text-white shadow-sm"
-              : "bg-white text-indigo-900 hover:text-indigo-950 border border-indigo-300"
-          }`}
-        >
-          <Package className="w-4 h-4 text-indigo-500" />
-          <span>🏭 Magazzino Centrale & Inventario (Pallet)</span>
-        </button>
+            <button
+              onClick={() => setActiveTab("inventory")}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                activeTab === "inventory"
+                  ? "bg-indigo-700 text-white shadow-sm"
+                  : "bg-white text-indigo-900 hover:text-indigo-950 border border-indigo-300"
+              }`}
+            >
+              <Package className="w-4 h-4 text-indigo-500" />
+              <span>🏭 Magazzino Centrale & Inventario (Pallet)</span>
+            </button>
+          </>
+        )}
+
+        {WMS_PHASE_CONFIG.PHASE_1_PACKING_STATION_ONLY && (
+          <span
+            className="px-3.5 py-2 rounded-xl text-[11px] font-mono font-bold bg-slate-100 text-slate-500 border border-dashed border-slate-300 flex items-center gap-1.5"
+            title="I moduli Inventario Centrale, Lotti FEFO e Scrico Automatico ERP sono congelati per la Fase 1 (focus Postazione Imballaggio) e documentati nella Roadmap Strategica."
+          >
+            <span>🔒 Fase 1: Focus Postazione Imballaggio (Moduli Magazzino & FEFO in Roadmap)</span>
+          </span>
+        )}
 
         <a
           href="/calcolatore-omega3.html"

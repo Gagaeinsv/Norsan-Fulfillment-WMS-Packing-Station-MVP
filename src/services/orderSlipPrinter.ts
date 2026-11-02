@@ -1,4 +1,5 @@
 import { Order } from "../types/wms";
+import { WMS_PHASE_CONFIG } from "../config/wmsPhaseConfig";
 import { generateCode128SvgMarkup } from "./barcodeGenerator";
 import { getProductLotInfo } from "./lotTraceabilityService";
 
@@ -30,8 +31,12 @@ function generateSingleSlipHtml(order: Order): string {
           <div style="font-weight: 900; font-size: 11pt; color: #0f172a;">${item.product.italianName || item.product.name}</div>
           <div style="font-size: 9pt; color: #64748b; margin-top: 3px;">
             SKU: <b style="color: #0f172a;">${item.product.sku}</b> &nbsp;|&nbsp; 
-            EAN: <span style="font-family: monospace; font-weight: bold;">${item.product.ean}</span> &nbsp;|&nbsp;
-            <span style="color: #0369a1; font-weight: 800;">Lotto FEFO: ${lotStr} (Scad. ${expStr})</span>
+            EAN: <span style="font-family: monospace; font-weight: bold;">${item.product.ean}</span>
+            ${
+              WMS_PHASE_CONFIG.ENABLE_FEFO_LOT_TRACKING
+                ? ` &nbsp;|&nbsp; <span style="color: #0369a1; font-weight: 800;">Lotto FEFO: ${lotStr} (Scad. ${expStr})</span>`
+                : ""
+            }
           </div>
         </td>
         <td style="padding: 10px 8px; text-align: center; font-size: 16pt; font-weight: 900; color: #0284c7;">
@@ -125,7 +130,7 @@ function generateSingleSlipHtml(order: Order): string {
             <tr style="background: #0f172a; color: #ffffff; font-size: 8.5pt; text-transform: uppercase;">
               <th style="padding: 8px; width: 35px; text-align: center;">#</th>
               <th style="padding: 8px; width: 110px; text-align: center;">Corsia / Scaffale</th>
-              <th style="padding: 8px;">Articolo & Dettagli FEFO</th>
+              <th style="padding: 8px;">Articolo</th>
               <th style="padding: 8px; width: 60px; text-align: center;">Q.tà</th>
               <th style="padding: 8px; width: 50px; text-align: center;">Spunta</th>
             </tr>

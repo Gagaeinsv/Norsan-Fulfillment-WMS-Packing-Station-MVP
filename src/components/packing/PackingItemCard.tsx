@@ -18,6 +18,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { OrderItem } from "../../types/wms";
+import { WMS_PHASE_CONFIG } from "../../config/wmsPhaseConfig";
 import {
   getProductLotInfo,
   updateProductLotInfo,
@@ -192,7 +193,8 @@ export const PackingItemCard: React.FC<PackingItemCardProps> = ({
             </span>
           </div>
 
-          {/* FEFO Lot & Expiry Date Control Strip */}
+          {/* FEFO Lot & Expiry Date Control Strip (Frozen in Phase 1 Packing Station mode) */}
+          {WMS_PHASE_CONFIG.ENABLE_FEFO_LOT_TRACKING && (
           <div className="mt-1.5">
             {!isEditingLot ? (
               <div className="flex flex-wrap items-center gap-1">
@@ -296,6 +298,7 @@ export const PackingItemCard: React.FC<PackingItemCardProps> = ({
               </div>
             )}
           </div>
+          )}
 
           <div className="mt-2 flex items-center gap-1.5 flex-wrap">
             {item.product.fragile && (

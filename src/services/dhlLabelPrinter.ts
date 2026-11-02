@@ -1,4 +1,5 @@
 import { Order } from "../types/wms";
+import { WMS_PHASE_CONFIG } from "../config/wmsPhaseConfig";
 import { generateCode128SvgMarkup } from "./barcodeGenerator";
 import { getProductLotInfo } from "./lotTraceabilityService";
 
@@ -131,9 +132,13 @@ function generateSingleDhlHtml(
           </div>
         </div>
 
-        <div style="margin-top: 3px; font-size: 6pt; font-family: monospace; color: #475569; background: #f8fafc; padding: 2px 4px; border: 1px solid #e2e8f0; border-radius: 3px; word-break: break-all;">
+        ${
+          WMS_PHASE_CONFIG.ENABLE_FEFO_LOT_TRACKING
+            ? `<div style="margin-top: 3px; font-size: 6pt; font-family: monospace; color: #475569; background: #f8fafc; padding: 2px 4px; border: 1px solid #e2e8f0; border-radius: 3px; word-break: break-all;">
           <b>FEFO Trace:</b> ${fefoSummary}
-        </div>
+        </div>`
+            : ""
+        }
       </div>
     </div>
   `;
