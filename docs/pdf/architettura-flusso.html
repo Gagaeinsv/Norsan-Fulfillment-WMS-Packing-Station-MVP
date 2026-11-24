@@ -2,154 +2,155 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Architettura e Flusso - Norsan WMS</title>
+<title>Architettura e Flusso - Norsan WMS v2.0</title>
 <style>
-  @page { size: A4; margin: 16mm 14mm; }
-  body { font-family: "Segoe UI", Arial, sans-serif; color: #1e293b; font-size: 10.5pt; line-height: 1.45; }
-  h1 { color: #0f4c5c; font-size: 22pt; margin: 0 0 4px; }
-  h2 { color: #0f4c5c; border-bottom: 2px solid #0f4c5c; padding-bottom: 3px; margin-top: 20px; font-size: 13.5pt; page-break-after: avoid; }
-  .sub { color: #64748b; margin-bottom: 12px; }
-  table { border-collapse: collapse; width: 100%; margin: 8px 0; page-break-inside: avoid; }
-  th, td { border: 1px solid #cbd5e1; padding: 5px 8px; text-align: left; vertical-align: top; font-size: 9.5pt; }
-  th { background: #e2f1f4; }
-  .layer { border: 2px solid #0f4c5c; border-radius: 8px; padding: 8px 10px; margin: 6px 0; background: #f8fafc; page-break-inside: avoid; }
-  .layer > b { color: #0f4c5c; }
+  @page { size: A4; margin: 14mm 14mm; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1e293b; font-size: 10pt; line-height: 1.42; margin: 0; }
+  h1 { color: #0f4c5c; font-size: 20pt; margin: 0 0 3px; letter-spacing: -0.02em; }
+  h2 { color: #0f4c5c; border-bottom: 2px solid #0f4c5c; padding-bottom: 3px; margin-top: 18px; margin-bottom: 8px; font-size: 13pt; break-after: avoid; page-break-after: avoid; }
+  .sub { color: #64748b; font-size: 9.5pt; margin-bottom: 12px; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; break-inside: avoid; page-break-inside: avoid; }
+  th, td { border: 1px solid #cbd5e1; padding: 5px 8px; text-align: left; vertical-align: top; font-size: 9pt; }
+  th { background: #e2f1f4; color: #0f172a; }
+  .layer { border: 2px solid #0f4c5c; border-radius: 8px; padding: 8px 10px; margin: 5px 0; background: #f8fafc; break-inside: avoid; page-break-inside: avoid; }
+  .layer > b { color: #0f4c5c; font-size: 9.5pt; }
   .row { display: flex; gap: 8px; margin-top: 6px; }
-  .node { flex: 1; border: 1px solid #94a3b8; border-radius: 6px; background: #fff; padding: 5px 7px; font-size: 9pt; text-align: center; }
-  .arrow { text-align: center; font-size: 15pt; color: #0f4c5c; margin: 0; line-height: 1; }
+  .node { flex: 1; border: 1px solid #94a3b8; border-radius: 6px; background: #fff; padding: 5px 7px; font-size: 8.8pt; text-align: center; }
+  .arrow { text-align: center; font-size: 11pt; font-weight: 700; color: #0f4c5c; margin: 3px 0; line-height: 1.1; }
   .ph2 { border-style: dashed; background: #fffbeb; }
-  .steps { counter-reset: s; list-style: none; padding: 0; }
-  .steps li { counter-increment: s; margin: 5px 0; padding-left: 30px; position: relative; }
-  .steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%; background: #0f4c5c; color: #fff; text-align: center; font-size: 9pt; line-height: 22px; font-weight: bold; }
-  .note { background: #f1f5f9; border-left: 4px solid #0f4c5c; padding: 6px 10px; margin: 8px 0; font-size: 9.5pt; }
-  .legend { font-size: 9pt; color: #64748b; }
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 6px 0; }
+  .steps > li { counter-increment: s; margin: 6px 0; padding-left: 30px; position: relative; break-inside: avoid; page-break-inside: avoid; }
+  .steps > li::before { content: counter(s); position: absolute; left: 0; top: 1px; width: 21px; height: 21px; border-radius: 50%; background: #0f4c5c; color: #fff; text-align: center; font-size: 8.5pt; line-height: 21px; font-weight: bold; }
+  .steps > li ul { margin: 4px 0 2px 16px; padding: 0; list-style: disc; }
+  .steps > li ul li { margin: 2px 0; font-size: 9.4pt; color: #334155; }
+  .note { background: #f1f5f9; border-left: 4px solid #0f4c5c; padding: 7px 10px; margin: 8px 0; font-size: 9.2pt; break-inside: avoid; page-break-inside: avoid; }
+  .legend { font-size: 8.8pt; color: #64748b; margin: 4px 0 10px; }
+  code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 8.8pt; background: #f1f5f9; padding: 1px 4px; border-radius: 3px; }
 </style>
 </head>
 <body>
 
 <h1>Architettura e Flusso del Sistema</h1>
-<div class="sub">Norsan &amp; ZREEN – Fulfillment WMS · Postazione di imballaggio · Hub di Bolzano · Versione 1.0</div>
+<div class="sub">Norsan &amp; ZREEN &ndash; Fulfillment WMS &middot; Postazione di imballaggio &middot; Hub di Bolzano &middot; Versione 2.0 (Flusso Rapido 1-Scan)</div>
 
 <h2>1. Visione d'insieme</h2>
-<p>Il sistema è composto da un'applicazione web (frontend React) usata sulla postazione e da un servizio backend (Node.js + SQLite) che conserva catalogo, scaffali e log delle scansioni. Il backend può girare in Docker su un server locale a Bolzano o nel cloud.</p>
+<p>Il sistema è composto da un'applicazione web (frontend React con design Swiss-Light Industrial) usata ai banchi di imballaggio e da un servizio backend (Node.js + Express 5 + SQLite a 14 tabelle) che gestisce catalogo, slotting 5S, blocco atomico degli ordini multi-banco (Order Locking), coda <code>api_outbox</code>, anomalie Kanban e audit opzionale.</p>
 
-<div class="layer"><b>Utenti e dispositivi</b>
+<div class="layer"><b>Utenti e dispositivi in reparto</b>
   <div class="row">
-    <div class="node">Operatore<br>(badge + scanner)</div>
-    <div class="node">Team Lead<br>(PIN supervisore)</div>
-    <div class="node">Stampante Zebra ZT411<br>(Fase 2)</div>
+    <div class="node">Operatore Imballaggio<br>(badge / PIN + scanner USB)</div>
+    <div class="node">Team Lead<br>(PIN supervisore &middot; Force Release)</div>
+    <div class="node">Stampante Termica 100&times;150 mm<br>(layout A6 pronto; API DHL in .env)</div>
   </div>
 </div>
-<p class="arrow">▼</p>
-<div class="layer"><b>Frontend – React + Vite + TypeScript (ospitato su Vercel)</b>
+<div class="arrow">&darr;</div>
+<div class="layer"><b>Frontend &ndash; React 19 + Vite + TypeScript (Vercel o LAN locale HTTP)</b>
   <div class="row">
-    <div class="node">Vista imballaggio<br>(ordine attivo)</div>
-    <div class="node">Coda ordini<br>e Takt time</div>
-    <div class="node">Guida scaffale<br>Pick-to-Light visuale</div>
-    <div class="node">Dashboard<br>Team Lead</div>
+    <div class="node">Flusso Rapido 1-Scan<br>(bolla &rarr; stampa DHL immediata)</div>
+    <div class="node">Coda Ordini Multi-Banco<br>(badge stato lock per postazione)</div>
+    <div class="node">Guida Scaffale 5 Livelli<br>(tavoli speculari ST-01 / ST-02)</div>
+    <div class="node">Dashboard Team Lead<br>(Control Tower &amp; Force Release)</div>
   </div>
   <div class="row">
-    <div class="node">Stato globale: useWarehouseState</div>
-    <div class="node">Scanner: useBarcodeScanner</div>
-    <div class="node">Audio: useSoundEffects</div>
-  </div>
-</div>
-<p class="arrow">▼ HTTP / JSON (/api/...)</p>
-<div class="layer"><b>Backend – Node.js + Express (Docker)</b>
-  <div class="row">
-    <div class="node">Catalogo<br>prodotti, scatole, volantini</div>
-    <div class="node">Slotting<br>scaffali</div>
-    <div class="node">Audit<br>scansioni</div>
-    <div class="node">Pick-to-Light<br>stato e comandi LED</div>
+    <div class="node">Orchestratore: useWarehouseState</div>
+    <div class="node">Scanner HID: useBarcodeScanner</div>
+    <div class="node">Audio &amp; Printer Services</div>
   </div>
 </div>
-<p class="arrow">▼</p>
-<div class="layer"><b>Dati e hardware</b>
+<div class="arrow">&darr; HTTP / JSON (/api/...)</div>
+<div class="layer"><b>Backend &ndash; Node.js + Express 5 (Docker / LAN Bolzano :3001)</b>
   <div class="row">
-    <div class="node">Database SQLite<br>(volume persistente)</div>
-    <div class="node ph2">Controller LED ESP32<br>(Fase 2)</div>
-    <div class="node ph2">SellyErp – ordini reali<br>(Fase 2)</div>
+    <div class="node">Ordini &amp; Order Locking<br>(lock atomico TTL 15 min)</div>
+    <div class="node">Slotting 5S &amp; Binding<br>(condivisi tra tutti i banchi)</div>
+    <div class="node">Kanban, Indirizzi &amp; Audit<br>(/api/issues &middot; /api/audit)</div>
+    <div class="node">Adapter Corriere, Outbox<br>&amp; Pick-to-Light</div>
   </div>
 </div>
-<p class="legend">Riquadri tratteggiati = componenti previsti nella Fase 2, non ancora collegati. Nell'MVP gli ordini sono simulati.</p>
+<div class="arrow">&darr;</div>
+<div class="layer"><b>Persistenza SQLite e Integrazioni Esterne (.env)</b>
+  <div class="row">
+    <div class="node">Database SQLite (14 tabelle)<br>(volume persistente wms.sqlite)</div>
+    <div class="node ph2">DHL Business API<br>(tracking live via .env)</div>
+    <div class="node ph2">Selly ERP &amp; Amazon SP-API<br>(sync ordini &amp; ritorno api_outbox)</div>
+    <div class="node ph2">Controller LED ESP32<br>(opzionale Fase successiva)</div>
+  </div>
+</div>
+<p class="legend">Riquadri tratteggiati = integrazioni esterne predisposte via <code>.env</code> / adapter e in attesa di credenziali o hardware. Oggi l'importazione reale avviene tramite CSV Selly ERP.</p>
 
-<h2>2. Flusso operativo di un ordine</h2>
+<h2>2. Flusso operativo di un ordine (Flusso Rapido 1-Scan)</h2>
 <ol class="steps">
-<li><b>Accesso:</b> l'operatore scansiona il badge e sblocca la postazione.</li>
-<li><b>Selezione ordine:</b> dalla coda sceglie l'ordine; il sistema mostra articoli, quantità, volantini e tipo di scatola.</li>
-<li><b>Scansione prodotto:</b> lo scanner legge l'EAN, il SKU o un codice alias (cartone master).</li>
-<li><b>Controllo Poka-Yoke:</b>
+<li><b>Accesso operatore:</b> l'operatore scansiona il proprio badge (o inserisce il PIN) sbloccando la postazione. Se l'operatore blocca il terminale a fine turno, l'eventuale ordine aperto viene rilasciato automaticamente.</li>
+<li><b>1-Scan Bolla &amp; Blocco Atomico Multi-Banco:</b> l'operatore scansiona il codice a barre della distinta/bolla A4:
   <ul>
-    <li>Prodotto nell'ordine e quantità corretta → +1 e segnale acustico di successo.</li>
-    <li>Prodotto non nell'ordine → errore rosso, il sistema indica dove riporlo.</li>
-    <li>Quantità già raggiunta → avviso.</li>
-    <li>Codice sconosciuto → errore "Codice sconosciuto".</li>
+    <li>Il backend acquisisce il blocco esclusivo (<code>POST /api/orders/:id/lock</code>) per operatore e banco (TTL 15 minuti).</li>
+    <li>Se un altro banco tenta di aprire o scansionare un duplicato dello stesso ordine, il sistema restituisce <code>409 Conflict</code> e <b>impedisce la stampa di una seconda etichetta DHL</b>.</li>
   </ul></li>
-<li><b>Volantini e gadget:</b> l'operatore conferma l'inserimento dei materiali richiesti.</li>
-<li><b>Completamento:</b> a ordine verificato al 100% si apre la finestra etichetta (ZPL simulato).</li>
-<li><b>Registrazione:</b> ogni scansione viene scritta nel log di audit (operatore, codice, esito, ordine, ora).</li>
-<li><b>Avanzamento:</b> il sistema passa all'ordine successivo e aggiorna i KPI.</li>
+<li><b>Stampa Immediata Etichetta DHL:</b> all'apertura della bolla (modalità predefinita <code>on_scan</code>, oppure <code>on_finish</code> su scelta dell'operatore) viene lanciata subito la stampa termica A6 <code>100&times;150 mm</code>. Oltre 10 unità o tramite comando scanner <code>+COLLO</code> genera automaticamente etichette multi-collo sequenziali.</li>
+<li><b>Prelievo Rapido con Guida Visuale (Zero Rallentamenti):</b>
+  <ul>
+    <li><b>Nessuna scansione obbligatoria dei singoli flaconi:</b> lo schermo mostra foto prodotto, coordinata sullo scaffale speculare a 5 piani (<code>Sinistra / Destra / Tavolo</code>), tipo di scatola (<b>NORSAN vs Neutra Amazon</b>) e promemoria volantini/omaggi/B2B.</li>
+    <li>La scansione del singolo EAN resta disponibile come controllo opzionale non bloccante (utile su nuovi lotti, registrazione barcode in 1 clic su <code>/api/barcode-bindings</code> o audit statistico).</li>
+  </ul></li>
+<li><b>Chiusura &amp; Accodamento <code>api_outbox</code>:</b> alla scansione della bolla successiva oppure premendo <b>Completa &amp; Prossimo</b>, il backend imposta l'ordine come <code>packed</code>, rilascia il lock, aggiorna i KPI turno e accoda l'ordine in <code>api_outbox</code> (<code>pending_api</code>) per il ritorno tracking verso Selly/Amazon.</li>
 </ol>
 
-<h2>3. Flusso del Team Lead (Slotting 5S)</h2>
+<h2>3. Flusso del Team Lead (Control Tower &amp; Slotting 5S)</h2>
 <ol class="steps">
-<li>Accesso con PIN supervisore.</li>
-<li>Apertura di "Gestione Scaffali &amp; Slotting".</li>
-<li>Aggiunta, assegnazione o rimozione di una posizione (lato S/D, piano 1–3).</li>
-<li>Il backend salva la modifica; gli ordini attivi ricevono le nuove coordinate di prelievo.</li>
-<li>Se il backend non è raggiungibile, la modifica viene salvata nel browser (modalità locale dell'MVP).</li>
+<li>Accesso protetto tramite ruolo Team Lead o PIN supervisore a 4 cifre.</li>
+<li><b>Controllo Multi-Banco &amp; Force Release:</b> nella tab <i>Postazioni</i> monitora tutti gli ordini bloccati sui banchi e può liberare qualsiasi ordine in 1 clic (<code>Force Release</code>) o gestire la coda <i>Anomalie &amp; Kanban</i> persistita su SQLite.</li>
+<li><b>Gestione Code &amp; Indirizzi IT:</b> stampa singola o batch di distinte A4 con Code 128-B per <i>Selly Web-Shop</i> e <i>Amazon FBM</i>, e correzione assistita degli indirizzi italiani incompleti salvata su DB.</li>
+<li><b>Slotting 5S (5 livelli E&ndash;A):</b> aggiunta, assegnazione o rimozione posizioni e aggiornamento immagini SKU sincronizzati con tutti i banchi.</li>
+<li><b>Control Tower Roadmap:</b> <i>Order Locking</i> già contrassegnato come <code>Attivo nel Nucleo</code>, affiancato dalle anteprime dei moduli avanzati pianificabili (Cutoff DHL, Audit Heatmap, Borderò EOD, Resi RMA, FEFO HACCP).</li>
 </ol>
 
-<h2>4. Flusso previsto: ordini da SellyErp (Fase 2)</h2>
+<h2>4. Stato Integrazioni Esterne (Plug-and-Play via .env)</h2>
 <ol class="steps">
-<li>L'ordine viene registrato in SellyErp.</li>
-<li>Il backend lo acquisisce automaticamente (webhook oppure polling ogni 1–2 minuti).</li>
-<li>Controllo duplicati e filtro dei SKU di servizio.</li>
-<li>L'ordine è salvato nel database con stato "in coda" e compare subito sulla postazione.</li>
-<li>L'imballatore lavora dallo schermo, senza bolle cartacee. Si stampa solo su richiesta: etichetta corriere al momento dell'imballaggio, altri documenti per singolo ordine.</li>
-<li>A fine imballaggio lo stato (ed eventualmente il tracking) torna a SellyErp.</li>
+<li>Gli ordini entrano oggi via <b>Upload CSV Selly ERP</b> (Zero-API con filtro righe servizio e parser indirizzi IT); il daemon REST (<code>sellySyncService.ts</code>) è pronto ad attivarsi inserendo <code>SELLY_API_KEY</code>.</li>
+<li>L'adapter corriere (<code>server/services/carrierService.ts</code>) usa oggi tracking simulati <code>JJD...</code> (<code>CARRIER_MODE=mock</code>); inserendo <code>DHL_API_KEY</code> e <code>DHL_ACCOUNT_NUMBER</code> si attiva l'invio reale senza modificare l'interfaccia banco.</li>
+<li>Ogni ordine completato scrive in <code>api_outbox</code> su SQLite in attesa del worker di invio tracking verso Selly ERP e Amazon SP-API.</li>
 </ol>
-<div class="note">Non ancora implementato: nell'MVP gli ordini sono simulati. Modalità, tempi e documento di spedizione saranno confermati dopo la verifica delle API SellyErp.</div>
+<div class="note"><b>Istruzioni dettagliate backend e deploy:</b> vedere <code>docs/BACKEND_DEPLOY_GUIDE.md</code> e il template <code>.env.example</code>.</div>
 
-<h2>5. Interfacce API del backend</h2>
+<h2>5. Interfacce API del backend (Principali)</h2>
 <table>
-<tr><th style="width:12%">Metodo</th><th style="width:30%">Percorso</th><th>Funzione</th></tr>
-<tr><td>GET</td><td>/api/products</td><td>Catalogo prodotti Norsan e ZREEN</td></tr>
-<tr><td>GET</td><td>/api/boxes · /api/flyers</td><td>Scatole e volantini</td></tr>
-<tr><td>GET</td><td>/api/slots</td><td>Elenco posizioni scaffale</td></tr>
-<tr><td>POST</td><td>/api/slotting/assign</td><td>Assegna un prodotto a una posizione</td></tr>
-<tr><td>POST</td><td>/api/slots/add</td><td>Crea una nuova posizione</td></tr>
-<tr><td>DELETE</td><td>/api/slots/:slotCode</td><td>Elimina una posizione</td></tr>
-<tr><td>POST</td><td>/api/audit/scan</td><td>Registra una scansione</td></tr>
-<tr><td>GET</td><td>/api/p2l/status</td><td>Stato del controller Pick-to-Light</td></tr>
-<tr><td>POST</td><td>/api/p2l/light · scanned · error · clear</td><td>Comandi LED (verde, conferma, rosso, spegni)</td></tr>
+<tr><th style="width:18%">Metodo</th><th style="width:32%">Percorso</th><th>Funzione</th></tr>
+<tr><td>GET</td><td>/api/products &middot; /api/boxes &middot; /api/flyers</td><td>Catalogo prodotti Norsan/ZREEN, formati scatole e volantini</td></tr>
+<tr><td>GET / POST / DEL</td><td>/api/slots &middot; /api/slotting/assign &middot; /api/slots/add</td><td>Topologia 5 livelli e assegnazione dinamica Slotting 5S</td></tr>
+<tr><td>GET / POST / PUT</td><td>/api/operators &middot; /api/operators/verify</td><td>Anagrafica staff e verifica login tramite badge o PIN</td></tr>
+<tr><td>GET / POST / DEL</td><td>/api/orders &middot; /api/orders/bulk &middot; /api/orders/clear-packed</td><td>Coda ordini condivisa, importazione massiva CSV/ERP e pulizia</td></tr>
+<tr><td>POST</td><td>/api/orders/:id/lock &middot; /api/orders/:id/unlock</td><td>Blocco atomico multi-banco (<code>409 Conflict</code>) e Force Release Team Lead</td></tr>
+<tr><td>PATCH</td><td>/api/orders/:id/status &middot; /checklist &middot; /address</td><td>Chiusura ordine (+ <code>api_outbox</code>), salvataggio allegati e indirizzi IT</td></tr>
+<tr><td>GET / POST / PATCH</td><td>/api/issues &middot; /api/issues/:id/resolve</td><td>Segnalazioni Kanban dai banchi persistite su SQLite</td></tr>
+<tr><td>GET / POST</td><td>/api/barcode-bindings</td><td>Associazioni barcode personalizzate condivise tra tutte le postazioni</td></tr>
+<tr><td>GET / POST</td><td>/api/audit/scan &middot; /api/audit/summary</td><td>Log scansioni opzionale e riepilogo aggregato errori</td></tr>
+<tr><td>GET / POST</td><td>/api/integrations/status &middot; /api/selly/* &middot; /api/p2l/*</td><td>Prontezza credenziali <code>.env</code>, coda outbox, sync Selly e comandi ESP32</td></tr>
 </table>
 
 <h2>6. Mappa dei file principali</h2>
 <table>
-<tr><th style="width:30%">Percorso</th><th>Ruolo</th></tr>
-<tr><td>src/App.tsx</td><td>Orchestratore dell'interfaccia</td></tr>
-<tr><td>src/hooks/useWarehouseState.ts</td><td>Logica di business e stato globale (scansioni, ordini, KPI)</td></tr>
-<tr><td>src/hooks/useBarcodeScanner.ts</td><td>Lettura dello scanner in modalità tastiera</td></tr>
-<tr><td>src/components/packing, queue, rack, supervisor</td><td>Schermate operative e dashboard</td></tr>
-<tr><td>src/services/api.ts</td><td>Chiamate al backend con fallback locale</td></tr>
-<tr><td>src/data/</td><td>Catalogo prodotti, ordini e operatori di esempio</td></tr>
-<tr><td>server/index.ts · server/db.ts</td><td>API REST e database SQLite</td></tr>
-<tr><td>server/tests/api.test.ts</td><td>Test automatici del backend</td></tr>
-<tr><td>Dockerfile · docker-compose.yml</td><td>Distribuzione del backend</td></tr>
+<tr><th style="width:34%">Percorso</th><th>Ruolo</th></tr>
+<tr><td>src/App.tsx &middot; src/config/wmsPhaseConfig.ts</td><td>Orchestratore interfaccia e feature flag Fase 1 vs Fasi 2&ndash;4 congelate</td></tr>
+<tr><td>src/hooks/useWarehouseState.ts</td><td>Flusso 1-Scan, Order Locking, sync 5s con guardia mutazioni e API client</td></tr>
+<tr><td>src/hooks/useBarcodeScanner.ts</td><td>Intercettazione globale scanner HID USB/Bluetooth e comandi tavolo</td></tr>
+<tr><td>src/components/packing, queue, rack, supervisor</td><td>Schermate Swiss-Light Industrial e Control Tower Team Lead</td></tr>
+<tr><td>src/services/api.ts &middot; dhlLabelPrinter.ts</td><td>Client REST con fallback <code>localStorage</code> e stampa termica A6 / distinte A4</td></tr>
+<tr><td>server/index.ts &middot; server/db.ts</td><td>Server Express 5 REST API e schema SQLite a 14 tabelle</td></tr>
+<tr><td>server/services/carrierService.ts</td><td>Adapter Corriere plug-and-play (Mock / DHL API) e readiness integrazioni</td></tr>
+<tr><td>server/tests/*.test.ts</td><td>6 suite attive (29 test) incl. <code>productionReadiness.test.ts</code></td></tr>
+<tr><td>Dockerfile &middot; docker-compose.yml &middot; docs/BACKEND_DEPLOY_GUIDE.md</td><td>Containerizzazione persistente e guida completa al deploy</td></tr>
 </table>
 
 <h2>7. Distribuzione</h2>
 <table>
-<tr><th>Componente</th><th>Dove</th><th>Note</th></tr>
-<tr><td>Frontend</td><td>Vercel (da branch main)</td><td>Pubblicazione automatica ad ogni push</td></tr>
-<tr><td>Backend + SQLite</td><td>Docker su server locale a Bolzano o PaaS con disco persistente</td><td>Vercel non è adatto a SQLite (ambiente serverless senza disco permanente)</td></tr>
-<tr><td>Collegamento</td><td>Variabile VITE_API_BASE sul frontend</td><td>Es. https://server-bolzano/api</td></tr>
+<tr><th style="width:20%">Componente</th><th style="width:34%">Dove</th><th>Note operative</th></tr>
+<tr><td>Frontend</td><td>Vercel (branch <code>main</code>) oppure Nginx/LAN</td><td>Se il backend gira in LAN su <code>http://</code>, servire anche il frontend in LAN <code>http://</code> per evitare blocchi <i>Mixed Content</i> del browser.</td></tr>
+<tr><td>Backend + SQLite</td><td>Docker su server locale Bolzano o VPS con disco persistente</td><td>Montare volume su <code>/app/server/data</code> per conservare <code>wms.sqlite</code>. Serverless stateless non adatto a SQLite.</td></tr>
+<tr><td>Collegamento</td><td>Variabile <code>VITE_API_BASE</code></td><td>Es. <code>https://api-wms.tuodominio.it/api</code> oppure <code>http://192.168.x.x:3001/api</code>.</td></tr>
 </table>
 
 <h2>8. Qualità e test</h2>
-<p>Il backend ha 8 test di integrazione automatici (Vitest + Supertest, database in memoria) che coprono catalogo, slotting (aggiunta, assegnazione, eliminazione), registro audit e Pick-to-Light. Comando: <code>npm run test:backend</code>.</p>
-<div class="note"><b>Limiti attuali:</b> ordini simulati, nessuna integrazione SellyErp, LED e stampante non collegati, test di carico con due postazioni ancora da eseguire. Questi punti sono pianificati nella Fase 2.</div>
+<p>Il backend dispone di <b>6 suite automatiche attive (29 test superati)</b> con Vitest + Supertest su SQLite in memoria (<code>api.test.ts</code>, <code>hardening.test.ts</code>, <code>p2l.test.ts</code>, <code>sellyCsvImporter.test.ts</code>, <code>catalogIntegrity.test.ts</code> e <code>productionReadiness.test.ts</code>) che verificano catalogo, slotting persistente, lock atomico 409, Force Release, checklist, indirizzi, Kanban, binding condivisi, outbox e sicurezza JSON. I moduli FEFO/inventario congelati restano isolati da feature flag.</p>
 
 </body>
 </html>
