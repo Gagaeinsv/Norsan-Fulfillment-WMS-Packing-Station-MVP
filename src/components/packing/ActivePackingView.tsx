@@ -18,6 +18,15 @@ import {
   Repeat,
   Package,
   CheckCircle2,
+  Circle,
+  Bookmark,
+  Flame,
+  Truck,
+  ArrowRight,
+  Link2,
+  AlertTriangle,
+  PackageSearch,
+  Plus,
 } from "lucide-react";
 import { Order, BoxType, ScanEvent, Product } from "../../types/wms";
 import { BOX_TYPES } from "../../data/norsanProducts";
@@ -81,22 +90,22 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
 
   if (!order) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-white border-2 border-slate-300 rounded-2xl p-8 text-center shadow-xs">
-        <div className="p-4 bg-cyan-50 text-cyan-700 rounded-3xl border border-cyan-200 mb-4 shadow-xs">
-          <Package className="w-12 h-12 text-cyan-600" />
+      <div className="flex flex-col items-center justify-center h-full bg-white border border-slate-200/90 rounded-2xl p-8 text-center shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <div className="w-16 h-16 bg-norsan-50 text-norsan-700 rounded-2xl border border-norsan-100 mb-4 flex items-center justify-center">
+          <Package className="w-8 h-8" />
         </div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold font-mono mb-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-          <span>Postazione Operativa Pronta • Lettore Barcode Attivo</span>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold mb-3">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>Postazione Pronta · Lettore Barcode Attivo</span>
         </div>
-        <h3 className="text-xl font-black text-slate-900 tracking-tight">
+        <h3 className="text-xl font-bold text-slate-900 tracking-tight">
           Nessun Ordine Attivo sul Banco
         </h3>
         <p className="text-xs text-slate-500 mt-1.5 max-w-md leading-relaxed">
           Scansiona il foglio d'ordine Selly (
-          <strong className="font-mono text-cyan-800">ORDVE...</strong> o{" "}
-          <strong className="font-mono text-cyan-800">INT...</strong>) con la
-          pistola ottica oppure carica una nuova distinta ordini da Selly ERP.
+          <strong className="font-mono text-norsan-700">ORDVE...</strong> o{" "}
+          <strong className="font-mono text-norsan-700">INT...</strong>) con la
+          pistola ottica oppure importa una nuova distinta ordini da Selly ERP.
         </p>
       </div>
     );
@@ -146,198 +155,231 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full gap-2 select-none min-h-0">
-      {/* ── Order Header ──────────────────────────────────────────────────── */}
-      <div className="bg-white border border-slate-300 rounded-xl p-3 shadow-xs flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-4 flex-wrap min-w-0">
-          <div className="flex items-center gap-2 shrink-0">
-            <FileText className="w-6 h-6 text-slate-500" />
-            <span className="font-black text-slate-900 font-mono text-3xl">
-              {order.orderNumber}
+    <div className="flex flex-col h-full gap-2.5 select-none min-h-0">
+      {/* ── Order Header (2 Clean Rows) ──────────────────────────────────── */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] shrink-0">
+        {/* Row 1: Identity & Live Progress */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 flex-wrap min-w-0">
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+                <FileText className="w-4.5 h-4.5" />
+              </div>
+              <span className="font-bold text-slate-900 font-mono text-2xl tracking-tight">
+                {order.orderNumber}
+              </span>
+            </div>
+
+            <div className="h-5 w-px bg-slate-200 hidden sm:block" />
+
+            <div className="flex items-center gap-1.5 text-slate-700 min-w-0">
+              <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="font-semibold text-base text-slate-900 truncate">
+                {order.customerName}
+              </span>
+              <span className="text-slate-300 shrink-0">·</span>
+              <span className="text-sm text-slate-500 truncate">
+                {order.customerCity}
+              </span>
+            </div>
+
+            <span
+              className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg border shrink-0 ${
+                order.priority === "urgent"
+                  ? "bg-rose-50 text-rose-700 border-rose-200"
+                  : "bg-slate-50 text-slate-700 border-slate-200"
+              }`}
+            >
+              {order.priority === "urgent" ? (
+                <>
+                  <Flame className="w-3.5 h-3.5 text-rose-600" />
+                  <span>URGENTE</span>
+                </>
+              ) : (
+                <>
+                  <Truck className="w-3.5 h-3.5 text-slate-400" />
+                  <span>{order.courier}</span>
+                </>
+              )}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-slate-600 min-w-0">
-            <MapPin className="w-5 h-5 shrink-0" />
-            <span className="font-bold text-xl truncate">{order.customerName}</span>
-            <span className="text-slate-400 shrink-0">·</span>
-            <span className="text-base truncate">{order.customerCity}</span>
+
+          <div className="flex items-center gap-2.5 flex-wrap justify-end">
+            {/* Takt timer */}
+            <div
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold border tabular-nums ${
+                isOverTaktTime
+                  ? "bg-rose-50 text-rose-700 border-rose-200 animate-pulse"
+                  : isNearTaktTime
+                    ? "bg-amber-50 text-amber-800 border-amber-200"
+                    : "bg-slate-50 text-slate-600 border-slate-200"
+              }`}
+            >
+              <Repeat className="w-3.5 h-3.5" />
+              <span className="font-mono">
+                {elapsedSeconds}s / {targetTaktSeconds}s
+              </span>
+              <span className="text-[11px] font-medium opacity-80">
+                {isOverTaktTime
+                  ? `+${elapsedSeconds - targetTaktSeconds}s`
+                  : "Ritmo"}
+              </span>
+            </div>
+
+            {/* Weight */}
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl tabular-nums">
+              <Scale className="w-3.5 h-3.5 text-slate-400" />
+              <span className="font-mono">
+                {(totalGrossWeight / 1000).toFixed(2)} kg
+              </span>
+            </div>
+
+            {/* Progress */}
+            <div className="flex items-center gap-2 pl-1">
+              <div className="w-24 bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/60">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    isProductsFullyScanned ? "bg-emerald-500" : "bg-norsan-600"
+                  }`}
+                  style={{ width: `${overallProgress}%` }}
+                />
+              </div>
+              <span className="text-xs font-mono font-bold text-slate-700 tabular-nums w-9 text-right">
+                {overallProgress}%
+              </span>
+            </div>
           </div>
-          <span
-            className={`text-sm font-bold px-3 py-1.5 rounded-lg border shrink-0 ${
-              order.priority === "urgent"
-                ? "bg-red-100 text-red-800 border-red-300 animate-pulse"
-                : "bg-slate-100 text-slate-700 border-slate-300"
-            }`}
-          >
-            {order.priority === "urgent" ? "🔥 URGENTE" : order.courier}
-          </span>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-          {/* Takt timer */}
-          <div
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border ${
-              isOverTaktTime
-                ? "bg-red-100 text-red-800 border-red-300 animate-pulse"
-                : isNearTaktTime
-                  ? "bg-amber-100 text-amber-800 border-amber-300"
-                  : "bg-slate-100 text-slate-700 border-slate-300"
-            }`}
-          >
-            <Repeat className="w-3.5 h-3.5" />
-            <span>
-              {elapsedSeconds}s / {targetTaktSeconds}s{" "}
-              {isOverTaktTime
-                ? "RITMO +" + (elapsedSeconds - targetTaktSeconds) + "S"
-                : "IN RITMO LEAN"}
-            </span>
-          </div>
-
-          {/* Box type selector */}
-          <select
-            value={order.boxRecommendation}
-            onChange={(e) =>
-              onChangeBoxType(
-                (BOX_TYPES.find((b) => b.id === e.target.value) || BOX_TYPES[1])
-                  .id,
-              )
-            }
-            className="text-xs font-bold border-2 border-slate-300 rounded-xl px-2 py-1.5 bg-white text-slate-700 cursor-pointer hover:border-slate-400 transition"
-          >
-            {BOX_TYPES.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.branding === "norsan_logo"
-                  ? "🐟"
-                  : b.branding === "zreen_logo"
-                    ? "🌿"
-                    : "📦"}{" "}
-                {b.name}
-              </option>
-            ))}
-          </select>
-
-          {/* Multi-Collo Box Counter */}
-          <div className="flex items-center gap-1 bg-white border-2 border-slate-300 rounded-xl px-2 py-1 shadow-2xs">
-            <Package className="w-3.5 h-3.5 text-blue-700" />
-            <span className="text-[11px] font-bold text-slate-600">Scatole:</span>
-            <button
-              type="button"
-              onClick={() =>
-                onUpdatePackageCount?.(
-                  order.id,
-                  Math.max(1, (order.packageCount || 1) - 1),
+        {/* Row 2: Packaging & Print Controls */}
+        <div className="border-t border-slate-100 pt-2.5 mt-2.5 flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Box type selector */}
+            <select
+              value={order.boxRecommendation}
+              onChange={(e) =>
+                onChangeBoxType(
+                  (
+                    BOX_TYPES.find((b) => b.id === e.target.value) ||
+                    BOX_TYPES[1]
+                  ).id,
                 )
               }
-              disabled={(order.packageCount || 1) <= 1}
-              className="w-5 h-5 flex items-center justify-center font-black text-xs text-slate-700 hover:bg-slate-100 rounded disabled:opacity-30 cursor-pointer"
-              title="Riduci numero scatole/colli"
+              className="text-xs font-semibold border border-slate-200 rounded-xl px-2.5 py-1.5 bg-slate-50 text-slate-700 cursor-pointer hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-norsan-500 transition"
             >
-              -
-            </button>
-            <span className="font-mono font-black text-xs px-1 text-blue-900">
-              {order.packageCount || 1}{" "}
-              {(order.packageCount || 1) === 1 ? "collo" : "colli"}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                const nextCount = (order.packageCount || 1) + 1;
-                onUpdatePackageCount?.(order.id, nextCount);
-                if (dhlPrintTiming === "on_scan") {
-                  printDhlThermalLabel(order, nextCount, nextCount - 1);
-                }
-              }}
-              className="w-5 h-5 flex items-center justify-center font-black text-xs text-blue-700 hover:bg-blue-100 rounded cursor-pointer"
-              title="Aggiungi scatola (stampa solo l'etichetta del nuovo collo)"
-            >
-              +
-            </button>
-          </div>
+              {BOX_TYPES.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
 
-          {/* DHL Print Timing Mode Switcher */}
-          {onToggleDhlPrintTiming && (
-            <button
-              type="button"
-              onClick={onToggleDhlPrintTiming}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition active:scale-95 cursor-pointer shadow-2xs ${
-                dhlPrintTiming === "on_scan"
-                  ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
-                  : "bg-blue-50 text-blue-800 border-blue-300 hover:bg-blue-100"
-              }`}
-              title="Cambia momento stampa: All'Avvio (subito allo scan bolla) oppure A Chiusura (a scatole pronte)"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>
-                {dhlPrintTiming === "on_scan"
-                  ? "DHL: All'Avvio"
-                  : "DHL: A Chiusura"}
+            {/* Multi-Collo Box Counter */}
+            <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2 py-1">
+              <Package className="w-3.5 h-3.5 text-norsan-600" />
+              <span className="text-[11px] font-medium text-slate-500 mr-0.5">
+                Colli:
               </span>
-            </button>
-          )}
-
-          {/* Quick Print Paper Slip button */}
-          <button
-            type="button"
-            onClick={() => printOrderPackingSlip(order)}
-            className="flex items-center gap-1 text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 px-2.5 py-1.5 rounded-xl transition active:scale-95 shadow-2xs cursor-pointer"
-            title="Ristampa foglio distinta con Barcode per questo ordine"
-          >
-            <Printer className="w-3.5 h-3.5 text-slate-600" />
-            <span>Foglio Prelievo</span>
-          </button>
-
-          {/* Weight */}
-          <div className="flex items-center gap-1 text-xs font-bold text-slate-600 bg-slate-100 border border-slate-300 px-2.5 py-1.5 rounded-xl">
-            <Scale className="w-3.5 h-3.5" />
-            <span>{(totalGrossWeight / 1000).toFixed(2)} kg</span>
+              <button
+                type="button"
+                onClick={() =>
+                  onUpdatePackageCount?.(
+                    order.id,
+                    Math.max(1, (order.packageCount || 1) - 1),
+                  )
+                }
+                disabled={(order.packageCount || 1) <= 1}
+                className="w-5 h-5 flex items-center justify-center font-bold text-xs text-slate-700 hover:bg-white rounded-md disabled:opacity-30 cursor-pointer transition"
+                title="Riduci numero scatole/colli"
+              >
+                -
+              </button>
+              <span className="font-mono font-bold text-xs px-1.5 text-slate-900 tabular-nums">
+                {order.packageCount || 1}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const nextCount = (order.packageCount || 1) + 1;
+                  onUpdatePackageCount?.(order.id, nextCount);
+                  if (dhlPrintTiming === "on_scan") {
+                    printDhlThermalLabel(order, nextCount, nextCount - 1);
+                  }
+                }}
+                className="w-5 h-5 flex items-center justify-center font-bold text-xs text-norsan-700 hover:bg-white rounded-md cursor-pointer transition"
+                title="Aggiungi scatola (stampa solo l'etichetta del nuovo collo)"
+              >
+                +
+              </button>
+            </div>
           </div>
 
-          {/* Progress */}
-          <div className="flex items-center gap-1.5">
-            <div className="text-xs font-black text-slate-700">
-              {overallProgress}%
-            </div>
-            <div className="w-20 bg-slate-200 rounded-full h-2 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${isProductsFullyScanned ? "bg-emerald-600" : "bg-amber-500"}`}
-                style={{ width: `${overallProgress}%` }}
-              />
-            </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* DHL Print Timing Mode Switcher */}
+            {onToggleDhlPrintTiming && (
+              <button
+                type="button"
+                onClick={onToggleDhlPrintTiming}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition active:scale-95 cursor-pointer ${
+                  dhlPrintTiming === "on_scan"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100/70"
+                    : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                }`}
+                title="Cambia momento stampa: All'Avvio (subito allo scan bolla) oppure A Chiusura (a scatole pronte)"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>
+                  {dhlPrintTiming === "on_scan"
+                    ? "DHL: All'Avvio"
+                    : "DHL: A Chiusura"}
+                </span>
+              </button>
+            )}
+
+            {/* Quick Print Paper Slip button */}
+            <button
+              type="button"
+              onClick={() => printOrderPackingSlip(order)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-2.5 py-1.5 rounded-xl transition active:scale-95 cursor-pointer"
+              title="Ristampa foglio distinta con Barcode per questo ordine"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-500" />
+              <span>Foglio Prelievo</span>
+            </button>
           </div>
         </div>
       </div>
 
       {/* ── Flyer checklist ───────────────────────────────────────────────── */}
       {order.marketingFlyers.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 flex items-center gap-2 flex-wrap shadow-xs shrink-0">
-          <BookmarkIcon className="w-4 h-4 text-slate-400 flex-shrink-0" />
-          <span className="text-xs font-black text-slate-500 uppercase tracking-wide mr-1">
-            Volantini:
+        <div className="bg-white border border-slate-200/90 rounded-xl px-3.5 py-2 flex items-center gap-2 flex-wrap shadow-[0_1px_2px_rgba(15,23,42,0.03)] shrink-0">
+          <Bookmark className="w-4 h-4 text-slate-400 shrink-0" />
+          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mr-1">
+            Volantini
           </span>
           {order.marketingFlyers.map((flyer) => (
             <button
               key={flyer.id}
+              type="button"
               onClick={() => onToggleFlyer?.(flyer.id)}
-              className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border font-bold transition active:scale-95 ${
+              className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border font-semibold transition active:scale-95 cursor-pointer ${
                 flyer.isIncluded
-                  ? "bg-emerald-100 text-emerald-800 border-emerald-400"
-                  : "bg-rose-50 text-rose-800 border-rose-300 animate-pulse"
+                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                  : "bg-rose-50 text-rose-800 border-rose-200 hover:border-rose-300"
               }`}
             >
               <span
-                className={`font-mono text-[10px] px-1.5 py-0.5 rounded font-black ${flyer.isIncluded ? "bg-emerald-200/90" : "bg-rose-200/90"}`}
+                className={`font-mono text-[10px] px-1.5 py-0.2 rounded font-bold ${
+                  flyer.isIncluded ? "bg-emerald-200/70" : "bg-rose-200/70"
+                }`}
               >
-                [{flyer.shelfLocation}]
+                {flyer.shelfLocation}
               </span>
-              <span className="truncate max-w-[140px] font-semibold">
-                {flyer.title}
-              </span>
+              <span className="truncate max-w-[160px]">{flyer.title}</span>
               {flyer.isIncluded ? (
-                <span className="text-emerald-600 font-black">✓</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               ) : (
-                <span className="text-rose-600 font-black text-lg leading-none">
-                  *
-                </span>
+                <Circle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
               )}
             </button>
           ))}
@@ -358,21 +400,31 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
         (lastScan.resultType === "wrong_product" ||
           lastScan.resultType === "unknown_code") && (
           <div
-            className={`p-3 rounded-xl border-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-md shrink-0 transition-all ${
+            className={`px-3.5 py-2.5 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shrink-0 transition-all ${
               lastScan.otherOrderCandidate
-                ? "bg-amber-50 border-amber-400 text-amber-950 animate-pulse"
-                : "bg-rose-50 border-rose-400 text-rose-950"
+                ? "bg-amber-50 border-amber-300 text-amber-950"
+                : "bg-rose-50 border-rose-300 text-rose-950"
             }`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="p-2 rounded-lg bg-black/10 text-xl flex-shrink-0">
-                {lastScan.otherOrderCandidate ? "📦" : "⚠️"}
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                  lastScan.otherOrderCandidate
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-rose-100 text-rose-700"
+                }`}
+              >
+                {lastScan.otherOrderCandidate ? (
+                  <PackageSearch className="w-4.5 h-4.5" />
+                ) : (
+                  <AlertTriangle className="w-4.5 h-4.5" />
+                )}
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-black uppercase tracking-wider">
+                <div className="text-[11px] font-bold uppercase tracking-wider">
                   {lastScan.title}
                 </div>
-                <div className="text-sm font-semibold truncate">
+                <div className="text-xs font-medium truncate">
                   {lastScan.message}
                 </div>
               </div>
@@ -381,36 +433,42 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
             <div className="flex items-center gap-2 flex-wrap shrink-0">
               {lastScan.otherOrderCandidate && onQuickSwitchOrder && (
                 <button
+                  type="button"
                   onClick={() =>
                     onQuickSwitchOrder(
                       lastScan.otherOrderCandidate!.orderId,
-                      lastScan.rawCode
+                      lastScan.rawCode,
                     )
                   }
-                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1.5 rounded-lg font-black text-xs transition active:scale-95 shadow-md flex items-center gap-1 cursor-pointer"
+                  className="bg-amber-400 hover:bg-amber-300 text-slate-950 px-3 py-1.5 rounded-lg font-bold text-xs transition active:scale-95 flex items-center gap-1 cursor-pointer"
                 >
                   <span>
-                    👉 Passa all'ordine {lastScan.otherOrderCandidate.orderNumber}
+                    Passa a {lastScan.otherOrderCandidate.orderNumber}
                   </span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               )}
 
               {lastScan.matchedProduct && onForceAddProduct && (
                 <button
+                  type="button"
                   onClick={() => onForceAddProduct(lastScan.matchedProduct!)}
-                  className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg font-bold text-xs transition active:scale-95 shadow-sm cursor-pointer"
+                  className="bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded-lg font-semibold text-xs transition active:scale-95 cursor-pointer flex items-center gap-1"
                   title="Aggiungi comunque a questo ordine per testare il flusso"
                 >
-                  + Aggiungi a questo ordine (Test MVP)
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Aggiungi (Test MVP)</span>
                 </button>
               )}
 
               {lastScan.resultType === "unknown_code" && onOpenBindModal && (
                 <button
+                  type="button"
                   onClick={() => onOpenBindModal(lastScan.rawCode)}
-                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1.5 rounded-lg font-black text-xs transition active:scale-95 shadow-md flex items-center gap-1 cursor-pointer"
+                  className="bg-amber-400 hover:bg-amber-300 text-slate-950 px-3 py-1.5 rounded-lg font-bold text-xs transition active:scale-95 flex items-center gap-1 cursor-pointer"
                 >
-                  <span>🔗 Associa codice [{lastScan.rawCode}]</span>
+                  <Link2 className="w-3.5 h-3.5" />
+                  <span className="font-mono">Associa {lastScan.rawCode}</span>
                 </button>
               )}
             </div>
@@ -419,7 +477,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
 
       {/* ── Item cards grid ──────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto min-h-0 pr-1">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
           {order.items.map((item, index) => (
             <PackingItemCard
               key={item.product.id}
@@ -436,40 +494,41 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
       </div>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <div className="bg-white border-t border-slate-300 rounded-xl p-2 shadow-sm flex flex-col xl:flex-row items-center justify-between gap-2 shrink-0 mt-auto">
-        <div className="flex items-center gap-3">
+      <div className="bg-white border border-slate-200/90 rounded-2xl px-4 py-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex flex-col xl:flex-row items-center justify-between gap-3 shrink-0 mt-auto">
+        <div className="flex items-center gap-3 min-w-0">
           <div
-            className={`p-1.5 rounded-lg border flex items-center justify-center ${
+            className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${
               isOrderFullyReady
-                ? "bg-emerald-100 border-emerald-300 text-emerald-700"
-                : "bg-slate-100 border-slate-300 text-slate-600"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-600"
+                : "bg-slate-50 border-slate-200 text-slate-500"
             }`}
           >
-            <ShieldCheck className="w-7 h-7" />
+            <ShieldCheck className="w-5 h-5" />
           </div>
-          <div>
-            <div className="text-xs uppercase font-bold text-slate-500 flex items-center gap-2">
-              <span>Stato Imballaggio Ordine</span>
-              <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.5 rounded text-[10px] font-black font-mono">
-                100% POKA-YOKE
+          <div className="min-w-0">
+            <div className="text-[11px] font-semibold text-slate-500 flex items-center gap-2">
+              <span>Stato Imballaggio</span>
+              <span className="bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.2 rounded text-[10px] font-mono font-semibold">
+                Poka-Yoke
               </span>
             </div>
-            <div className="text-base font-black text-slate-900">
+            <div className="text-sm font-bold text-slate-900">
               {isOrderFullyReady ? (
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-emerald-700">
-                    Tutti i {totalItemsRequired} prodotti scansionati! Pronto
-                    per la spedizione.
+                    Tutti i {totalItemsRequired} prodotti scansionati · Pronto per la spedizione
                   </span>
                   {requiredFlyer && (
-                    <span className="text-xs font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                      💡 Ricorda: {requiredFlyer.title} [
-                      {requiredFlyer.shelfLocation}]
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200">
+                      <Bookmark className="w-3 h-3 text-slate-400" />
+                      <span>
+                        {requiredFlyer.title} [{requiredFlyer.shelfLocation}]
+                      </span>
                     </span>
                   )}
                 </div>
               ) : (
-                <span className="text-amber-800">
+                <span className="text-amber-700 tabular-nums">
                   Mancano {totalItemsRequired - totalItemsScanned} prodotti da
                   scansionare
                 </span>
@@ -478,12 +537,13 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+        <div className="flex items-center gap-2.5 w-full md:w-auto justify-end shrink-0">
           <button
+            type="button"
             onClick={onOpenIssueModal}
-            className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-rose-50 active:scale-95 text-rose-700 hover:text-rose-900 text-xs font-bold border border-slate-300 hover:border-rose-300 transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+            className="px-3 py-2 rounded-xl bg-white hover:bg-rose-50 active:scale-95 text-rose-700 text-xs font-semibold border border-slate-200 hover:border-rose-200 transition flex items-center gap-1.5 cursor-pointer"
           >
-            <AlertOctagon className="w-4 h-4" />
+            <AlertOctagon className="w-3.5 h-3.5" />
             <span>Segnala Anomalia</span>
           </button>
 
@@ -491,22 +551,28 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
           <button
             type="button"
             onClick={() => printDhlThermalLabel(order, order.packageCount || 1)}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white font-bold text-xs border border-slate-700 transition shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-semibold text-xs transition cursor-pointer tabular-nums"
             title="Ristampa l'etichetta termica DHL per questo ordine"
           >
-            <Printer className="w-4 h-4 text-yellow-400" />
-            <span>Ristampa DHL ({(order.packageCount || 1) > 1 ? `${order.packageCount} colli` : "1 collo"})</span>
+            <Printer className="w-3.5 h-3.5 text-amber-300" />
+            <span>
+              Ristampa DHL (
+              {(order.packageCount || 1) > 1
+                ? `${order.packageCount} colli`
+                : "1 collo"}
+              )
+            </span>
           </button>
 
           {onCompleteOrder && (
             <button
               type="button"
               onClick={onCompleteOrder}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs transition shadow-md cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold text-xs transition shadow-2xs cursor-pointer"
               title="Chiudi questo ordine e passa al prossimo (oppure scansiona semplicemente il prossimo foglio prelievo)"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Completa & Prossimo Ordine</span>
+              <span>Completa & Prossimo</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           )}
@@ -515,20 +581,3 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
     </div>
   );
 };
-
-// Local icon alias (BookOpen → simpler import)
-const BookmarkIcon = ({ className }: { className?: string }) => (
-  <svg
-    className={className}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-    />
-  </svg>
-);

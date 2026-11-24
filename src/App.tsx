@@ -94,7 +94,7 @@ export function App() {
   // If terminal is locked, display Kiosk Login Screen
   if (isTerminalLocked) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans select-none">
+      <div className="min-h-screen bg-[#f4f6f9] text-slate-900 flex flex-col font-sans select-none">
         <TerminalLockScreen
           operators={operators}
           onLogin={handleLoginFromLockScreen}
@@ -113,7 +113,7 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans select-none">
+    <div className="h-screen overflow-hidden bg-[#f4f6f9] text-slate-900 flex flex-col font-sans select-none">
       {/* Top Clean Industrial Header with Integrated Live Scanner Status */}
       <Header
         currentOperator={currentOperator}
@@ -141,7 +141,7 @@ export function App() {
 
       {/* Main Content Area */}
       {activeView === "packing" ? (
-        <main className="flex-1 p-2 grid grid-cols-1 lg:grid-cols-12 gap-2 max-w-[1920px] mx-auto w-full overflow-hidden min-h-0">
+        <main className="flex-1 p-3 grid grid-cols-1 lg:grid-cols-12 gap-3 max-w-[1920px] mx-auto w-full overflow-hidden min-h-0">
           {/* Left Side: Order Queue (3 cols on desktop) */}
           <div className="lg:col-span-3 h-full min-h-0 flex flex-col">
             <OrderQueue
