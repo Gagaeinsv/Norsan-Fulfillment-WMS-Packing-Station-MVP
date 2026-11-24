@@ -1,4 +1,4 @@
-import { Product, Order, Operator } from "../types/wms";
+import { Product, Order, Operator, IssueTicket } from "../types/wms";
 import {
   WarehouseSlotData,
   generateBolzanoDefaultSlots,
@@ -7,7 +7,7 @@ import { NORSAN_PRODUCTS } from "../data/norsanProducts";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
-  `http://${window.location.hostname}:3001/api`;
+  `http://${typeof window !== "undefined" ? window.location.hostname : "localhost"}:3001/api`;
 
 export const DEFAULT_SLOTS: WarehouseSlotData[] = generateBolzanoDefaultSlots(NORSAN_PRODUCTS);
 
@@ -500,5 +500,199 @@ export async function upsertLotRecordApi(lot: any): Promise<boolean> {
     return res.ok;
   } catch {
     return false;
+  }
+}
+
+export async function lockOrderApi(
+  orderId: string,
+  operatorId: string,
+  operatorName: string,
+  stationId: string,
+): Promise<{
+  ok: boolean;
+  conflict?: boolean;
+  error?: string;
+  lockedBy?: {
+    operatorId: string;
+    operatorName?: string;
+    stationId?: string;
+    lockedAt?: number;
+  };
+  offline?: boolean;
+}> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/lock`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ operatorId, operatorName, stationId }),
+      signal: AbortSignal.timeout(3000),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 409) {
+      return {
+        ok: false,
+        conflict: true,
+        error: data?.error || "Ordine già bloccato su un'altra postazione",
+        lockedBy: data?.lockedBy,
+      };
+    }
+    if (!res.ok) {
+      return { ok: false, error: data?.error || "Errore blocco ordine" };
+    }
+    return { ok: true, lockedBy: data?.lockedBy };
+  } catch {
+    return { ok: true, offline: true };
+  }
+}
+
+export async function unlockOrderApi(
+  orderId: string,
+  operatorId?: string,
+  force: boolean = false,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/unlock`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ operatorId, force }),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateOrderChecklistApi(
+  orderId: string,
+  patch: {
+    marketingFlyers?: any[];
+    giftConfirmed?: boolean;
+    physicalDocumentConfirmed?: boolean;
+  },
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/checklist`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateOrderAddressApi(
+  orderId: string,
+  updatedFields: any,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/address`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedFields),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function fetchIssuesApi(): Promise<IssueTicket[] | null> {
+  try {
+    const res = await fetch(`${API_BASE}/issues`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data) ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function createIssueApi(issue: IssueTicket): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/issues`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(issue),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function resolveIssueApi(
+  issueId: string,
+  resolvedBy?: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/issues/${issueId}/resolve`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resolvedBy }),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function fetchBarcodeBindingsApi(): Promise<Record<string, string> | null> {
+  try {
+    const res = await fetch(`${API_BASE}/barcode-bindings`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.bindings && typeof data.bindings === "object" ? data.bindings : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveBarcodeBindingApi(
+  rawBarcode: string,
+  targetSku: string,
+  boundBy?: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/barcode-bindings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rawBarcode, targetSku, boundBy }),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function logScanAuditApi(payload: {
+  operatorCode: string;
+  rawCode: string;
+  resultType: string;
+  status: string;
+  message: string;
+  orderId?: string;
+  productId?: string;
+}): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/audit/scan`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(3000),
+    });
+  } catch {
+    // Ignore audit log offline error
   }
 }

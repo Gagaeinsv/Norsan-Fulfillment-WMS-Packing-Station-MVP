@@ -139,6 +139,12 @@ export interface Order {
   // Multi-collo DHL shipment support
   packageCount?: number; // e.g. 1, 2, 3...
   colliWeights?: number[]; // [weightCollo1, weightCollo2, ...]
+  // Multi-bench Order Locking & Station Assignment
+  assignedStationId?: string | null;
+  lockedByOperatorId?: string | null;
+  lockedByOperatorName?: string | null;
+  lockedByStationId?: string | null;
+  lockedAt?: number | null;
 }
 
 export interface AddressDetails {

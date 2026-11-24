@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Operator,
   Order,
@@ -32,6 +32,16 @@ import {
   updateOperatorApi,
   deleteOperatorApi,
   clearPackedOrdersApi,
+  lockOrderApi,
+  unlockOrderApi,
+  updateOrderChecklistApi,
+  updateOrderAddressApi,
+  fetchIssuesApi,
+  createIssueApi,
+  resolveIssueApi,
+  fetchBarcodeBindingsApi,
+  saveBarcodeBindingApi,
+  logScanAuditApi,
 } from "../services/api";
 import {
   deductPackedOrderFromShelf,
@@ -212,6 +222,51 @@ export function useWarehouseState() {
   const [isBindModalOpen, setIsBindModalOpen] = useState(false);
   const [unboundBarcode, setUnboundBarcode] = useState<string>("");
 
+  // Guard recent optimistic edits against 5s polling overwrite
+  const lastMutationByOrderRef = useRef<Record<string, number>>({});
+  const markOrderMutated = useCallback((orderId: string) => {
+    lastMutationByOrderRef.current[orderId] = Date.now();
+  }, []);
+
+  const syncRemoteBarcodeBindings = useCallback(
+    (remoteBindings: Record<string, string>) => {
+      if (!remoteBindings || Object.keys(remoteBindings).length === 0) return;
+
+      try {
+        const saved = localStorage.getItem("wms_custom_barcode_bindings");
+        const localBindings = saved ? JSON.parse(saved) : {};
+        const merged = { ...localBindings };
+        for (const [code, sku] of Object.entries(remoteBindings)) {
+          const upper = code.trim().toUpperCase();
+          merged[code] = sku;
+          merged[upper] = sku;
+        }
+        localStorage.setItem("wms_custom_barcode_bindings", JSON.stringify(merged));
+      } catch {
+        // ignore storage errors
+      }
+
+      const bySku = new Map<string, string[]>();
+      for (const [code, sku] of Object.entries(remoteBindings)) {
+        const upper = code.trim().toUpperCase();
+        const existing = bySku.get(sku) || [];
+        existing.push(code, upper);
+        bySku.set(sku, existing);
+      }
+
+      setProductsList((prev) =>
+        prev.map((p) => {
+          const extra = bySku.get(p.sku);
+          if (!extra || extra.length === 0) return p;
+          const nextAliases = Array.from(new Set([...(p.aliases || []), ...extra]));
+          if (nextAliases.length === (p.aliases || []).length) return p;
+          return { ...p, aliases: nextAliases };
+        }),
+      );
+    },
+    [],
+  );
+
   // Load live DB data from SQLite backend on mount
   useEffect(() => {
     const customImgs = getCustomProductImages();
@@ -233,6 +288,9 @@ export function useWarehouseState() {
         });
         setProductsList(merged);
       }
+      fetchBarcodeBindingsApi().then((bindings) => {
+        if (bindings) syncRemoteBarcodeBindings(bindings);
+      });
     });
 
     // 2. Fetch warehouse slots
@@ -255,12 +313,15 @@ export function useWarehouseState() {
         setOrders(cleanOrders);
         setActiveOrderId((prev) => {
           if (prev && cleanOrders.some((o) => o.id === prev)) return prev;
-          return cleanOrders[0]?.id || "";
+          const preferred = cleanOrders.find(
+            (o) => o.status !== "packed" && !o.lockedByOperatorId,
+          );
+          return preferred?.id || cleanOrders[0]?.id || "";
         });
       }
     });
 
-    // 4. Fetch registered warehouse staff from SQLite backend
+    // 4. Fetch registered warehouse staff & persistent issues from SQLite backend
     fetchOperatorsApi().then((serverOps) => {
       if (serverOps && Array.isArray(serverOps) && serverOps.length > 0) {
         setOperators(serverOps);
@@ -270,6 +331,12 @@ export function useWarehouseState() {
           );
           return matched || serverOps[0];
         });
+      }
+    });
+
+    fetchIssuesApi().then((serverIssues) => {
+      if (serverIssues) {
+        setIssues(serverIssues);
       }
     });
 
@@ -285,7 +352,15 @@ export function useWarehouseState() {
           const cleanOrders = serverOrders.filter((o) => !isLegacyDemoOrder(o));
           setOrders((prev) => {
             if (cleanOrders.length === 0 && prev.length > 0) return prev;
-            return cleanOrders;
+            const now = Date.now();
+            const prevMap = new Map(prev.map((o) => [o.id, o]));
+            return cleanOrders.map((serverOrd) => {
+              const mutatedAt = lastMutationByOrderRef.current[serverOrd.id] || 0;
+              if (now - mutatedAt < 4000) {
+                return prevMap.get(serverOrd.id) || serverOrd;
+              }
+              return serverOrd;
+            });
           });
         }
       });
@@ -294,13 +369,21 @@ export function useWarehouseState() {
           setOperators(serverOps);
         }
       });
+      fetchIssuesApi().then((serverIssues) => {
+        if (serverIssues) {
+          setIssues(serverIssues);
+        }
+      });
+      fetchBarcodeBindingsApi().then((bindings) => {
+        if (bindings) syncRemoteBarcodeBindings(bindings);
+      });
       if (WMS_PHASE_CONFIG.ENABLE_WAREHOUSE_INVENTORY_ERP) {
         syncInventoryFromBackend(NORSAN_PRODUCTS).catch(() => {});
       }
     }, 5000);
 
     return () => clearInterval(syncTimer);
-  }, []);
+  }, [syncRemoteBarcodeBindings]);
 
   // Update product photo (Team Lead feature)
   const handleUpdateProductImage = useCallback(
@@ -572,56 +655,209 @@ export function useWarehouseState() {
     return orders.find((o) => o.id === activeOrderId) || orders[0];
   }, [orders, activeOrderId]);
 
-  // Toggle marketing flyer inclusion
+  // Toggle marketing flyer inclusion (persisted to SQLite)
   const handleToggleFlyer = useCallback(
     (flyerId: string) => {
+      const target = orders.find((o) => o.id === activeOrderId) || orders[0];
+      if (!target) return;
+      const updatedFlyers = target.marketingFlyers.map((f) =>
+        f.id === flyerId ? { ...f, isIncluded: !f.isIncluded } : f,
+      );
+      markOrderMutated(target.id);
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === target.id ? { ...o, marketingFlyers: updatedFlyers } : o,
+        ),
+      );
+      updateOrderChecklistApi(target.id, { marketingFlyers: updatedFlyers }).catch(
+        () => {},
+      );
+      if (!isMuted) playScanSuccess();
+    },
+    [orders, activeOrderId, isMuted, playScanSuccess, markOrderMutated],
+  );
+
+  // Toggle retention gift confirmation (persisted to SQLite)
+  const handleToggleGift = useCallback(() => {
+    const target = orders.find((o) => o.id === activeOrderId) || orders[0];
+    if (!target) return;
+    const nextVal = !target.giftConfirmed;
+    markOrderMutated(target.id);
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === target.id ? { ...o, giftConfirmed: nextVal } : o,
+      ),
+    );
+    updateOrderChecklistApi(target.id, { giftConfirmed: nextVal }).catch(() => {});
+    if (!isMuted) playScanSuccess();
+  }, [orders, activeOrderId, isMuted, playScanSuccess, markOrderMutated]);
+
+  // Toggle physical document confirmation (persisted to SQLite)
+  const handleTogglePhysicalDocument = useCallback(() => {
+    const target = orders.find((o) => o.id === activeOrderId) || orders[0];
+    if (!target) return;
+    const nextVal = !target.physicalDocumentConfirmed;
+    markOrderMutated(target.id);
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === target.id ? { ...o, physicalDocumentConfirmed: nextVal } : o,
+      ),
+    );
+    updateOrderChecklistApi(target.id, { physicalDocumentConfirmed: nextVal }).catch(
+      () => {},
+    );
+    if (!isMuted) playScanSuccess();
+  }, [orders, activeOrderId, isMuted, playScanSuccess, markOrderMutated]);
+
+  // Multi-bench Order Selection with Atomic SQLite Lock
+  const handleSelectOrder = useCallback(
+    async (orderId: string) => {
+      const target = orders.find((o) => o.id === orderId);
+      if (!target) {
+        setActiveOrderId(orderId);
+        return;
+      }
+
+      if (
+        target.status !== "packed" &&
+        target.lockedByOperatorId &&
+        target.lockedByOperatorId !== currentOperator.id
+      ) {
+        if (!isMuted) playScanError();
+        setLastScan({
+          id: Math.random().toString(),
+          rawCode: target.orderNumber,
+          resultType: "command",
+          status: "error",
+          title: "Ordine Bloccato da Altro Banco",
+          message: `Ordine ${target.orderNumber} già bloccato da ${target.lockedByOperatorName || target.lockedByOperatorId} (${target.lockedByStationId || "ST"}).`,
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      if (target.status === "packed") {
+        setActiveOrderId(orderId);
+        return;
+      }
+
+      const previousOrderId = activeOrderId;
+      const now = Date.now();
+      markOrderMutated(orderId);
+      if (previousOrderId && previousOrderId !== orderId) {
+        markOrderMutated(previousOrderId);
+      }
+
       setOrders((prev) =>
         prev.map((o) => {
-          if (o.id === activeOrderId) {
-            const updatedFlyers = o.marketingFlyers.map((f) => {
-              if (f.id === flyerId) {
-                return { ...f, isIncluded: !f.isIncluded };
-              }
-              return f;
-            });
-            return { ...o, marketingFlyers: updatedFlyers };
+          if (o.id === orderId) {
+            return {
+              ...o,
+              lockedByOperatorId: currentOperator.id,
+              lockedByOperatorName: currentOperator.name,
+              lockedByStationId: stationConfigId,
+              lockedAt: now,
+            };
+          }
+          if (
+            o.lockedByOperatorId === currentOperator.id &&
+            o.status !== "packed"
+          ) {
+            return {
+              ...o,
+              lockedByOperatorId: null,
+              lockedByOperatorName: null,
+              lockedByStationId: null,
+              lockedAt: null,
+            };
           }
           return o;
         }),
       );
-      if (!isMuted) playScanSuccess();
+      setActiveOrderId(orderId);
+
+      const lockRes = await lockOrderApi(
+        orderId,
+        currentOperator.id,
+        currentOperator.name,
+        stationConfigId,
+      );
+
+      if (!lockRes.ok && lockRes.conflict) {
+        if (!isMuted) playScanError();
+        markOrderMutated(orderId);
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId
+              ? {
+                  ...o,
+                  lockedByOperatorId: lockRes.lockedBy?.operatorId || "other",
+                  lockedByOperatorName: lockRes.lockedBy?.operatorName || null,
+                  lockedByStationId: lockRes.lockedBy?.stationId || null,
+                  lockedAt: lockRes.lockedBy?.lockedAt || now,
+                }
+              : o,
+          ),
+        );
+        if (previousOrderId && previousOrderId !== orderId) {
+          setActiveOrderId(previousOrderId);
+        }
+        setLastScan({
+          id: Math.random().toString(),
+          rawCode: target.orderNumber,
+          resultType: "command",
+          status: "error",
+          title: "Conflitto Multi-Banco",
+          message:
+            lockRes.error ||
+            `Ordine ${target.orderNumber} già bloccato su un'altra postazione.`,
+          timestamp: Date.now(),
+        });
+      }
     },
-    [activeOrderId, isMuted, playScanSuccess],
+    [
+      orders,
+      activeOrderId,
+      currentOperator,
+      stationConfigId,
+      isMuted,
+      playScanError,
+      markOrderMutated,
+    ],
   );
 
-  // Toggle retention gift confirmation
-  const handleToggleGift = useCallback(() => {
-    setOrders((prev) =>
-      prev.map((o) => {
-        if (o.id === activeOrderId) {
-          return { ...o, giftConfirmed: !o.giftConfirmed };
-        }
-        return o;
-      }),
-    );
-    if (!isMuted) playScanSuccess();
-  }, [activeOrderId, isMuted, playScanSuccess]);
-
-  // Toggle physical document confirmation
-  const handleTogglePhysicalDocument = useCallback(() => {
-    setOrders((prev) =>
-      prev.map((o) => {
-        if (o.id === activeOrderId) {
-          return {
-            ...o,
-            physicalDocumentConfirmed: !o.physicalDocumentConfirmed,
-          };
-        }
-        return o;
-      }),
-    );
-    if (!isMuted) playScanSuccess();
-  }, [activeOrderId, isMuted, playScanSuccess]);
+  // Team Lead Force Release for locked orders
+  const handleForceUnlockOrder = useCallback(
+    (orderId: string) => {
+      const target = orders.find((o) => o.id === orderId);
+      markOrderMutated(orderId);
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                lockedByOperatorId: null,
+                lockedByOperatorName: null,
+                lockedByStationId: null,
+                lockedAt: null,
+              }
+            : o,
+        ),
+      );
+      unlockOrderApi(orderId, currentOperator.id, true).catch(() => {});
+      if (!isMuted) playScanSuccess();
+      setLastScan({
+        id: Math.random().toString(),
+        rawCode: target?.orderNumber || orderId,
+        resultType: "command",
+        status: "info",
+        title: "Blocco Ordine Rilasciato",
+        message: `Ordine ${target?.orderNumber || orderId} sbloccato dal Team Lead ed è ora disponibile per tutti i banchi.`,
+        timestamp: Date.now(),
+      });
+    },
+    [orders, currentOperator.id, isMuted, playScanSuccess, markOrderMutated],
+  );
 
   // Update FEFO Lot & Expiry Date on an item in the active order
   const handleUpdateItemLot = useCallback(
@@ -830,8 +1066,27 @@ export function useWarehouseState() {
       );
 
       if (matchedOrder) {
+        if (
+          matchedOrder.status !== "packed" &&
+          matchedOrder.lockedByOperatorId &&
+          matchedOrder.lockedByOperatorId !== currentOperator.id
+        ) {
+          if (!isMuted) playScanError();
+          setLastScan({
+            id: Math.random().toString(),
+            rawCode,
+            resultType: "command",
+            status: "error",
+            title: "Ordine Bloccato da Altro Banco",
+            message: `Ordine ${matchedOrder.orderNumber} già in lavorazione da ${matchedOrder.lockedByOperatorName || matchedOrder.lockedByOperatorId} (${matchedOrder.lockedByStationId || "ST"}). Doppio imballaggio impedito.`,
+            timestamp: Date.now(),
+          });
+          return;
+        }
+
         // If there was a previous order active and not yet packed, finalize it as packed
         if (activeOrder && activeOrder.id !== matchedOrder.id && activeOrder.status !== "packed") {
+          markOrderMutated(activeOrder.id);
           if (WMS_PHASE_CONFIG.ENABLE_WAREHOUSE_INVENTORY_ERP) {
             deductPackedOrderFromShelf(
               productsList,
@@ -850,7 +1105,15 @@ export function useWarehouseState() {
           setOrders((prev) =>
             prev.map((o) =>
               o.id === activeOrder.id
-                ? { ...o, status: "packed", packingCompletedAt: Date.now() }
+                ? {
+                    ...o,
+                    status: "packed",
+                    packingCompletedAt: Date.now(),
+                    lockedByOperatorId: null,
+                    lockedByOperatorName: null,
+                    lockedByStationId: null,
+                    lockedAt: null,
+                  }
                 : o,
             ),
           );
@@ -906,6 +1169,7 @@ export function useWarehouseState() {
               ? Math.ceil(totalUnits / 8)
               : 1;
 
+        const now = Date.now();
         const fulfilledOrder: Order = {
           ...matchedOrder,
           status: "packing",
@@ -914,21 +1178,80 @@ export function useWarehouseState() {
           marketingFlyers: completedFlyers,
           giftConfirmed: true,
           physicalDocumentConfirmed: true,
+          lockedByOperatorId: currentOperator.id,
+          lockedByOperatorName: currentOperator.name,
+          lockedByStationId: stationConfigId,
+          lockedAt: now,
         };
+
+        markOrderMutated(matchedOrder.id);
 
         // Update state and active order
         setOrders((prev) =>
-          prev.map((o) => (o.id === matchedOrder.id ? fulfilledOrder : o)),
+          prev.map((o) => {
+            if (o.id === matchedOrder.id) return fulfilledOrder;
+            if (o.lockedByOperatorId === currentOperator.id && o.status !== "packed") {
+              return {
+                ...o,
+                lockedByOperatorId: null,
+                lockedByOperatorName: null,
+                lockedByStationId: null,
+                lockedAt: null,
+              };
+            }
+            return o;
+          }),
         );
         setActiveOrderId(matchedOrder.id);
 
-        // Async sync to SQLite backend with station assignment
+        // Async acquire order lock & persist status + checklist to SQLite backend
+        lockOrderApi(
+          matchedOrder.id,
+          currentOperator.id,
+          currentOperator.name,
+          stationConfigId,
+        ).then((lockRes) => {
+          if (!lockRes.ok && lockRes.conflict) {
+            if (!isMuted) playScanError();
+            markOrderMutated(matchedOrder.id);
+            setOrders((prev) =>
+              prev.map((o) =>
+                o.id === matchedOrder.id
+                  ? {
+                      ...o,
+                      lockedByOperatorId: lockRes.lockedBy?.operatorId || "other",
+                      lockedByOperatorName: lockRes.lockedBy?.operatorName || null,
+                      lockedByStationId: lockRes.lockedBy?.stationId || null,
+                      lockedAt: lockRes.lockedBy?.lockedAt || now,
+                    }
+                  : o,
+              ),
+            );
+            setLastScan({
+              id: Math.random().toString(),
+              rawCode,
+              resultType: "command",
+              status: "error",
+              title: "Conflitto Multi-Banco",
+              message:
+                lockRes.error ||
+                `Ordine ${matchedOrder.orderNumber} già bloccato su un'altra postazione.`,
+              timestamp: Date.now(),
+            });
+          }
+        });
+
         updateOrderStatusApi(
           matchedOrder.id,
           "packing",
           currentOperator.id,
           stationConfigId,
         ).catch(() => {});
+        updateOrderChecklistApi(matchedOrder.id, {
+          marketingFlyers: completedFlyers,
+          giftConfirmed: true,
+          physicalDocumentConfirmed: true,
+        }).catch(() => {});
 
         // Light Pick-to-Light LEDs for the active order
         lightActiveOrder(fulfilledOrder);
@@ -1071,23 +1394,23 @@ export function useWarehouseState() {
           return;
         }
 
+        const updatedFlyers = activeOrder.marketingFlyers.map((f) => {
+          if (f.code.toUpperCase() === rawCode || f.id === matchedFlyer.id) {
+            return { ...f, isIncluded: true };
+          }
+          return f;
+        });
+        markOrderMutated(activeOrder.id);
         setOrders((prev) =>
-          prev.map((o) => {
-            if (o.id === activeOrder.id) {
-              const updatedFlyers = o.marketingFlyers.map((f) => {
-                if (
-                  f.code.toUpperCase() === rawCode ||
-                  f.id === matchedFlyer.id
-                ) {
-                  return { ...f, isIncluded: true };
-                }
-                return f;
-              });
-              return { ...o, marketingFlyers: updatedFlyers };
-            }
-            return o;
-          }),
+          prev.map((o) =>
+            o.id === activeOrder.id
+              ? { ...o, marketingFlyers: updatedFlyers }
+              : o,
+          ),
         );
+        updateOrderChecklistApi(activeOrder.id, {
+          marketingFlyers: updatedFlyers,
+        }).catch(() => {});
         if (!isMuted) playItemComplete();
         setLastScan({
           id: Math.random().toString(),
@@ -1211,6 +1534,17 @@ export function useWarehouseState() {
               }
             : undefined,
         });
+        logScanAuditApi({
+          operatorCode: currentOperator.operatorCode,
+          rawCode: code,
+          resultType: "wrong_product",
+          status: otherOrder ? "warning" : "error",
+          message: otherOrder
+            ? `Articolo ${matchedProduct.sku} appartiene a ${otherOrder.orderNumber}`
+            : `Articolo ${matchedProduct.sku} non incluso in ${activeOrder.orderNumber}`,
+          orderId: activeOrder.id,
+          productId: matchedProduct.id,
+        }).catch(() => {});
         return;
       }
 
@@ -1241,6 +1575,7 @@ export function useWarehouseState() {
 
       // Update state with FEFO Lot & Expiry traceability
       const activeLotInfo = getProductLotInfo(matchedProduct);
+      markOrderMutated(activeOrder.id);
       setOrders((prev) =>
         prev.map((ord) => {
           if (ord.id === activeOrder.id) {
@@ -1262,13 +1597,22 @@ export function useWarehouseState() {
         }),
       );
 
-      // Async sync to SQLite backend
+      // Async sync to SQLite backend & audit log
       updateOrderItemScannedApi(
         activeOrder.id,
         matchedProduct.id,
         newScannedQty,
         isItemDone ? "completed" : "in_progress",
       ).catch(() => {});
+      logScanAuditApi({
+        operatorCode: currentOperator.operatorCode,
+        rawCode: code,
+        resultType: "product_match",
+        status: "success",
+        message: `Scansionato ${matchedProduct.sku} (${newScannedQty}/${currentItem.quantityRequired})`,
+        orderId: activeOrder.id,
+        productId: matchedProduct.id,
+      }).catch(() => {});
 
       // Check if entire order is now 100% complete (strict Poka-Yoke item-by-item check)
       const itemsDone = activeOrder.items.every((it, idx) => {
@@ -1336,11 +1680,15 @@ export function useWarehouseState() {
       activeOrder,
       operators,
       productsList,
+      currentOperator,
+      stationConfigId,
+      dhlPrintTiming,
       isMuted,
       playScanSuccess,
       playScanError,
       playItemComplete,
       playOrderComplete,
+      markOrderMutated,
     ],
   );
 
@@ -1372,12 +1720,42 @@ export function useWarehouseState() {
     }
 
     const completedOrderId = activeOrder.id;
+    markOrderMutated(completedOrderId);
 
-    // Mark current order as packed
+    // Find next unlocked/own ready order
+    const nextOrder = orders.find(
+      (o) =>
+        o.id !== completedOrderId &&
+        o.status !== "packed" &&
+        (!o.lockedByOperatorId || o.lockedByOperatorId === currentOperator.id),
+    );
+    if (nextOrder) {
+      markOrderMutated(nextOrder.id);
+    }
+
+    const now = Date.now();
+    // Mark current order as packed, clear its lock, and lock nextOrder if present
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id === completedOrderId) {
-          return { ...o, status: "packed", packingCompletedAt: Date.now() };
+          return {
+            ...o,
+            status: "packed",
+            packingCompletedAt: now,
+            lockedByOperatorId: null,
+            lockedByOperatorName: null,
+            lockedByStationId: null,
+            lockedAt: null,
+          };
+        }
+        if (nextOrder && o.id === nextOrder.id) {
+          return {
+            ...o,
+            lockedByOperatorId: currentOperator.id,
+            lockedByOperatorName: currentOperator.name,
+            lockedByStationId: stationConfigId,
+            lockedAt: now,
+          };
         }
         return o;
       }),
@@ -1417,12 +1795,14 @@ export function useWarehouseState() {
       }),
     );
 
-    // Find next ready order
-    const nextOrder = orders.find(
-      (o) => o.id !== completedOrderId && o.status !== "packed",
-    );
     if (nextOrder) {
       setActiveOrderId(nextOrder.id);
+      lockOrderApi(
+        nextOrder.id,
+        currentOperator.id,
+        currentOperator.name,
+        stationConfigId,
+      ).catch(() => {});
       setLastScan({
         id: Math.random().toString(),
         rawCode: nextOrder.barcode,
@@ -1492,9 +1872,28 @@ export function useWarehouseState() {
 
   const handleQuickSwitchOrder = useCallback(
     (targetOrderId: string, autoScanBarcode?: string) => {
-      setActiveOrderId(targetOrderId);
-      if (!isMuted) playScanSuccess();
       const targetOrder = orders.find((o) => o.id === targetOrderId);
+      if (
+        targetOrder &&
+        targetOrder.status !== "packed" &&
+        targetOrder.lockedByOperatorId &&
+        targetOrder.lockedByOperatorId !== currentOperator.id
+      ) {
+        if (!isMuted) playScanError();
+        setLastScan({
+          id: Math.random().toString(),
+          rawCode: targetOrder.orderNumber,
+          resultType: "command",
+          status: "error",
+          title: "Ordine Bloccato da Altro Banco",
+          message: `Ordine ${targetOrder.orderNumber} già in lavorazione da ${targetOrder.lockedByOperatorName || targetOrder.lockedByOperatorId} (${targetOrder.lockedByStationId || "ST"}).`,
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      handleSelectOrder(targetOrderId);
+      if (!isMuted) playScanSuccess();
       setLastScan({
         id: Math.random().toString(),
         rawCode: targetOrder?.orderNumber || targetOrderId,
@@ -1506,7 +1905,7 @@ export function useWarehouseState() {
       });
       if (autoScanBarcode) setPendingAutoScan(autoScanBarcode);
     },
-    [orders, isMuted, playScanSuccess],
+    [orders, currentOperator.id, isMuted, playScanSuccess, playScanError, handleSelectOrder],
   );
 
   const handleForceAddProductToActiveOrder = useCallback(
@@ -1567,7 +1966,7 @@ export function useWarehouseState() {
 
   const handleBindBarcode = useCallback(
     (barcode: string, targetSku: string) => {
-      const clean = barcode.trim();
+      const clean = barcode.trim().toUpperCase();
       try {
         const saved = localStorage.getItem("wms_custom_barcode_bindings");
         const bindings = saved ? JSON.parse(saved) : {};
@@ -1576,6 +1975,10 @@ export function useWarehouseState() {
       } catch {
         // fallback
       }
+
+      saveBarcodeBindingApi(clean, targetSku, currentOperator.operatorCode).catch(
+        () => {},
+      );
 
       setProductsList((prev) =>
         prev.map((p) => {
@@ -1589,7 +1992,7 @@ export function useWarehouseState() {
 
       handleBarcodeScanned(clean);
     },
-    [handleBarcodeScanned],
+    [handleBarcodeScanned, currentOperator.operatorCode],
   );
 
   const handleImportSellyOrders = useCallback(
@@ -1624,6 +2027,9 @@ export function useWarehouseState() {
   const handleChangeBoxType = (boxType: BoxType) => {
     const matchedBox = BOX_TYPES.find((b) => b.id === boxType);
     const boxBranding = matchedBox ? matchedBox.branding : "norsan_logo";
+    if (activeOrderId) {
+      markOrderMutated(activeOrderId);
+    }
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id === activeOrderId) {
@@ -1646,6 +2052,7 @@ export function useWarehouseState() {
   const handleUpdatePackageCount = useCallback(
     (orderId: string, count: number) => {
       const validCount = Math.max(1, count);
+      markOrderMutated(orderId);
       setOrders((prev) =>
         prev.map((o) => {
           if (o.id === orderId) {
@@ -1660,7 +2067,7 @@ export function useWarehouseState() {
       updatePackageCountApi(orderId, validCount).catch(() => {});
       if (!isMuted) playScanSuccess();
     },
-    [isMuted, playScanSuccess],
+    [isMuted, playScanSuccess, markOrderMutated],
   );
 
   const handleSubmitIssue = (type: string, note: string) => {
@@ -1676,6 +2083,7 @@ export function useWarehouseState() {
     };
 
     setIssues((prev) => [newIssue, ...prev]);
+    createIssueApi(newIssue).catch(() => {});
 
     setLastScan({
       id: Math.random().toString(),
@@ -1697,11 +2105,13 @@ export function useWarehouseState() {
         return i;
       }),
     );
+    resolveIssueApi(issueId, currentOperator.name).catch(() => {});
     if (!isMuted) playScanSuccess();
   };
 
   const handleUpdateOrderAddress = useCallback(
     (orderId: string, updatedFields: any) => {
+      markOrderMutated(orderId);
       setOrders((prev) =>
         prev.map((o) => {
           if (o.id === orderId) {
@@ -1714,9 +2124,13 @@ export function useWarehouseState() {
           return o;
         }),
       );
+      updateOrderAddressApi(orderId, {
+        ...updatedFields,
+        addressStatus: updatedFields.addressDetails?.status || "valid",
+      }).catch(() => {});
       if (!isMuted) playScanSuccess();
     },
-    [isMuted, playScanSuccess],
+    [isMuted, playScanSuccess, markOrderMutated],
   );
 
   const handleSwitchToStation = (_stationId: string) => {
@@ -1747,9 +2161,30 @@ export function useWarehouseState() {
   }, []);
 
   const handleLockTerminal = useCallback(() => {
+    if (
+      activeOrder &&
+      activeOrder.status !== "packed" &&
+      activeOrder.lockedByOperatorId === currentOperator.id
+    ) {
+      markOrderMutated(activeOrder.id);
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === activeOrder.id
+            ? {
+                ...o,
+                lockedByOperatorId: null,
+                lockedByOperatorName: null,
+                lockedByStationId: null,
+                lockedAt: null,
+              }
+            : o,
+        ),
+      );
+      unlockOrderApi(activeOrder.id, currentOperator.id, false).catch(() => {});
+    }
     setIsTerminalLocked(true);
     setActiveView("packing");
-  }, []);
+  }, [activeOrder, currentOperator.id, markOrderMutated]);
 
   const handleLoginFromLockScreen = useCallback(
     (operator: Operator) => {
@@ -1851,5 +2286,7 @@ export function useWarehouseState() {
     activeOrder,
     dhlPrintTiming,
     toggleDhlPrintTiming,
+    handleSelectOrder,
+    handleForceUnlockOrder,
   };
 }

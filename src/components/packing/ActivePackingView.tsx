@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   PackageSearch,
   Plus,
+  Lock,
 } from "lucide-react";
 import { Order, BoxType, ScanEvent, Product } from "../../types/wms";
 import { BOX_TYPES } from "../../data/norsanProducts";
@@ -55,6 +56,7 @@ interface ActivePackingViewProps {
   onCompleteOrder?: () => void;
   dhlPrintTiming?: "on_scan" | "on_finish";
   onToggleDhlPrintTiming?: () => void;
+  currentOperatorId?: string;
 }
 
 export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
@@ -77,6 +79,7 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   onCompleteOrder,
   dhlPrintTiming = "on_scan",
   onToggleDhlPrintTiming,
+  currentOperatorId,
 }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [kanbanAlertItem, setKanbanAlertItem] = useState<string | null>(null);
@@ -127,6 +130,12 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
   const isGiftConfirmed = !requiresGift || order.giftConfirmed;
   const isPhysicalDocumentConfirmed =
     !order.requiresPhysicalDocument || order.physicalDocumentConfirmed;
+  const isLockedByOther = Boolean(
+    order.lockedByOperatorId &&
+      currentOperatorId &&
+      order.lockedByOperatorId !== currentOperatorId &&
+      order.status !== "packed",
+  );
   const isOrderFullyReady =
     isProductsFullyScanned &&
     isFlyersFullyScanned &&
@@ -349,6 +358,30 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* ── Multi-Bench Order Lock Warning ─────────────────────────────────── */}
+      {isLockedByOther && (
+        <div className="bg-rose-50 border border-rose-300 text-rose-950 rounded-xl px-4 py-2.5 flex items-center justify-between gap-3 shrink-0 shadow-2xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+              <Lock className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold uppercase tracking-wider text-rose-800">
+                Ordine bloccato su un&apos;altra postazione
+              </div>
+              <div className="text-xs text-rose-900 mt-0.5">
+                Bloccato da{" "}
+                <strong>
+                  {order.lockedByOperatorName || order.lockedByOperatorId}
+                </strong>{" "}
+                ({order.lockedByStationId || "ST"}) — doppio imballaggio
+                impedito. Contatta il Team Lead per eventuale Force Release.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Flyer checklist ───────────────────────────────────────────────── */}
       {order.marketingFlyers.length > 0 && (

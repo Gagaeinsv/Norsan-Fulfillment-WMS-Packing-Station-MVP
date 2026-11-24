@@ -8,6 +8,9 @@ import {
   clearAllLeds,
   getP2lStatus,
 } from "./services/p2lService";
+import { getIntegrationsReadiness } from "./services/carrierService";
+
+const ORDER_LOCK_TTL_MS = 15 * 60 * 1000;
 
 export const app = express();
 const PORT = process.env.PORT || 3001;
@@ -405,6 +408,7 @@ app.get("/api/orders", (_req, res) => {
       });
     }
 
+    const now = Date.now();
     const orders = ordersRows.map((o) => {
       let flyers: any[] = [];
       try {
@@ -412,6 +416,21 @@ app.get("/api/orders", (_req, res) => {
       } catch {
         flyers = [];
       }
+
+      let addressDetails: any = undefined;
+      if (o.address_details_json) {
+        try {
+          addressDetails = JSON.parse(o.address_details_json);
+        } catch {
+          addressDetails = undefined;
+        }
+      }
+
+      const isLockActive = Boolean(
+        o.locked_by_operator_id &&
+          o.locked_at &&
+          now - Number(o.locked_at) < ORDER_LOCK_TTL_MS,
+      );
 
       return {
         id: o.id,
@@ -442,6 +461,15 @@ app.get("/api/orders", (_req, res) => {
         requiresPhysicalDocument: Boolean(o.requires_physical_doc),
         physicalDocumentConfirmed: Boolean(o.physical_doc_confirmed),
         packageCount: o.package_count || 1,
+        assignedStationId: o.assigned_station_id || null,
+        lockedByOperatorId: isLockActive ? o.locked_by_operator_id : null,
+        lockedByOperatorName: isLockActive ? o.locked_by_operator_name : null,
+        lockedByStationId: isLockActive ? o.locked_by_station_id : null,
+        lockedAt: isLockActive ? o.locked_at : null,
+        addressDetails,
+        addressStatus: o.address_status || addressDetails?.status || "valid",
+        packingStartedAt: o.packing_started_at || undefined,
+        packingCompletedAt: o.packing_completed_at || undefined,
       };
     });
 
@@ -472,9 +500,9 @@ app.post("/api/orders/bulk", (req, res) => {
           courier, tracking_number, priority, box_recommendation, box_branding,
           status, special_notes, created_at, is_subscription, subscription_cycle,
           retention_gift, requires_physical_doc, gift_confirmed, physical_doc_confirmed,
-          marketing_flyers_json
+          marketing_flyers_json, package_count, address_details_json, address_status
         ) VALUES (
-          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
       `);
 
@@ -511,6 +539,9 @@ app.post("/api/orders/bulk", (req, res) => {
           ord.giftConfirmed ? 1 : 0,
           ord.physicalDocumentConfirmed ? 1 : 0,
           JSON.stringify(ord.marketingFlyers || []),
+          Math.max(1, Number(ord.packageCount) || 1),
+          ord.addressDetails ? JSON.stringify(ord.addressDetails) : null,
+          ord.addressStatus || ord.addressDetails?.status || "valid",
         );
 
         // Delete existing items if replacing this order
@@ -541,7 +572,165 @@ app.post("/api/orders/bulk", (req, res) => {
   }
 });
 
-// Update order status (packing, packed, shipped) with automatic shelf stock deduction & operator stats update
+// Atomic Order Lock (prevents double-packing across 2+ stations)
+app.post("/api/orders/:id/lock", (req, res) => {
+  const { id } = req.params;
+  const { operatorId, operatorName, stationId } = req.body || {};
+  if (!operatorId || typeof operatorId !== "string") {
+    return res.status(400).json({ error: "operatorId obbligatorio" });
+  }
+
+  try {
+    const outcome = db.transaction(() => {
+      const now = Date.now();
+      const existing = db
+        .prepare("SELECT * FROM orders WHERE id = ?")
+        .get(id) as any;
+
+      if (!existing) {
+        return { httpStatus: 404, body: { success: false, error: "Ordine non trovato" } };
+      }
+
+      if (existing.status === "packed" || existing.status === "shipped") {
+        return {
+          httpStatus: 200,
+          body: { success: true, locked: false, alreadyPacked: true },
+        };
+      }
+
+      const isActiveOtherLock = Boolean(
+        existing.locked_by_operator_id &&
+          existing.locked_by_operator_id !== operatorId &&
+          existing.locked_at &&
+          now - Number(existing.locked_at) < ORDER_LOCK_TTL_MS,
+      );
+
+      if (isActiveOtherLock) {
+        return {
+          httpStatus: 409,
+          body: {
+            success: false,
+            error: `Ordine già bloccato da ${existing.locked_by_operator_name || existing.locked_by_operator_id} (${existing.locked_by_station_id || "ST"})`,
+            lockedBy: {
+              operatorId: existing.locked_by_operator_id,
+              operatorName: existing.locked_by_operator_name,
+              stationId: existing.locked_by_station_id,
+              lockedAt: existing.locked_at,
+            },
+          },
+        };
+      }
+
+      // Release any other non-packed order currently locked by the same operator
+      db.prepare(
+        `
+        UPDATE orders
+        SET locked_by_operator_id = NULL,
+            locked_by_operator_name = NULL,
+            locked_by_station_id = NULL,
+            locked_at = NULL
+        WHERE locked_by_operator_id = ?
+          AND id != ?
+          AND status != 'packed'
+          AND status != 'shipped'
+      `,
+      ).run(operatorId, id);
+
+      const safeStationId = stationId || existing.assigned_station_id || null;
+      const safeOperatorName = operatorName || operatorId;
+
+      db.prepare(
+        `
+        UPDATE orders
+        SET locked_by_operator_id = ?,
+            locked_by_operator_name = ?,
+            locked_by_station_id = ?,
+            locked_at = ?,
+            assigned_station_id = COALESCE(?, assigned_station_id),
+            packing_started_at = COALESCE(packing_started_at, ?)
+        WHERE id = ?
+      `,
+      ).run(
+        operatorId,
+        safeOperatorName,
+        safeStationId,
+        now,
+        safeStationId,
+        now,
+        id,
+      );
+
+      return {
+        httpStatus: 200,
+        body: {
+          success: true,
+          locked: true,
+          lockedBy: {
+            operatorId,
+            operatorName: safeOperatorName,
+            stationId: safeStationId,
+            lockedAt: now,
+          },
+        },
+      };
+    })();
+
+    return res.status(outcome.httpStatus).json(outcome.body);
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Release Order Lock (by holder or Team Lead Force Release)
+app.post("/api/orders/:id/unlock", (req, res) => {
+  const { id } = req.params;
+  const { operatorId, force } = req.body || {};
+
+  try {
+    const existing = db
+      .prepare("SELECT * FROM orders WHERE id = ?")
+      .get(id) as any;
+
+    if (!existing) {
+      return res.status(404).json({ error: "Ordine non trovato" });
+    }
+
+    const isLockActive = Boolean(
+      existing.locked_by_operator_id &&
+        existing.locked_at &&
+        Date.now() - Number(existing.locked_at) < ORDER_LOCK_TTL_MS,
+    );
+
+    if (
+      !force &&
+      isLockActive &&
+      existing.locked_by_operator_id &&
+      existing.locked_by_operator_id !== operatorId
+    ) {
+      return res.status(403).json({
+        success: false,
+        error: "Solo l'operatore titolare o il Team Lead può sbloccare l'ordine",
+      });
+    }
+
+    db.prepare(
+      `
+      UPDATE orders
+      SET locked_by_operator_id = NULL,
+          locked_by_operator_name = NULL,
+          locked_by_station_id = NULL,
+          locked_at = NULL
+      WHERE id = ?
+    `,
+    ).run(id);
+
+    return res.json({ success: true, id });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Update order status (packing, packed, shipped) with automatic shelf stock deduction, lock release & outbox queue
 app.patch("/api/orders/:id/status", (req, res) => {
   const { id } = req.params;
   const { status, operatorId, stationId } = req.body || {};
@@ -551,14 +740,50 @@ app.patch("/api/orders/:id/status", (req, res) => {
 
   try {
     const existing = db
-      .prepare("SELECT status FROM orders WHERE id = ?")
-      .get(id) as { status: string } | undefined;
+      .prepare(
+        "SELECT id, order_number, source, courier, tracking_number, package_count, status FROM orders WHERE id = ?",
+      )
+      .get(id) as any;
 
     const tx = db.transaction(() => {
-      if (stationId && status === "packing") {
+      const now = Date.now();
+      if (status === "packed" || status === "shipped") {
         db.prepare(
-          "UPDATE orders SET status = ?, assigned_station_id = ? WHERE id = ?",
-        ).run(status, stationId, id);
+          `
+          UPDATE orders
+          SET status = ?,
+              locked_by_operator_id = NULL,
+              locked_by_operator_name = NULL,
+              locked_by_station_id = NULL,
+              locked_at = NULL,
+              packing_completed_at = COALESCE(packing_completed_at, ?)
+          WHERE id = ?
+        `,
+        ).run(status, now, id);
+
+        if (existing) {
+          db.prepare(
+            `
+            INSERT INTO api_outbox (
+              order_id, order_number, channel, tracking_number, package_count, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, 'pending_api', ?)
+            ON CONFLICT(order_id) DO UPDATE SET
+              tracking_number = excluded.tracking_number,
+              package_count = excluded.package_count
+          `,
+          ).run(
+            existing.id,
+            existing.order_number,
+            existing.source || "Selly ERP",
+            existing.tracking_number || null,
+            existing.package_count || 1,
+            now,
+          );
+        }
+      } else if (stationId && status === "packing") {
+        db.prepare(
+          "UPDATE orders SET status = ?, assigned_station_id = ?, packing_started_at = COALESCE(packing_started_at, ?) WHERE id = ?",
+        ).run(status, stationId, now, id);
       } else {
         db.prepare("UPDATE orders SET status = ? WHERE id = ?").run(status, id);
       }
@@ -603,6 +828,106 @@ app.patch("/api/orders/:id/status", (req, res) => {
     res.json({ success: true, id, status });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Persist packing checklist toggles (flyers, retention gift, B2B physical doc)
+app.patch("/api/orders/:id/checklist", (req, res) => {
+  const { id } = req.params;
+  const { marketingFlyers, giftConfirmed, physicalDocumentConfirmed } = req.body || {};
+
+  try {
+    const existing = db.prepare("SELECT id FROM orders WHERE id = ?").get(id);
+    if (!existing) {
+      return res.status(404).json({ error: "Ordine non trovato" });
+    }
+
+    const updates: string[] = [];
+    const params: any[] = [];
+
+    if (marketingFlyers !== undefined) {
+      updates.push("marketing_flyers_json = ?");
+      params.push(JSON.stringify(marketingFlyers));
+    }
+    if (giftConfirmed !== undefined) {
+      updates.push("gift_confirmed = ?");
+      params.push(giftConfirmed ? 1 : 0);
+    }
+    if (physicalDocumentConfirmed !== undefined) {
+      updates.push("physical_doc_confirmed = ?");
+      params.push(physicalDocumentConfirmed ? 1 : 0);
+    }
+
+    if (updates.length > 0) {
+      params.push(id);
+      db.prepare(`UPDATE orders SET ${updates.join(", ")} WHERE id = ?`).run(...params);
+    }
+
+    return res.json({ success: true, id });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Persist normalized / fixed customer shipping address
+app.patch("/api/orders/:id/address", (req, res) => {
+  const { id } = req.params;
+  const {
+    customerAddress,
+    customerCity,
+    customerZip,
+    customerProvince,
+    customerCountry,
+    addressDetails,
+    addressStatus,
+  } = req.body || {};
+
+  try {
+    const existing = db.prepare("SELECT id FROM orders WHERE id = ?").get(id);
+    if (!existing) {
+      return res.status(404).json({ error: "Ordine non trovato" });
+    }
+
+    const updates: string[] = [];
+    const params: any[] = [];
+
+    if (customerAddress !== undefined) {
+      updates.push("customer_address = ?");
+      params.push(customerAddress);
+    }
+    if (customerCity !== undefined) {
+      updates.push("customer_city = ?");
+      params.push(customerCity);
+    }
+    if (customerZip !== undefined) {
+      updates.push("customer_zip = ?");
+      params.push(customerZip);
+    }
+    if (customerProvince !== undefined) {
+      updates.push("customer_province = ?");
+      params.push(customerProvince);
+    }
+    if (customerCountry !== undefined) {
+      updates.push("customer_country = ?");
+      params.push(customerCountry);
+    }
+    if (addressDetails !== undefined) {
+      updates.push("address_details_json = ?");
+      params.push(JSON.stringify(addressDetails));
+    }
+    if (addressStatus !== undefined || addressDetails?.status !== undefined) {
+      updates.push("address_status = ?");
+      params.push(addressStatus || addressDetails?.status || "valid");
+    }
+
+    if (updates.length > 0) {
+      params.push(id);
+      db.prepare(`UPDATE orders SET ${updates.join(", ")} WHERE id = ?`).run(...params);
+    }
+
+    return res.json({ success: true, id });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
@@ -769,6 +1094,7 @@ app.post("/api/orders/clear-packed", (_req, res) => {
 });
 
 // Boxes and Flyers metadata
+app.get("/api/boxes", (_req, res) => {
   const boxes = db.prepare("SELECT * FROM boxes").all();
   res.json(boxes);
 });
@@ -816,6 +1142,195 @@ app.post("/api/audit/scan", (req, res) => {
     Date.now(),
   );
   res.json({ success: true, logId: Number(info.lastInsertRowid) });
+});
+
+// Audit Trail Summary (blocked scan mistakes + recent logs)
+app.get("/api/audit/summary", (_req, res) => {
+  try {
+    const totalRow = db
+      .prepare("SELECT COUNT(*) as total FROM scan_audit_logs")
+      .get() as { total: number };
+    const blockedRow = db
+      .prepare(
+        "SELECT COUNT(*) as blocked FROM scan_audit_logs WHERE status IN ('error', 'warning') OR result_type = 'wrong_product'",
+      )
+      .get() as { blocked: number };
+    const topErrors = db
+      .prepare(
+        `
+        SELECT raw_code as rawCode, result_type as resultType, COUNT(*) as count
+        FROM scan_audit_logs
+        WHERE status IN ('error', 'warning') OR result_type = 'wrong_product'
+        GROUP BY raw_code, result_type
+        ORDER BY count DESC
+        LIMIT 10
+      `,
+      )
+      .all();
+    const recentLogs = db
+      .prepare(
+        `
+        SELECT id, operator_code as operatorCode, raw_code as rawCode, result_type as resultType,
+               status, message, order_id as orderId, product_id as productId, timestamp
+        FROM scan_audit_logs
+        ORDER BY timestamp DESC
+        LIMIT 20
+      `,
+      )
+      .all();
+
+    res.json({
+      totalScans: totalRow?.total || 0,
+      blockedErrors: blockedRow?.blocked || 0,
+      topErrors,
+      recentLogs,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Persistent Issues / Kanban Replenishment Requests API
+app.get("/api/issues", (_req, res) => {
+  try {
+    const rows = db
+      .prepare("SELECT * FROM issues ORDER BY timestamp DESC")
+      .all() as any[];
+    const mapped = rows.map((r) => ({
+      id: r.id,
+      orderNumber: r.order_number,
+      stationId: r.station_id,
+      operatorName: r.operator_name,
+      type: r.type,
+      note: r.note,
+      timestamp: r.timestamp,
+      status: r.status,
+      resolvedAt: r.resolved_at || undefined,
+      resolvedBy: r.resolved_by || undefined,
+    }));
+    res.json(mapped);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/issues", (req, res) => {
+  const { id, orderNumber, stationId, operatorName, type, note, timestamp } =
+    req.body || {};
+  if (!type || typeof type !== "string" || !stationId || typeof stationId !== "string") {
+    return res.status(400).json({ error: "type e stationId obbligatori" });
+  }
+
+  try {
+    const issue = {
+      id: typeof id === "string" && id.trim() ? id.trim() : `iss-${Date.now()}`,
+      orderNumber: typeof orderNumber === "string" ? orderNumber : "N/A",
+      stationId: stationId.trim(),
+      operatorName: typeof operatorName === "string" ? operatorName : "Operatore",
+      type: type.trim(),
+      note: typeof note === "string" ? note : "",
+      timestamp: typeof timestamp === "number" ? timestamp : Date.now(),
+      status: "pending" as const,
+    };
+
+    db.prepare(
+      `
+      INSERT OR REPLACE INTO issues (
+        id, order_number, station_id, operator_name, type, note, timestamp, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
+    `,
+    ).run(
+      issue.id,
+      issue.orderNumber,
+      issue.stationId,
+      issue.operatorName,
+      issue.type,
+      issue.note,
+      issue.timestamp,
+    );
+
+    res.json({ success: true, issue });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch("/api/issues/:id/resolve", (req, res) => {
+  const { id } = req.params;
+  const resolvedBy = req.body?.resolvedBy || null;
+  try {
+    const info = db
+      .prepare(
+        "UPDATE issues SET status = 'resolved', resolved_at = ?, resolved_by = ? WHERE id = ?",
+      )
+      .run(Date.now(), resolvedBy, id);
+    if (info.changes === 0) {
+      return res.status(404).json({ error: "Segnalazione non trovata" });
+    }
+    res.json({ success: true, id, status: "resolved" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Shared Custom Barcode Bindings API
+app.get("/api/barcode-bindings", (_req, res) => {
+  try {
+    const rows = db
+      .prepare("SELECT raw_barcode, target_sku FROM barcode_bindings")
+      .all() as { raw_barcode: string; target_sku: string }[];
+    const bindings: Record<string, string> = {};
+    for (const r of rows) {
+      bindings[r.raw_barcode] = r.target_sku;
+    }
+    res.json({ bindings });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/barcode-bindings", (req, res) => {
+  const { rawBarcode, targetSku, boundBy } = req.body || {};
+  if (
+    !rawBarcode ||
+    typeof rawBarcode !== "string" ||
+    !rawBarcode.trim() ||
+    !targetSku ||
+    typeof targetSku !== "string" ||
+    !targetSku.trim()
+  ) {
+    return res.status(400).json({ error: "rawBarcode e targetSku obbligatori" });
+  }
+
+  try {
+    const cleanCode = rawBarcode.trim();
+    const cleanSku = targetSku.trim();
+    db.prepare(
+      `
+      INSERT OR REPLACE INTO barcode_bindings (raw_barcode, target_sku, bound_by, created_at)
+      VALUES (?, ?, ?, ?)
+    `,
+    ).run(cleanCode, cleanSku, boundBy || null, Date.now());
+
+    res.json({ success: true, rawBarcode: cleanCode, targetSku: cleanSku });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Integration & API Outbox Readiness Status
+app.get("/api/integrations/status", (_req, res) => {
+  try {
+    const pendingRow = db
+      .prepare("SELECT COUNT(*) as count FROM api_outbox WHERE status = 'pending_api'")
+      .get() as { count: number };
+    res.json({
+      ...getIntegrationsReadiness(),
+      outboxPendingCount: pendingRow?.count || 0,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // --- 3. PICK-TO-LIGHT API ---

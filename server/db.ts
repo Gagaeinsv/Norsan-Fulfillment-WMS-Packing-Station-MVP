@@ -144,23 +144,67 @@ export function initDatabase() {
       fefo_status TEXT NOT NULL DEFAULT 'optimal',
       fefo_note TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS issues (
+      id TEXT PRIMARY KEY,
+      order_number TEXT NOT NULL,
+      station_id TEXT NOT NULL,
+      operator_name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      note TEXT NOT NULL,
+      timestamp INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      resolved_at INTEGER,
+      resolved_by TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS barcode_bindings (
+      raw_barcode TEXT PRIMARY KEY,
+      target_sku TEXT NOT NULL,
+      bound_by TEXT,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS api_outbox (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id TEXT NOT NULL UNIQUE,
+      order_number TEXT NOT NULL,
+      channel TEXT NOT NULL,
+      tracking_number TEXT,
+      package_count INTEGER DEFAULT 1,
+      status TEXT NOT NULL DEFAULT 'pending_api',
+      created_at INTEGER NOT NULL,
+      synced_at INTEGER,
+      last_error TEXT
+    );
   `);
 
-  // Migration helper for new order fields in SQLite
-  try {
-    db.exec(`
-      ALTER TABLE orders ADD COLUMN is_subscription INTEGER DEFAULT 0;
-      ALTER TABLE orders ADD COLUMN subscription_cycle INTEGER DEFAULT 1;
-      ALTER TABLE orders ADD COLUMN retention_gift TEXT DEFAULT 'none';
-      ALTER TABLE orders ADD COLUMN requires_physical_doc INTEGER DEFAULT 0;
-      ALTER TABLE orders ADD COLUMN gift_confirmed INTEGER DEFAULT 0;
-      ALTER TABLE orders ADD COLUMN physical_doc_confirmed INTEGER DEFAULT 0;
-      ALTER TABLE orders ADD COLUMN marketing_flyers_json TEXT DEFAULT '[]';
-      ALTER TABLE orders ADD COLUMN package_count INTEGER DEFAULT 1;
-      ALTER TABLE orders ADD COLUMN assigned_station_id TEXT;
-    `);
-  } catch {
-    // Columns already exist
+  // Idempotent per-column migrations for orders table
+  const orderColumnMigrations = [
+    "ALTER TABLE orders ADD COLUMN is_subscription INTEGER DEFAULT 0",
+    "ALTER TABLE orders ADD COLUMN subscription_cycle INTEGER DEFAULT 1",
+    "ALTER TABLE orders ADD COLUMN retention_gift TEXT DEFAULT 'none'",
+    "ALTER TABLE orders ADD COLUMN requires_physical_doc INTEGER DEFAULT 0",
+    "ALTER TABLE orders ADD COLUMN gift_confirmed INTEGER DEFAULT 0",
+    "ALTER TABLE orders ADD COLUMN physical_doc_confirmed INTEGER DEFAULT 0",
+    "ALTER TABLE orders ADD COLUMN marketing_flyers_json TEXT DEFAULT '[]'",
+    "ALTER TABLE orders ADD COLUMN package_count INTEGER DEFAULT 1",
+    "ALTER TABLE orders ADD COLUMN assigned_station_id TEXT",
+    "ALTER TABLE orders ADD COLUMN locked_by_operator_id TEXT",
+    "ALTER TABLE orders ADD COLUMN locked_by_operator_name TEXT",
+    "ALTER TABLE orders ADD COLUMN locked_by_station_id TEXT",
+    "ALTER TABLE orders ADD COLUMN locked_at INTEGER",
+    "ALTER TABLE orders ADD COLUMN address_details_json TEXT",
+    "ALTER TABLE orders ADD COLUMN address_status TEXT DEFAULT 'valid'",
+    "ALTER TABLE orders ADD COLUMN packing_started_at INTEGER",
+    "ALTER TABLE orders ADD COLUMN packing_completed_at INTEGER",
+  ];
+  for (const sql of orderColumnMigrations) {
+    try {
+      db.exec(sql);
+    } catch {
+      // Column already exists
+    }
   }
 
   // Seed default Operators in SQLite (INSERT OR IGNORE preserves updated names and shift stats)

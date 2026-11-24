@@ -25,7 +25,6 @@ export function App() {
     setStationConfigId,
     orders,
     activeOrderId,
-    setActiveOrderId,
     lastScan,
     isMuted,
     setIsMuted,
@@ -89,6 +88,8 @@ export function App() {
     activeOrder,
     dhlPrintTiming,
     toggleDhlPrintTiming,
+    handleSelectOrder,
+    handleForceUnlockOrder,
   } = state;
 
   // If terminal is locked, display Kiosk Login Screen
@@ -147,8 +148,9 @@ export function App() {
             <OrderQueue
               orders={orders}
               activeOrderId={activeOrderId}
-              onSelectOrder={setActiveOrderId}
+              onSelectOrder={handleSelectOrder}
               onOpenSellyModal={() => setIsSellyModalOpen(true)}
+              currentOperatorId={currentOperator.id}
             />
           </div>
 
@@ -177,6 +179,7 @@ export function App() {
                 setUnboundBarcode(code);
                 setIsBindModalOpen(true);
               }}
+              currentOperatorId={currentOperator.id}
             />
           </div>
         </main>
@@ -203,6 +206,7 @@ export function App() {
             onUpdateProductImage={handleUpdateProductImage}
             onResetSlotsToDefault={handleResetSlotsToDefault}
             onUpdateOrderAddress={handleUpdateOrderAddress}
+            onForceUnlockOrder={handleForceUnlockOrder}
           />
         </main>
       )}

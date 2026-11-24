@@ -8,6 +8,7 @@ import {
   Printer,
   Package,
   AlertTriangle,
+  Lock,
 } from "lucide-react";
 import { Order } from "../../types/wms";
 import {
@@ -20,6 +21,7 @@ interface OrderQueueProps {
   activeOrderId: string;
   onSelectOrder: (orderId: string) => void;
   onOpenSellyModal?: () => void;
+  currentOperatorId?: string;
 }
 
 type FilterType = "all" | "subscriptions" | "b2b" | "amazon";
@@ -29,6 +31,7 @@ export const OrderQueue: React.FC<OrderQueueProps> = ({
   activeOrderId,
   onSelectOrder,
   onOpenSellyModal,
+  currentOperatorId,
 }) => {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
@@ -294,12 +297,26 @@ export const OrderQueue: React.FC<OrderQueueProps> = ({
             const isAmazonOrder =
               order.source === "Amazon Marketplace" ||
               order.boxBranding === "neutral_unbranded";
+            const isLocked =
+              !isPacked && Boolean(order.lockedByOperatorId);
+            const isLockedByOther = Boolean(
+              isLocked &&
+                currentOperatorId &&
+                order.lockedByOperatorId !== currentOperatorId,
+            );
+            const isLockedBySelf = Boolean(
+              isLocked &&
+                currentOperatorId &&
+                order.lockedByOperatorId === currentOperatorId,
+            );
 
             let cardSurface =
               "border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/60";
             if (isActive) {
               cardSurface =
                 "border-norsan-300 border-l-4 border-l-norsan-600 bg-norsan-50/45 shadow-xs";
+            } else if (isLockedByOther) {
+              cardSurface = "border-rose-200 bg-rose-50/35 opacity-85";
             } else if (isPacked) {
               cardSurface = "border-slate-200/70 bg-slate-50/70 opacity-75";
             }
@@ -345,6 +362,28 @@ export const OrderQueue: React.FC<OrderQueueProps> = ({
                     </span>
                   )}
                 </div>
+
+                {isLocked && (
+                  <div className="mb-1.5">
+                    {isLockedByOther ? (
+                      <span
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-200 max-w-full truncate"
+                        title="Ordine attualmente bloccato da un'altra postazione"
+                      >
+                        <Lock className="w-2.5 h-2.5 shrink-0" />
+                        <span className="truncate">
+                          {order.lockedByOperatorName || order.lockedByOperatorId} ·{" "}
+                          {order.lockedByStationId || "ST"}
+                        </span>
+                      </span>
+                    ) : isLockedBySelf ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        <Lock className="w-2.5 h-2.5 shrink-0" />
+                        <span>Tuo banco</span>
+                      </span>
+                    ) : null}
+                  </div>
+                )}
 
                 <div className="text-xs font-semibold text-slate-900 truncate flex items-center gap-1.5">
                   <span className="truncate">{order.customerName}</span>
