@@ -531,9 +531,9 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
         <div className="flex items-center gap-3 min-w-0">
           <div
             className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${
-              isOrderFullyReady
+              order.status === "packed" || isOrderFullyReady
                 ? "bg-emerald-50 border-emerald-200 text-emerald-600"
-                : "bg-slate-50 border-slate-200 text-slate-500"
+                : "bg-slate-50 border-slate-200 text-slate-600"
             }`}
           >
             <ShieldCheck className="w-5 h-5" />
@@ -541,15 +541,15 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
           <div className="min-w-0">
             <div className="text-[11px] font-semibold text-slate-500 flex items-center gap-2">
               <span>Stato Imballaggio</span>
-              <span className="bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.2 rounded text-[10px] font-mono font-semibold">
-                Poka-Yoke
+              <span className="bg-norsan-50 text-norsan-800 border border-norsan-200 px-1.5 py-0.2 rounded text-[10px] font-mono font-semibold">
+                Flusso Rapido 1-Scan
               </span>
             </div>
             <div className="text-sm font-bold text-slate-900">
-              {isOrderFullyReady ? (
+              {order.status === "packed" ? (
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-emerald-700">
-                    Tutti i {totalItemsRequired} prodotti scansionati · Pronto per la spedizione
+                    Ordine completato · Pronto per ritiro DHL
                   </span>
                   {requiredFlyer && (
                     <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200">
@@ -561,10 +561,24 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
                   )}
                 </div>
               ) : (
-                <span className="text-amber-700 tabular-nums">
-                  Mancano {totalItemsRequired - totalItemsScanned} prodotti da
-                  scansionare
-                </span>
+                <div className="flex items-center gap-2 flex-wrap tabular-nums">
+                  <span className="text-slate-800">
+                    {totalItemsRequired} pz da imballare ·{" "}
+                    <span className="text-emerald-700">
+                      {dhlPrintTiming === "on_scan"
+                        ? "Etichetta DHL automatica alla scansione bolla"
+                        : "Etichetta DHL alla chiusura"}
+                    </span>
+                  </span>
+                  {requiredFlyer && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200">
+                      <Bookmark className="w-3 h-3 text-slate-400" />
+                      <span>
+                        {requiredFlyer.title} [{requiredFlyer.shelfLocation}]
+                      </span>
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>

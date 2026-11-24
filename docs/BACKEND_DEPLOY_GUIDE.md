@@ -16,7 +16,7 @@ La componente server è sviluppata in **TypeScript** su **Node.js 20+**, **Expre
 │                 server/index.ts (Express 5)              │
 │  • CRUD coda ordini, slot 5S, operatori                  │
 │  • Order Locking atomico (TTL 15 min) + Force Release    │
-│  • Audit scansioni Poka-Yoke, anomalie Kanban, binding   │
+│  • Audit scansioni (opzionale), anomalie Kanban, binding │
 └───────┬───────────────────────┬──────────────────────────┘
         │                       │
         ▼                       ▼
@@ -53,7 +53,7 @@ Il file del database viene creato automaticamente al primo avvio (`server/db.ts`
 | | `order_items` | Righe prodotto di ogni ordine (`quantity_required`, `quantity_scanned`, `status`). |
 | **Operatività Condivisa** | `issues` | Richieste Kanban e segnalazioni anomalie dai banchi (`status`: `pending`/`resolved`, `resolved_by`, `resolved_at`). |
 | | `barcode_bindings` | Associazioni personalizzate di codici a barre non censiti (`raw_barcode` → `target_sku`), condivise tra tutte le postazioni. |
-| | `scan_audit_logs` | Storico delle scansioni valide e degli errori bloccati dal controllo Poka-Yoke. |
+| | `scan_audit_logs` | Storico delle scansioni opzionali e degli avvisi registrati ai banchi. |
 | **Coda API** | `api_outbox` | Coda ordini imballati (`status = 'pending_api'`) con numero tracking e quantità colli pronta per l'invio a Selly ERP / Amazon SP-API. |
 | **Fase 2–3 (Congelate)** | `inventory_stock`, `product_lots` | Tabelle predisposte per stock su 2 livelli e tracciabilità lotti FEFO (disattivate in `src/config/wmsPhaseConfig.ts`). |
 

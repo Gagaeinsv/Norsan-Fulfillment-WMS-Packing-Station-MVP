@@ -13,7 +13,7 @@
 
 Sistema operativo di magazzino (**WMS Packing Station & Supervisor Control Tower**) progettato per l'Hub logistico **NORSAN S.r.l. / ZREEN** di Bolzano (Alto Adige, Italia).
 
-Sostituisce i processi manuali e i software intermediari esterni a pagamento con un'interfaccia **Swiss-Light Industrial** ad alta velocità, conforme agli standard **Lean 5S**, **Poka-Yoke** (zero errori di spedizione), controllo multi-banco e predisposizione **Pick-to-Light** + integrazioni API.
+Sostituisce i processi manuali e i software intermediari esterni a pagamento con un'interfaccia **Swiss-Light Industrial** veloce ed essenziale: **1 scansione sulla bolla per aprire l'ordine, bloccarlo sul banco e stampare subito l'etichetta DHL**, senza rallentare l'operatore con scansioni obbligatorie dei singoli flaconi.
 
 > **Documentazione dedicata:**
 > - [DOCUMENTAZIONE_ARCHITETTURA.md](DOCUMENTAZIONE_ARCHITETTURA.md) — Mappa completa dei moduli frontend/backend e flusso operativo
@@ -23,28 +23,26 @@ Sostituisce i processi manuali e i software intermediari esterni a pagamento con
 
 ## 🎯 Funzionalità Operative Attive (Fase 1 + Nucleo Multi-Banco)
 
-1. **Zero Errori di Confezionamento (Poka-Yoke Attivo)**
-   - Verifica rigorosa tramite scanner hardware USB/Bluetooth (EAN-13, UPC-12, SKU, alias di lotto e associazioni condivise su DB).
-   - Blocco automatico della chiusura ordine finché non sono confermati: **Articoli**, **Volantino Marketing**, **Omaggio Fedeltà** e **Fattura/DDT Cartaceo B2B**, con salvataggio immediato su SQLite (`PATCH /api/orders/:id/checklist`).
-   - **1-Click Barcode Binding**: associazione al volo di nuovi codici fornitore condivisa automaticamente tra tutte le postazioni (`/api/barcode-bindings`).
-   - **Audit Log Poka-Yoke**: tracciamento scansioni valide ed errori bloccati con report aggregato (`/api/audit/summary`).
+1. **Flusso Rapido 1-Scan: Bolla → Stampa Immediata DHL (Zero Rallentamenti)**
+   - Scansionando il codice a barre della bolla cartacea, il WMS carica l'ordine, segna automaticamente la distinta pronta e lancia **immediatamente l'etichetta termica DHL `100×150 mm`** (`on_scan` di default, o `on_finish` su scelta dell'operatore).
+   - **Nessuna scansione obbligatoria dei singoli prodotti**: la scansione EAN resta disponibile come controllo opzionale non bloccante (con eventuale audit su `scan_audit_logs`), mentre comandi da tavolo (`+COLLO`, `PRINT-DHL`) gestiscono colli multipli e ristampe senza mouse.
 
-2. **Controllo Multi-Banco (Order Locking & Force Release)**
-   - Lock atomico degli ordini in SQLite (`POST /api/orders/:id/lock`, TTL 15 min) con risposta `409 Conflict` se un altro banco tenta di aprire o scansionare lo stesso ordine.
+2. **Protezione Multi-Banco (Order Locking & Force Release)**
+   - Lock atomico degli ordini in SQLite (`POST /api/orders/:id/lock`, TTL 15 min): se un secondo banco prova a prendere o scansionare un duplicato della stessa bolla, riceve **`409 Conflict`** e **non stampa una seconda etichetta DHL**.
    - Rilascio automatico al cambio ordine, al completamento o al blocco terminale, più **Force Release** in 1 clic per il Team Lead dalla tab `Postazioni`.
-   - Sincronizzazione live ogni 5 secondi con protezione delle modifiche locali recenti (4s window).
+   - Sincronizzazione live ogni 5 secondi tra i terminali con protezione delle modifiche locali recenti (finestra 4s).
 
-3. **Doppio Flusso: Paperless (Pick-to-Light) & Prelievo da Bolla Cartacea**
-   - Comandi da tavolo scanner-first (`+COLLO`, `PRINT-DHL`, `CMD:PRINT-DHL`) e scelta stampa etichetta DHL immediata alla scansione della bolla (`on_scan`) oppure a chiusura scatola (`on_finish`).
-   - Validazione rapida da bolla cartacea A4 mantenendo intatti i controlli su allegati, scatole neutre Amazon FBM (`BOX-AMZ-*`) e anomalie Kanban (`/api/issues`).
+3. **Guida Visuale a 5 Livelli & Regole Canale (NORSAN vs Amazon Neutra)**
+   - Mappa interattiva **5 piani (`E, D, C, B, A`) + `TAVOLO`** per **NORSAN (`S`)** e **ZREEN (`D`)**, con inversione automatica sinistra/destra per tavoli speculari (`STATION_01` / `STATION_02`) per trovare i flaconi a colpo d'occhio.
+   - Promemoria visivi per **Scatola Neutra senza logo (`BOX-AMZ-*`)** su ordini Amazon FBM, eventuali volantini promozionali, omaggi clienti fedeli e documenti cartacei B2B, più segnalazioni rapide Kanban (`/api/issues`).
 
-4. **Integrazione Diretta Amazon FBM, Selly ERP & Predisposizione API**
+4. **Normalizzatore Indirizzi Italiani & Multi-Collo (`+COLLO`)**
+   - Parser dedicato (`Via / Civico / Piano / Scala / Int.`) che individua e corregge gli indirizzi italiani problematici prima dell'invio al corriere, salvando le correzioni su SQLite (`PATCH /api/orders/:id/address`).
+   - Calcolo automatico colli per ordini voluminosi e aggiunta scatole aggiuntive con barcode sequenziale.
+
+5. **Integrazione Selly ERP & Predisposizione API DHL / Amazon (`api_outbox`)**
    - Importazione ordini da **Selly ERP via CSV (Zero-API)** con filtro automatico delle righe di servizio (`3000-001 Spedizione`, incassi, sconti) e daemon REST pronto per `SELLY_API_KEY`.
-   - **Normalizzatore Indirizzi Italiani** (`Via / Civico / Piano / Scala`) con persistenza delle correzioni su SQLite (`PATCH /api/orders/:id/address`).
-   - **Architettura Adapter + `api_outbox`**: adapter `CarrierProvider` (`server/services/carrierService.ts`) e coda `api_outbox` pronti per attivare tracking reali DHL, Selly e Amazon SP-API tramite `.env` senza riscrivere il nucleo applicativo.
-
-5. **Topologia Reale Hub Bolzano a 5 Livelli & Control Tower Lead**
-   - Mappa interattiva a **5 livelli verticali (`E, D, C, B, A`) + `TAVOLO`** per **NORSAN (`S`)** e **ZREEN (`D`)**, con inversione automatica sinistra/destra per tavoli speculari (`STATION_01` / `STATION_02`).
+   - Adapter `CarrierProvider` (`server/services/carrierService.ts`) e coda `api_outbox` pronti per attivare tracking ufficiali DHL, Selly e Amazon SP-API inserendo le credenziali in `.env` senza riscrivere il nucleo.
    - Tab **`Control Tower Roadmap`** con i moduli enterprise previsti per le fasi successive (`Cutoff DHL & SLA`, `Audit Heatmap`, `Borderò EOD`, `Resi RMA`, `FEFO HACCP & Stock 2-Livelli` attualmente congelati in `src/config/wmsPhaseConfig.ts`).
 
 ---
