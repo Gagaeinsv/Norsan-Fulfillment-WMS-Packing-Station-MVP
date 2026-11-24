@@ -17,7 +17,7 @@ Sostituisce i processi manuali e i software intermediari esterni a pagamento con
 
 > **Documentazione dedicata:**
 > - [DOCUMENTAZIONE_ARCHITETTURA.md](DOCUMENTAZIONE_ARCHITETTURA.md) — Mappa completa dei moduli frontend/backend e flusso operativo
-> - [docs/BACKEND_DEPLOY_GUIDE.md](docs/BACKEND_DEPLOY_GUIDE.md) — **Guida al Backend (SQLite, REST API, `.env` e deploy Docker/Windows/Cloud)** *(in ucraino)*
+> - [docs/BACKEND_DEPLOY_GUIDE.md](docs/BACKEND_DEPLOY_GUIDE.md) — **Guida al Backend (SQLite, REST API, `.env` e deploy Docker/Windows/Cloud)**
 
 ---
 
@@ -67,7 +67,7 @@ Sostituisce i processi manuali e i software intermediari esterni a pagamento con
 ├── .env.example                       # Template variabili d'ambiente per backend, API corriere/ERP e ESP32
 ├── Dockerfile & docker-compose.yml    # Containerizzazione backend Node + volume persistente SQLite
 ├── docs/
-│   ├── BACKEND_DEPLOY_GUIDE.md        # Guida completa al backend e alle opzioni di deploy (UA)
+│   ├── BACKEND_DEPLOY_GUIDE.md        # Guida completa al backend e alle opzioni di deploy
 │   └── VISIONE_E_ROADMAP_ECOSISTEMA_MAGAZZINO_IT.md
 ├── src/
 │   ├── config/
