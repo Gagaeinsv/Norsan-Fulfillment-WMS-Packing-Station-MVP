@@ -181,7 +181,7 @@ export function App() {
           </div>
         </main>
       ) : (
-        <main className="flex-1 p-4 max-w-[1920px] mx-auto w-full h-[calc(100vh-84px)]">
+        <main className="flex-1 p-3 max-w-[1920px] mx-auto w-full overflow-hidden min-h-0">
           <SupervisorDashboard
             stations={stations}
             operators={operators}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Barcode, Link2, X, Sparkles } from "lucide-react";
+import { Barcode, Link2, X, Sparkles, MapPin } from "lucide-react";
 import { Product } from "../../types/wms";
 
 interface BarcodeBindModalProps {
@@ -69,65 +69,68 @@ export const BarcodeBindModal: React.FC<BarcodeBindModalProps> = ({
   const selectedProduct = catalog.find((p) => p.sku === selectedSku);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-      <div className="bg-slate-900 border-2 border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+      <div className="bg-white border border-slate-200/90 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden flex flex-col select-none">
         {/* Header */}
-        <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-4 bg-white border-b border-slate-100 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              <Barcode className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center shrink-0">
+              <Barcode className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-base font-black text-white">
+              <div className="text-base font-bold text-slate-900">
                 Associa Codice a Barre Sconosciuto
               </div>
-              <div className="text-xs text-slate-400">
-                Collega il codice scansionato al catalogo NORSAN per riconoscerlo per sempre.
+              <div className="text-xs text-slate-500 mt-0.5">
+                Collega il codice scansionato al catalogo NORSAN per
+                riconoscerlo in futuro.
               </div>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+            className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-5 space-y-4">
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-            <div className="text-[10px] uppercase font-bold text-slate-400">
+        <div className="p-5 space-y-4 bg-[#f4f6f9]">
+          <div className="bg-amber-50 p-3.5 rounded-xl border border-amber-200">
+            <div className="text-[11px] uppercase tracking-wider font-semibold text-amber-800">
               Codice Scansionato dalla Pistola
             </div>
-            <div className="text-2xl font-mono font-black text-amber-400 mt-1">
+            <div className="text-2xl font-mono font-bold text-amber-950 mt-1 tabular-nums">
               {rawBarcode}
             </div>
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-bold text-slate-300">
-                Seleziona il Prodotto Corrispondente:
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold text-slate-700">
+                Seleziona il Prodotto Corrispondente
               </label>
               {activeOrderSku && (
-                <span className="text-[10px] text-amber-400 font-bold flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> Pre-selezionato da ordine attivo
+                <span className="text-[11px] text-norsan-700 font-semibold flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  <span>Pre-selezionato da ordine attivo</span>
                 </span>
               )}
             </div>
             <select
               value={selectedSku}
               onChange={(e) => setSelectedSku(e.target.value)}
-              className="w-full bg-slate-950 border-2 border-amber-500/70 focus:border-amber-400 rounded-xl p-3 text-sm text-white font-bold cursor-pointer"
+              className="w-full bg-white border border-slate-300 focus:border-norsan-600 focus:outline-none focus:ring-2 focus:ring-norsan-500/20 rounded-xl px-3 py-2.5 text-sm text-slate-900 font-semibold cursor-pointer"
             >
               {sortedCatalog.map((p) => {
                 const isInActiveOrder =
                   activeOrderSkus.includes(p.sku) || p.sku === activeOrderSku;
                 return (
                   <option key={p.id} value={p.sku}>
-                    {isInActiveOrder ? "⭐ [ORDINE ATTIVO] " : ""}
-                    [{p.shelfLocation}] {p.name} ({p.sku})
+                    {isInActiveOrder ? "[ORDINE ATTIVO] " : ""}[
+                    {p.shelfLocation}] {p.name} ({p.sku})
                   </option>
                 );
               })}
@@ -135,23 +138,24 @@ export const BarcodeBindModal: React.FC<BarcodeBindModalProps> = ({
           </div>
 
           {selectedProduct && (
-            <div className="bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/60 flex items-center gap-3">
+            <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 flex items-center gap-3 shadow-2xs">
               <img
                 src={selectedProduct.imageUrl}
                 alt={selectedProduct.name}
-                className="w-12 h-12 object-cover rounded-lg border border-slate-600 flex-shrink-0"
+                className="w-12 h-12 object-contain rounded-lg border border-slate-100 bg-slate-50 p-1 shrink-0"
               />
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-white truncate">
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-bold text-slate-900 truncate">
                   {selectedProduct.name}
                 </div>
-                <div className="text-[11px] text-slate-400 font-mono">
-                  Posizione Scaffale:{" "}
-                  <span className="text-amber-400 font-bold">
-                    [{selectedProduct.shelfLocation}]
+                <div className="text-[11px] text-slate-600 font-mono flex items-center gap-1 mt-0.5">
+                  <MapPin className="w-3 h-3 text-slate-400" />
+                  <span>Posizione Scaffale:</span>
+                  <span className="text-norsan-700 font-bold">
+                    {selectedProduct.shelfLocation}
                   </span>
                 </div>
-                <div className="text-[10px] text-slate-500">
+                <div className="text-[10px] font-mono text-slate-400 mt-0.5">
                   EAN Primario: {selectedProduct.ean}
                 </div>
               </div>
@@ -160,16 +164,18 @@ export const BarcodeBindModal: React.FC<BarcodeBindModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-end gap-2">
+        <div className="px-5 py-3.5 bg-white border-t border-slate-100 flex items-center justify-end gap-2">
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white bg-slate-800 rounded-xl transition"
+            className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 bg-white border border-slate-200 rounded-xl transition cursor-pointer"
           >
             Annulla
           </button>
           <button
+            type="button"
             onClick={handleSave}
-            className="px-5 py-2 text-xs font-black text-white bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl transition shadow-lg flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition flex items-center gap-1.5 cursor-pointer"
           >
             <Link2 className="w-4 h-4" />
             <span>Salva Associazione e Scansiona</span>

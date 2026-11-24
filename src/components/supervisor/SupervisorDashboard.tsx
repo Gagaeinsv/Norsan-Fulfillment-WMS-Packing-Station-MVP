@@ -24,6 +24,13 @@ import {
   Key,
   Settings,
   ShoppingBag,
+  Lock,
+  ExternalLink,
+  Clock,
+  ShieldAlert,
+  RotateCcw,
+  Truck,
+  Database,
 } from "lucide-react";
 import {
   WarehouseStation,
@@ -122,6 +129,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
     | "lean"
     | "fefo"
     | "inventory"
+    | "roadmap"
   >("stations");
 
   // FEFO & Batch Recall State
@@ -417,90 +425,90 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
   return (
     <div className="flex flex-col h-full space-y-4 overflow-y-auto pr-1 select-none">
       {/* Top Banner & KPI Bar */}
-      <div className="bg-white border-2 border-slate-300 rounded-3xl p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3.5">
-            <div className="p-3 bg-norsan-600 rounded-2xl text-white shadow-md">
-              <Activity className="w-7 h-7" />
+            <div className="w-11 h-11 bg-norsan-700 rounded-xl text-white flex items-center justify-center shrink-0">
+              <Activity className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-black text-slate-900">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-lg font-bold tracking-tight text-slate-900">
                   Panoramica Direzione & Team Lead
                 </h1>
-                <span className="text-xs bg-cyan-100 text-cyan-900 border border-cyan-300 px-3 py-0.5 rounded-full font-mono font-bold">
+                <span className="text-[11px] bg-norsan-50 text-norsan-800 border border-norsan-200 px-2.5 py-0.5 rounded-full font-mono font-semibold">
                   HUB BOLZANO LIVE
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5 font-medium">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Controllo in tempo reale di postazioni di imballaggio, flussi
                 online norsan.it e produttività operatori
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 border border-slate-300 px-3 py-1.5 rounded-xl">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-semibold text-slate-600 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
               Modalità Operativa Produzione
             </span>
           </div>
         </div>
 
         {/* Aggregate KPI Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4">
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3">
-            <div className="text-[11px] font-bold text-slate-500 uppercase">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4 tabular-nums">
+          <div className="bg-[#f4f6f9] border border-slate-200/80 rounded-xl p-3">
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               Totale Ordini
             </div>
-            <div className="text-2xl font-black font-mono text-slate-900 mt-1">
+            <div className="text-2xl font-bold font-mono text-slate-900 mt-1">
               {totalOrders}
             </div>
-            <div className="text-[10px] text-slate-500 font-medium mt-1">
+            <div className="text-[11px] text-slate-500 mt-0.5">
               {webOrdersCount} da norsan.it
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3">
-            <div className="text-[11px] font-bold text-slate-500 uppercase">
+          <div className="bg-[#f4f6f9] border border-slate-200/80 rounded-xl p-3">
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               In Imballaggio
             </div>
-            <div className="text-2xl font-black font-mono text-amber-700 mt-1">
+            <div className="text-2xl font-bold font-mono text-amber-600 mt-1">
               {inPackingOrders}
             </div>
-            <div className="text-[10px] text-slate-500 font-medium mt-1">
+            <div className="text-[11px] text-slate-500 mt-0.5">
               Postazioni attive
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3">
-            <div className="text-[11px] font-bold text-slate-500 uppercase">
+          <div className="bg-[#f4f6f9] border border-slate-200/80 rounded-xl p-3">
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               Completati Oggi
             </div>
-            <div className="text-2xl font-black font-mono text-emerald-700 mt-1">
+            <div className="text-2xl font-bold font-mono text-emerald-600 mt-1">
               {packedOrders}
             </div>
-            <div className="text-[10px] text-slate-500 font-medium mt-1">
+            <div className="text-[11px] text-slate-500 mt-0.5">
               Pronti ritiro DHL
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3">
-            <div className="text-[11px] font-bold text-slate-500 uppercase">
+          <div className="bg-[#f4f6f9] border border-slate-200/80 rounded-xl p-3">
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               In Coda
             </div>
-            <div className="text-2xl font-black font-mono text-cyan-800 mt-1">
+            <div className="text-2xl font-bold font-mono text-norsan-700 mt-1">
               {readyOrders}
             </div>
-            <div className="text-[10px] text-slate-500 font-medium mt-1">
+            <div className="text-[11px] text-slate-500 mt-0.5">
               Da assegnare
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3">
-            <div className="text-[11px] font-bold text-slate-500 uppercase">
+          <div className="bg-[#f4f6f9] border border-slate-200/80 rounded-xl p-3">
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               Velocità Media
             </div>
-            <div className="text-2xl font-black font-mono text-slate-900 mt-1">
+            <div className="text-2xl font-bold font-mono text-slate-900 mt-1">
               {stations.some((s) => s.currentSpeedUPH > 0)
                 ? (
                     stations.reduce((acc, s) => acc + s.currentSpeedUPH, 0) /
@@ -508,19 +516,19 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   ).toFixed(1)
                 : "0"}
             </div>
-            <div className="text-[10px] text-emerald-700 font-bold mt-1">
+            <div className="text-[11px] text-emerald-700 font-semibold mt-0.5">
               UPH (Colli / ora)
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3">
-            <div className="text-[11px] font-bold text-slate-500 uppercase">
+          <div className="bg-[#f4f6f9] border border-slate-200/80 rounded-xl p-3">
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               Anomalie Aperte
             </div>
-            <div className="text-2xl font-black font-mono text-rose-700 mt-1">
+            <div className="text-2xl font-bold font-mono text-rose-600 mt-1">
               {issues.filter((i) => i.status === "pending").length}
             </div>
-            <div className="text-[10px] text-slate-500 font-medium mt-1">
+            <div className="text-[11px] text-slate-500 mt-0.5">
               Assistenza immediata
             </div>
           </div>
@@ -528,64 +536,69 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 flex-wrap">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2.5 flex-wrap">
         <button
+          type="button"
           onClick={() => setActiveTab("stations")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer tabular-nums ${
             activeTab === "stations"
-              ? "bg-norsan-600 text-white shadow-sm"
-              : "bg-white text-slate-600 hover:text-slate-900 border border-slate-300"
+              ? "bg-slate-900 text-white shadow-2xs"
+              : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200"
           }`}
         >
-          <Package className="w-4 h-4" />
+          <Package className="w-3.5 h-3.5" />
           <span>Postazioni ({stations.length})</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab("ecommerce")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer tabular-nums ${
             activeTab === "ecommerce"
-              ? "bg-blue-600 text-white shadow-sm"
-              : "bg-white text-slate-600 hover:text-slate-900 border border-slate-300"
+              ? "bg-slate-900 text-white shadow-2xs"
+              : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200"
           }`}
         >
-          <Globe className="w-4 h-4 text-blue-400" />
+          <Globe className="w-3.5 h-3.5 text-norsan-500" />
           <span>Selly Web-Shop ({webOrdersCount})</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab("amazon")}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer tabular-nums ${
             activeTab === "amazon"
-              ? "bg-amber-600 text-white shadow-sm"
-              : "bg-white text-amber-900 hover:text-amber-950 border border-amber-300"
+              ? "bg-slate-900 text-white shadow-2xs"
+              : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200"
           }`}
         >
-          <ShoppingBag className="w-4 h-4 text-amber-500" />
-          <span>📦 Amazon FBM ({amazonOrdersCount})</span>
+          <ShoppingBag className="w-3.5 h-3.5 text-amber-500" />
+          <span>Amazon FBM ({amazonOrdersCount})</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab("operators")}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer tabular-nums ${
             activeTab === "operators"
-              ? "bg-blue-600 text-white shadow-sm"
-              : "bg-white text-blue-700 hover:text-blue-950 border border-blue-300"
+              ? "bg-slate-900 text-white shadow-2xs"
+              : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200"
           }`}
         >
-          <Users className="w-4 h-4 text-blue-500" />
-          <span>👥 Operatori & Badge ({operators.length})</span>
+          <Users className="w-3.5 h-3.5 text-norsan-600" />
+          <span>Operatori & Badge ({operators.length})</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab("issues")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer tabular-nums ${
             activeTab === "issues"
-              ? "bg-rose-600 text-white shadow-sm"
-              : "bg-white text-slate-600 hover:text-slate-900 border border-slate-300"
+              ? "bg-slate-900 text-white shadow-2xs"
+              : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200"
           }`}
         >
-          <AlertOctagon className="w-4 h-4" />
+          <AlertOctagon className="w-3.5 h-3.5 text-rose-500" />
           <span>
             Anomalie & Kanban (
             {issues.filter((i) => i.status === "pending").length})
@@ -593,75 +606,96 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab("slotting")}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer ${
             activeTab === "slotting"
-              ? "bg-amber-600 text-white shadow-sm"
-              : "bg-white text-slate-700 hover:text-slate-900 border border-slate-300"
+              ? "bg-slate-900 text-white shadow-2xs"
+              : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200"
           }`}
         >
-          <Layers className="w-4 h-4 text-amber-500" />
-          <span>⚙️ Gestione Scaffali & Slotting (5S)</span>
+          <Layers className="w-3.5 h-3.5 text-amber-500" />
+          <span>Gestione Scaffali & Slotting (5S)</span>
         </button>
 
         {!WMS_PHASE_CONFIG.PHASE_1_PACKING_STATION_ONLY && (
           <>
             <button
+              type="button"
               onClick={() => setActiveTab("lean")}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer ${
                 activeTab === "lean"
-                  ? "bg-emerald-700 text-white shadow-sm"
-                  : "bg-white text-emerald-800 hover:text-emerald-950 border border-emerald-300"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200"
               }`}
             >
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <span>📈 Metriche Lean & 5S Kaizen</span>
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Metriche Lean & 5S Kaizen</span>
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab("fefo")}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer ${
                 activeTab === "fefo"
-                  ? "bg-teal-700 text-white shadow-sm"
-                  : "bg-white text-teal-800 hover:text-teal-950 border border-teal-300"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200"
               }`}
             >
-              <CheckCircle className="w-4 h-4 text-teal-500" />
-              <span>🧪 Lotti, Scadenze FEFO & Richiamo</span>
+              <CheckCircle className="w-3.5 h-3.5 text-teal-500" />
+              <span>Lotti, Scadenze FEFO & Richiamo</span>
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab("inventory")}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer ${
                 activeTab === "inventory"
-                  ? "bg-indigo-700 text-white shadow-sm"
-                  : "bg-white text-indigo-900 hover:text-indigo-950 border border-indigo-300"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200"
               }`}
             >
-              <Package className="w-4 h-4 text-indigo-500" />
-              <span>🏭 Magazzino Centrale & Inventario (Pallet)</span>
+              <Package className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Magazzino Centrale & Inventario</span>
             </button>
           </>
         )}
 
         {WMS_PHASE_CONFIG.PHASE_1_PACKING_STATION_ONLY && (
-          <span
-            className="px-3.5 py-2 rounded-xl text-[11px] font-mono font-bold bg-slate-100 text-slate-500 border border-dashed border-slate-300 flex items-center gap-1.5"
-            title="I moduli Inventario Centrale, Lotti FEFO e Scrico Automatico ERP sono congelati per la Fase 1 (focus Postazione Imballaggio) e documentati nella Roadmap Strategica."
+          <button
+            type="button"
+            onClick={() => setActiveTab("roadmap")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer tabular-nums ${
+              activeTab === "roadmap"
+                ? "bg-slate-900 text-white shadow-2xs border border-slate-900"
+                : "bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-dashed border-slate-300"
+            }`}
+            title="Visualizza i moduli di controllo Team Lead previsti in Roadmap (richiedono sviluppo dedicato)"
           >
-            <span>🔒 Fase 1: Focus Postazione Imballaggio (Moduli Magazzino & FEFO in Roadmap)</span>
-          </span>
+            <Lock className="w-3.5 h-3.5 text-amber-500" />
+            <span>Control Tower Roadmap</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono ${
+                activeTab === "roadmap"
+                  ? "bg-white/15 text-white"
+                  : "bg-slate-200/80 text-slate-700"
+              }`}
+            >
+              6
+            </span>
+          </button>
         )}
 
         <a
           href="/calcolatore-omega3.html"
           target="_blank"
           rel="noopener noreferrer"
-          className="px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer bg-sky-50 text-sky-900 hover:bg-sky-100 border border-sky-300"
+          className="px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer bg-white text-norsan-700 hover:bg-norsan-50 border border-slate-200 ml-auto"
           title="Apri il prototipo interattivo per norsan.it e Amazon A+"
         >
-          <Sparkles className="w-4 h-4 text-sky-600" />
-          <span>🔬 Calcolatore Etichetta Omega-3 (Marketing) ↗</span>
+          <Sparkles className="w-3.5 h-3.5 text-norsan-600" />
+          <span>Calcolatore Omega-3</span>
+          <ExternalLink className="w-3 h-3 opacity-70" />
         </a>
       </div>
 
@@ -685,30 +719,30 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           {stations.map((st) => (
             <div
               key={st.id}
-              className="bg-white border-2 border-slate-300 rounded-3xl p-5 shadow-sm flex flex-col justify-between"
+              className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-2.5">
-                    <span className="font-mono text-base font-black text-slate-900 bg-slate-100 px-3 py-1 rounded-xl border border-slate-300">
+                    <span className="font-mono text-sm font-bold text-slate-900 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200">
                       {st.id}
                     </span>
                     <div>
-                      <h3 className="text-sm font-black text-slate-900">
+                      <h3 className="text-sm font-bold text-slate-900">
                         {st.name}
                       </h3>
-                      <div className="text-xs text-slate-500 font-semibold">
+                      <div className="text-xs text-slate-500 font-medium">
                         {st.operatorName} ({st.operatorCode})
                       </div>
                     </div>
                   </div>
                   <span
-                    className={`text-xs font-black uppercase px-2.5 py-1 rounded-lg border ${
+                    className={`text-[11px] font-semibold uppercase px-2.5 py-1 rounded-lg border ${
                       st.status === "packing"
-                        ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                        ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                         : st.status === "idle"
-                          ? "bg-slate-100 text-slate-700 border-slate-300"
-                          : "bg-amber-100 text-amber-900 border-amber-300"
+                          ? "bg-slate-50 text-slate-600 border-slate-200"
+                          : "bg-amber-50 text-amber-800 border-amber-200"
                     }`}
                   >
                     {st.status === "packing"
@@ -719,47 +753,50 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 mt-4 text-center">
-                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
-                    <div className="text-[10px] text-slate-500 font-bold uppercase">
+                <div className="grid grid-cols-3 gap-2 mt-4 text-center tabular-nums">
+                  <div className="bg-[#f4f6f9] p-2.5 rounded-xl border border-slate-200/80">
+                    <div className="text-[10px] text-slate-500 font-semibold uppercase">
                       Colli Oggi
                     </div>
-                    <div className="text-lg font-black font-mono text-slate-900 mt-0.5">
+                    <div className="text-lg font-bold font-mono text-slate-900 mt-0.5">
                       {st.ordersPackedToday}
                     </div>
                   </div>
-                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
-                    <div className="text-[10px] text-slate-500 font-bold uppercase">
+                  <div className="bg-[#f4f6f9] p-2.5 rounded-xl border border-slate-200/80">
+                    <div className="text-[10px] text-slate-500 font-semibold uppercase">
                       UPH
                     </div>
-                    <div className="text-lg font-black font-mono text-amber-700 mt-0.5">
+                    <div className="text-lg font-bold font-mono text-amber-600 mt-0.5">
                       {st.currentSpeedUPH}
                     </div>
                   </div>
-                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
-                    <div className="text-[10px] text-slate-500 font-bold uppercase">
+                  <div className="bg-[#f4f6f9] p-2.5 rounded-xl border border-slate-200/80">
+                    <div className="text-[10px] text-slate-500 font-semibold uppercase">
                       Precisione
                     </div>
-                    <div className="text-lg font-black font-mono text-emerald-700 mt-0.5">
+                    <div className="text-lg font-bold font-mono text-emerald-600 mt-0.5">
                       {st.accuracy}%
                     </div>
                   </div>
                 </div>
 
                 {st.currentOrderNumber && (
-                  <div className="mt-3.5 p-2.5 bg-cyan-50 border border-cyan-200 rounded-xl text-xs flex items-center justify-between">
-                    <span className="text-slate-600">Ordine in corso:</span>
-                    <strong className="font-mono text-norsan-900">
+                  <div className="mt-3.5 px-3 py-2 bg-norsan-50/70 border border-norsan-200 rounded-xl text-xs flex items-center justify-between">
+                    <span className="text-slate-600 font-medium">
+                      Ordine in corso:
+                    </span>
+                    <strong className="font-mono text-norsan-800">
                       {st.currentOrderNumber}
                     </strong>
                   </div>
                 )}
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-end">
+              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
                 <button
+                  type="button"
                   onClick={() => onSwitchToStation(st.id)}
-                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition active:scale-95 flex items-center gap-1 cursor-pointer"
+                  className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
                 >
                   <span>Apri Vista Banco</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -772,34 +809,35 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
       {/* Tab Content 2: Selly Web-Shop Stream & Address Validation */}
       {activeTab === "ecommerce" && (
-        <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 shadow-sm space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div>
-              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                <Globe className="w-4 h-4 text-blue-600" />
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-norsan-600" />
                 <span>Flusso Ordini Web-Shop (Selly ERP) & Indirizzi IT</span>
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Ordini diretti dallo store online norsan.it sincronizzati con Selly ERP
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold tabular-nums">
               <button
+                type="button"
                 onClick={() => printBatchAmazonPackingSlips(sellyOrders)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition active:scale-95 shadow-xs cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-norsan-700 hover:bg-norsan-800 text-white text-xs font-semibold transition active:scale-95 cursor-pointer"
                 title="Stampa tutte le distinte di prelievo / bolle degli ordini Web Shop"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>Stampa Tutte le Bolle ({sellyOrders.length})</span>
+                <span>Stampa Bolle ({sellyOrders.length})</span>
               </button>
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300">
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                 <span>
                   {sellyOrders.filter((o) => o.addressStatus !== "warning").length}{" "}
                   Validi
                 </span>
               </span>
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-300">
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-200">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
                 <span>
                   {sellyOrders.filter((o) => o.addressStatus === "warning").length}{" "}
@@ -810,60 +848,68 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           </div>
 
           {/* Selly ERP Direct Sync Control Banner */}
-          <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 border border-slate-700">
+          <div className="bg-slate-900 text-white rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 border border-slate-800">
             <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-xl flex items-center justify-center ${
-                sellySyncStatus === "ok"
-                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                  : sellySyncStatus === "error"
-                  ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                  : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-              }`}>
-                <RefreshCw className={`w-5 h-5 ${isSellySyncing ? "animate-spin" : ""}`} />
+              <div
+                className={`p-2.5 rounded-xl flex items-center justify-center ${
+                  sellySyncStatus === "ok"
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                    : sellySyncStatus === "error"
+                      ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                      : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                }`}
+              >
+                <RefreshCw
+                  className={`w-4.5 h-4.5 ${isSellySyncing ? "animate-spin" : ""}`}
+                />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm">Selly ERP Auto-Sync</span>
-                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                    sellyAutoSyncEnabled && sellyApiKey
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                      : "bg-slate-700 text-slate-300 border border-slate-600"
-                  }`}>
-                    {sellyAutoSyncEnabled && sellyApiKey ? `ATTIVO (OGNI ${sellyInterval}M)` : "CONFIGURAZIONE MANUALE"}
+                  <span className="font-semibold text-sm">Selly ERP Auto-Sync</span>
+                  <span
+                    className={`text-[10px] font-mono font-semibold uppercase px-2 py-0.5 rounded-full ${
+                      sellyAutoSyncEnabled && sellyApiKey
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                        : "bg-slate-800 text-slate-300 border border-slate-700"
+                    }`}
+                  >
+                    {sellyAutoSyncEnabled && sellyApiKey
+                      ? `ATTIVO (OGNI ${sellyInterval}M)`
+                      : "MANUALE"}
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 mt-0.5">
-                  {sellySyncMessage}
-                </p>
+                <p className="text-xs text-slate-300 mt-0.5">{sellySyncMessage}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {sellyOrders.length > 0 && (
                 <button
                   type="button"
                   onClick={() => printBatchPackingSlips(sellyOrders)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl transition active:scale-95 shadow cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition active:scale-95 cursor-pointer tabular-nums"
                   title="Stampa tutte le distinte di prelievo A4 con barcode per il banco imballaggio"
                 >
-                  <Printer className="w-3.5 h-3.5 text-white" />
-                  <span>Stampa Distinte Ordini ({sellyOrders.length})</span>
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Stampa Distinte ({sellyOrders.length})</span>
                 </button>
               )}
               <button
                 type="button"
                 onClick={handleSyncSellyNow}
                 disabled={isSellySyncing}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-black rounded-xl transition active:scale-95 shadow cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-norsan-600 hover:bg-norsan-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition active:scale-95 cursor-pointer"
                 title="Esegui sincronizzazione immediata da Selly ERP senza attendere il timer"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isSellySyncing ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`w-3.5 h-3.5 ${isSellySyncing ? "animate-spin" : ""}`}
+                />
                 <span>{isSellySyncing ? "Sincronizzazione..." : "Sincronizza Ora"}</span>
               </button>
               <button
                 type="button"
                 onClick={() => setIsSellyConfigModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-bold rounded-xl transition border border-slate-600 cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-semibold rounded-xl transition border border-slate-700 cursor-pointer"
                 title="Configura API Key Selly ERP"
               >
                 <Settings className="w-3.5 h-3.5 text-slate-300" />
@@ -874,125 +920,131 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
           <div className="space-y-2">
             {sellyOrders.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 bg-slate-50 rounded-2xl border border-slate-200">
+              <div className="p-8 text-center text-slate-500 bg-slate-50 rounded-xl border border-slate-200 text-xs">
                 Nessun ordine Web-Shop presente al momento.
               </div>
             ) : (
               sellyOrders.map((o) => {
-              const hasAddressWarning =
-                o.addressStatus === "warning" ||
-                (!o.addressDetails?.houseNumber && o.customerAddress);
+                const hasAddressWarning =
+                  o.addressStatus === "warning" ||
+                  (!o.addressDetails?.houseNumber && o.customerAddress);
 
-              return (
-                <div
-                  key={o.id}
-                  className={`p-3.5 rounded-2xl border transition flex flex-wrap items-center justify-between gap-3 ${
-                    hasAddressWarning
-                      ? "border-amber-300 bg-amber-50/40 hover:border-amber-400"
-                      : "border-slate-200 hover:border-slate-400 bg-slate-50/50"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`p-2 rounded-xl border flex items-center justify-center ${
-                        hasAddressWarning
-                          ? "bg-amber-100 text-amber-800 border-amber-300"
-                          : "bg-emerald-100 text-emerald-800 border-emerald-300"
-                      }`}
-                    >
-                      {hasAddressWarning ? (
-                        <AlertTriangle className="w-4 h-4 text-amber-700" />
-                      ) : (
-                        <MapPin className="w-4 h-4 text-emerald-700" />
-                      )}
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-black text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-300">
-                          {o.orderNumber}
-                        </span>
-                        <span className="text-xs font-bold text-slate-900">
-                          {o.customerName}
-                        </span>
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-bold">
-                          {o.customerCountry || "IT"}
-                        </span>
-                      </div>
-
-                      <div className="text-[11px] text-slate-600 mt-1 flex flex-wrap items-center gap-2">
-                        <span className="font-medium text-slate-800">
-                          📍 {o.customerAddress} • {o.customerZip}{" "}
-                          {o.customerCity} ({o.customerProvince})
-                        </span>
-                        {o.addressDetails?.addressAddition && (
-                          <span className="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 text-[10px] font-semibold border border-blue-200">
-                            🏢 {o.addressDetails.addressAddition}
-                          </span>
+                return (
+                  <div
+                    key={o.id}
+                    className={`p-3.5 rounded-xl border transition flex flex-wrap items-center justify-between gap-3 ${
+                      hasAddressWarning
+                        ? "border-amber-300 bg-amber-50/40"
+                        : "border-slate-200/90 hover:border-slate-300 bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${
+                          hasAddressWarning
+                            ? "bg-amber-50 text-amber-700 border-amber-200"
+                            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        }`}
+                      >
+                        {hasAddressWarning ? (
+                          <AlertTriangle className="w-4 h-4" />
+                        ) : (
+                          <MapPin className="w-4 h-4" />
                         )}
                       </div>
 
-                      <div className="text-[10px] text-slate-400 mt-0.5">
-                        {o.source} •{" "}
-                        {o.items.reduce(
-                          (s: number, i: any) => s + i.quantityRequired,
-                          0,
-                        )}{" "}
-                        prodotti
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-xs font-bold text-slate-900 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200">
+                            {o.orderNumber}
+                          </span>
+                          <span className="text-xs font-semibold text-slate-900">
+                            {o.customerName}
+                          </span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">
+                            {o.customerCountry || "IT"}
+                          </span>
+                        </div>
+
+                        <div className="text-[11px] text-slate-600 mt-1 flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 font-medium text-slate-700">
+                            <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>
+                              {o.customerAddress} · {o.customerZip}{" "}
+                              {o.customerCity} ({o.customerProvince})
+                            </span>
+                          </span>
+                          {o.addressDetails?.addressAddition && (
+                            <span className="px-1.5 py-0.2 rounded bg-norsan-50 text-norsan-800 text-[10px] font-medium border border-norsan-200">
+                              {o.addressDetails.addressAddition}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          {o.source} ·{" "}
+                          {o.items.reduce(
+                            (s: number, i: any) => s + i.quantityRequired,
+                            0,
+                          )}{" "}
+                          prodotti
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
+                        type="button"
                         onClick={() => printOrderPackingSlip(o)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition active:scale-95 shadow-xs cursor-pointer"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs transition active:scale-95 cursor-pointer"
                         title="Stampa distinta di prelievo / bolla d'ordine in formato A4 con barcode per scan"
                       >
-                        <FileText className="w-3.5 h-3.5 text-blue-400" />
+                        <FileText className="w-3.5 h-3.5 text-slate-300" />
                         <span>Stampa Bolla</span>
                       </button>
 
                       {hasAddressWarning ? (
                         <button
+                          type="button"
                           onClick={() => {
                             setSelectedAddressOrder(o);
                             setIsAddressModalOpen(true);
                           }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-black text-xs transition active:scale-95 shadow-xs cursor-pointer animate-pulse"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition active:scale-95 cursor-pointer"
                         >
                           <AlertTriangle className="w-3.5 h-3.5" />
                           <span>Risolvi Indirizzo</span>
                         </button>
                       ) : (
                         <button
+                          type="button"
                           onClick={() => {
                             setSelectedAddressOrder(o);
                             setIsAddressModalOpen(true);
                           }}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px] border border-slate-300 transition cursor-pointer"
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-[11px] border border-slate-200 transition cursor-pointer"
                         >
                           <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                           <span>Dettagli Indirizzo</span>
                         </button>
                       )}
 
-                    <span
-                      className={`text-[10px] font-black uppercase px-2 py-1 rounded border ${
-                        o.status === "packed"
-                          ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                      <span
+                        className={`text-[10px] font-semibold uppercase px-2 py-1 rounded-md border ${
+                          o.status === "packed"
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                            : o.status === "packing"
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : "bg-slate-50 text-slate-600 border-slate-200"
+                        }`}
+                      >
+                        {o.status === "packed"
+                          ? "Spedito DHL"
                           : o.status === "packing"
-                            ? "bg-amber-100 text-amber-900 border-amber-300"
-                            : "bg-slate-100 text-slate-700 border-slate-300"
-                      }`}
-                    >
-                      {o.status === "packed"
-                        ? "Spedito DHL"
-                        : o.status === "packing"
-                          ? "In Imballaggio"
-                          : "In Coda"}
-                    </span>
-                      <span className="text-xs font-mono font-bold text-slate-700 bg-white px-2 py-1 rounded border border-slate-200">
+                            ? "In Imballaggio"
+                            : "In Coda"}
+                      </span>
+                      <span className="text-xs font-mono font-semibold text-slate-700 bg-slate-50 px-2 py-1 rounded-md border border-slate-200">
                         {o.courier}
                       </span>
                     </div>
@@ -1006,34 +1058,37 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
       {/* Tab Content 2.5: Amazon FBM Marketplace Stream */}
       {activeTab === "amazon" && (
-        <div className="bg-white border-2 border-amber-300 rounded-3xl p-5 shadow-sm space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 pb-3">
+        <div className="bg-white border border-amber-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-100 pb-3">
             <div>
-              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <ShoppingBag className="w-4 h-4 text-amber-600" />
                 <span>Canale Amazon FBM (Fulfillment by Merchant)</span>
               </h3>
-              <p className="text-xs text-slate-500">
-                Ordini Amazon Marketplace: obbligo <strong>Scatola Neutra Senza Logo</strong> e rispetto rigido SLA DHL
+              <p className="text-xs text-slate-500 mt-0.5">
+                Ordini Amazon Marketplace: obbligo{" "}
+                <strong>Scatola Neutra Senza Logo</strong> e rispetto rigido SLA
+                DHL
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold tabular-nums">
               <button
+                type="button"
                 onClick={() => printBatchAmazonPackingSlips(amazonOrders)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs transition active:scale-95 shadow cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition active:scale-95 cursor-pointer"
                 title="Stampa tutte le distinte di prelievo A4 per gli ordini Amazon"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Stampa Bolle Amazon ({amazonOrders.length})</span>
               </button>
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300">
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                 <span>
                   {amazonOrders.filter((o) => o.addressStatus !== "warning").length}{" "}
                   Validi
                 </span>
               </span>
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-300">
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-200">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
                 <span>
                   {amazonOrders.filter((o) => o.addressStatus === "warning").length}{" "}
@@ -1044,30 +1099,37 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           </div>
 
           {/* Amazon SP-API Integration Banner */}
-          <div className="bg-gradient-to-r from-amber-950 via-amber-900 to-slate-900 text-white rounded-2xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 border border-amber-800">
+          <div className="bg-slate-900 text-white rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 border border-slate-800">
             <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-xl flex items-center justify-center ${
-                amazonSyncStatus === "ok"
-                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                  : amazonSyncStatus === "error"
-                  ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                  : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-              }`}>
-                <ShoppingBag className="w-5 h-5 text-amber-400" />
+              <div
+                className={`p-2.5 rounded-xl flex items-center justify-center ${
+                  amazonSyncStatus === "ok"
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                    : amazonSyncStatus === "error"
+                      ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                      : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                }`}
+              >
+                <ShoppingBag className="w-4.5 h-4.5 text-amber-400" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm">Amazon SP-API Direct Sync</span>
-                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                    amazonSellerId
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                      : "bg-amber-950/60 text-amber-300 border border-amber-700"
-                  }`}>
-                    {amazonSellerId ? "COLLEGATO (SP-API)" : "INTEGRAZIONE FBM DIRETTA"}
+                  <span className="font-semibold text-sm">
+                    Amazon SP-API Direct Sync
+                  </span>
+                  <span
+                    className={`text-[10px] font-mono font-semibold uppercase px-2 py-0.5 rounded-full ${
+                      amazonSellerId
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                        : "bg-amber-500/15 text-amber-300 border border-amber-500/30"
+                    }`}
+                  >
+                    {amazonSellerId ? "COLLEGATO (SP-API)" : "FBM DIRETTA"}
                   </span>
                 </div>
-                <p className="text-xs text-amber-200/80 mt-0.5">
-                  {amazonSyncMessage} • Sostituisce il software tedesco intermediario
+                <p className="text-xs text-slate-300 mt-0.5">
+                  {amazonSyncMessage} · Sostituisce il software tedesco
+                  intermediario
                 </p>
               </div>
             </div>
@@ -1081,20 +1143,26 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   setTimeout(() => {
                     setIsAmazonSyncing(false);
                     setAmazonSyncStatus("ok");
-                    setAmazonSyncMessage(`Sincronizzati ${amazonOrders.length} ordini Amazon FBM`);
+                    setAmazonSyncMessage(
+                      `Sincronizzati ${amazonOrders.length} ordini Amazon FBM`,
+                    );
                   }, 600);
                 }}
                 disabled={isAmazonSyncing}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 text-xs font-black rounded-xl transition active:scale-95 shadow cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 text-slate-950 text-xs font-bold rounded-xl transition active:scale-95 cursor-pointer"
                 title="Sincronizza ordini Amazon FBM pendenti"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isAmazonSyncing ? "animate-spin" : ""}`} />
-                <span>{isAmazonSyncing ? "Sincronizzazione..." : "Sincronizza Amazon"}</span>
+                <RefreshCw
+                  className={`w-3.5 h-3.5 ${isAmazonSyncing ? "animate-spin" : ""}`}
+                />
+                <span>
+                  {isAmazonSyncing ? "Sincronizzazione..." : "Sincronizza Amazon"}
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => setIsAmazonConfigModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-100 text-xs font-bold rounded-xl transition border border-amber-700/60 cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-semibold rounded-xl transition border border-slate-700 cursor-pointer"
                 title="Configura credenziali Amazon SP-API"
               >
                 <Key className="w-3.5 h-3.5 text-amber-400" />
@@ -1106,7 +1174,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
           {/* Amazon Orders Listing */}
           <div className="space-y-2">
             {amazonOrders.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 bg-amber-50/40 rounded-2xl border border-amber-200">
+              <div className="p-8 text-center text-slate-500 bg-amber-50/40 rounded-xl border border-amber-200 text-xs">
                 Nessun ordine Amazon FBM in attesa di spedizione.
               </div>
             ) : (
@@ -1118,54 +1186,52 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 return (
                   <div
                     key={o.id}
-                    className={`p-3.5 rounded-2xl border transition flex flex-wrap items-center justify-between gap-3 ${
+                    className={`p-3.5 rounded-xl border transition flex flex-wrap items-center justify-between gap-3 ${
                       hasAddressWarning
-                        ? "border-amber-300 bg-amber-50/40 hover:border-amber-400"
-                        : "border-amber-200 hover:border-amber-400 bg-amber-50/20"
+                        ? "border-amber-300 bg-amber-50/40"
+                        : "border-amber-200/80 hover:border-amber-300 bg-white"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`p-2 rounded-xl border flex items-center justify-center ${
-                          hasAddressWarning
-                            ? "bg-amber-100 text-amber-800 border-amber-300"
-                            : "bg-amber-50 text-amber-800 border-amber-300"
-                        }`}
-                      >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg border bg-amber-50 text-amber-700 border-amber-200 flex items-center justify-center shrink-0">
                         {hasAddressWarning ? (
-                          <AlertTriangle className="w-4 h-4 text-amber-700" />
+                          <AlertTriangle className="w-4 h-4" />
                         ) : (
-                          <ShoppingBag className="w-4 h-4 text-amber-700" />
+                          <ShoppingBag className="w-4 h-4" />
                         )}
                       </div>
 
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-black text-amber-950 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-xs font-bold text-amber-950 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                             {o.orderNumber}
                           </span>
-                          <span className="text-xs font-bold text-slate-900">
+                          <span className="text-xs font-semibold text-slate-900">
                             {o.customerName}
                           </span>
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-200 text-amber-900 font-bold">
-                            📦 SCATOLA NEUTRA
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-semibold border border-amber-200 inline-flex items-center gap-1">
+                            <Package className="w-2.5 h-2.5" />
+                            <span>SCATOLA NEUTRA</span>
                           </span>
                         </div>
 
                         <div className="text-[11px] text-slate-600 mt-1 flex flex-wrap items-center gap-2">
-                          <span className="font-medium text-slate-800">
-                            📍 {o.customerAddress} • {o.customerZip}{" "}
-                            {o.customerCity} ({o.customerProvince})
+                          <span className="inline-flex items-center gap-1 font-medium text-slate-700">
+                            <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>
+                              {o.customerAddress} · {o.customerZip}{" "}
+                              {o.customerCity} ({o.customerProvince})
+                            </span>
                           </span>
                           {o.addressDetails?.addressAddition && (
-                            <span className="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 text-[10px] font-semibold border border-blue-200">
-                              🏢 {o.addressDetails.addressAddition}
+                            <span className="px-1.5 py-0.2 rounded bg-norsan-50 text-norsan-800 text-[10px] font-medium border border-norsan-200">
+                              {o.addressDetails.addressAddition}
                             </span>
                           )}
                         </div>
 
-                        <div className="text-[10px] text-slate-500 mt-0.5">
-                          Amazon FBM Prime •{" "}
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          Amazon FBM Prime ·{" "}
                           {o.items.reduce(
                             (s: number, i: any) => s + i.quantityRequired,
                             0,
@@ -1175,34 +1241,37 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
+                        type="button"
                         onClick={() => printAmazonPackingSlip(o)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition active:scale-95 shadow-xs cursor-pointer"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs transition active:scale-95 cursor-pointer"
                         title="Stampa distinta di prelievo / bolla d'ordine A4 (Layout Amazon)"
                       >
-                        <FileText className="w-3.5 h-3.5 text-amber-200" />
+                        <FileText className="w-3.5 h-3.5" />
                         <span>Stampa Bolla A4</span>
                       </button>
 
                       {hasAddressWarning ? (
                         <button
+                          type="button"
                           onClick={() => {
                             setSelectedAddressOrder(o);
                             setIsAddressModalOpen(true);
                           }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-black text-xs transition active:scale-95 shadow-xs cursor-pointer animate-pulse"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition active:scale-95 cursor-pointer"
                         >
                           <AlertTriangle className="w-3.5 h-3.5" />
                           <span>Risolvi Indirizzo</span>
                         </button>
                       ) : (
                         <button
+                          type="button"
                           onClick={() => {
                             setSelectedAddressOrder(o);
                             setIsAddressModalOpen(true);
                           }}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-300 transition cursor-pointer"
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-[11px] border border-slate-200 transition cursor-pointer"
                         >
                           <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                           <span>Dettagli Indirizzo</span>
@@ -1210,12 +1279,12 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                       )}
 
                       <span
-                        className={`text-[10px] font-black uppercase px-2 py-1 rounded border ${
+                        className={`text-[10px] font-semibold uppercase px-2 py-1 rounded-md border ${
                           o.status === "packed"
-                            ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                             : o.status === "packing"
-                              ? "bg-amber-100 text-amber-900 border-amber-300"
-                              : "bg-slate-100 text-slate-700 border-slate-300"
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : "bg-slate-50 text-slate-600 border-slate-200"
                         }`}
                       >
                         {o.status === "packed"
@@ -1224,7 +1293,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                             ? "In Imballaggio"
                             : "In Coda"}
                       </span>
-                      <span className="text-xs font-mono font-bold text-amber-900 bg-amber-100 px-2 py-1 rounded border border-amber-300">
+                      <span className="text-xs font-mono font-semibold text-amber-900 bg-amber-50 px-2 py-1 rounded-md border border-amber-200">
                         {o.courier}
                       </span>
                     </div>
@@ -1240,25 +1309,25 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
       {activeTab === "operators" && (
         <div className="space-y-4">
           {/* Header Action Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white border-2 border-slate-300 rounded-2xl p-4 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200/90 rounded-2xl p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
             <div>
-              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                <Users className="w-5 h-5 text-blue-600" />
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Users className="w-4 h-4 text-norsan-700" />
                 <span>Gestione Personale & Stampa Badge Barcode</span>
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
                 Aggiungi nuovi addetti all'imballaggio, assegna codici
-                identificativi (OP-XXX) e stampa il badge per il login
-                istantaneo con lettore barcode.
+                identificativi (OP-XXX) e stampa il badge per il login barcode.
               </p>
             </div>
 
             <button
+              type="button"
               onClick={() => setIsAddOperatorOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs shadow-md transition active:scale-95 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-norsan-700 hover:bg-norsan-800 text-white font-semibold text-xs transition active:scale-95 cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
-              <span>+ Aggiungi Nuovo Operatore</span>
+              <span>Nuovo Operatore</span>
             </button>
           </div>
 
@@ -1267,63 +1336,65 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
             {operators.map((op) => (
               <div
                 key={op.id}
-                className="bg-white border-2 border-slate-300 rounded-3xl p-4 flex flex-col justify-between shadow-sm hover:border-slate-400 transition"
+                className="bg-white border border-slate-200/90 rounded-2xl p-4 flex flex-col justify-between shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-slate-300 transition"
               >
                 <div>
-                  <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-200">
+                  <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <img
                         src={op.avatarUrl}
                         alt={op.name}
-                        className={`w-12 h-12 rounded-full object-cover border-2 shadow-xs flex-shrink-0 ${
+                        className={`w-11 h-11 rounded-full object-cover border shrink-0 ${
                           op.role === "team_lead"
-                            ? "border-purple-600"
-                            : "border-blue-600"
+                            ? "border-purple-400"
+                            : "border-norsan-400"
                         }`}
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <h4 className="text-sm font-black text-slate-900 truncate">
+                          <h4 className="text-sm font-bold text-slate-900 truncate">
                             {op.name}
                           </h4>
                           {op.role === "team_lead" && (
-                            <span className="text-[9px] font-black uppercase bg-purple-100 text-purple-800 border border-purple-300 px-1.5 py-0.5 rounded flex-shrink-0">
+                            <span className="text-[9px] font-bold uppercase bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.2 rounded shrink-0">
                               Lead
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1 text-[11px] font-mono font-bold mt-0.5">
+                        <div className="flex items-center gap-1 text-[11px] font-mono font-semibold mt-0.5">
                           <span
-                            className={`px-1.5 py-0.5 rounded border ${
+                            className={`px-1.5 py-0.2 rounded border ${
                               op.role === "team_lead"
-                                ? "bg-purple-50 text-purple-900 border-purple-200"
-                                : "bg-blue-50 text-blue-900 border-blue-200"
+                                ? "bg-purple-50 text-purple-800 border-purple-200"
+                                : "bg-norsan-50 text-norsan-800 border-norsan-200"
                             }`}
                           >
                             {op.operatorCode}
                           </span>
-                          <span>•</span>
+                          <span className="text-slate-300">·</span>
                           <span className="text-slate-500 truncate">
                             {op.stationId}
                           </span>
                         </div>
-                        <div className="text-[10px] text-slate-500 truncate mt-0.5">
+                        <div className="text-[10px] text-slate-400 truncate mt-0.5">
                           {op.shift}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 flex-shrink-0">
+                    <div className="flex items-center gap-1 shrink-0">
                       <button
+                        type="button"
                         onClick={() => handleOpenEdit(op)}
-                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-700 border border-slate-300 hover:border-blue-300 transition active:scale-95 cursor-pointer"
+                        className="p-1.5 rounded-lg bg-slate-50 hover:bg-norsan-50 text-slate-500 hover:text-norsan-700 border border-slate-200 transition active:scale-95 cursor-pointer"
                         title="Modifica dati o ruolo operatore / lead"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => setOperatorToDelete(op)}
-                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-300 hover:border-rose-300 transition active:scale-95 cursor-pointer"
+                        className="p-1.5 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition active:scale-95 cursor-pointer"
                         title="Elimina profilo dal sistema"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1331,51 +1402,53 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-1.5 mt-3 text-center">
-                    <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-                      <div className="text-[9px] text-slate-500 uppercase font-bold">
+                  <div className="grid grid-cols-3 gap-1.5 mt-3 text-center tabular-nums">
+                    <div className="bg-[#f4f6f9] p-1.5 rounded-xl border border-slate-200/70">
+                      <div className="text-[9px] text-slate-500 uppercase font-semibold">
                         Colli
                       </div>
-                      <div className="text-base font-black font-mono text-emerald-700">
+                      <div className="text-base font-bold font-mono text-emerald-600">
                         {op.packedToday}
                       </div>
                     </div>
-                    <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-                      <div className="text-[9px] text-slate-500 uppercase font-bold">
+                    <div className="bg-[#f4f6f9] p-1.5 rounded-xl border border-slate-200/70">
+                      <div className="text-[9px] text-slate-500 uppercase font-semibold">
                         UPH
                       </div>
-                      <div className="text-base font-black font-mono text-amber-700">
+                      <div className="text-base font-bold font-mono text-amber-600">
                         {op.uph}
                       </div>
                     </div>
-                    <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-                      <div className="text-[9px] text-slate-500 uppercase font-bold">
+                    <div className="bg-[#f4f6f9] p-1.5 rounded-xl border border-slate-200/70">
+                      <div className="text-[9px] text-slate-500 uppercase font-semibold">
                         Precisione
                       </div>
-                      <div className="text-base font-black font-mono text-cyan-800">
+                      <div className="text-base font-bold font-mono text-norsan-700">
                         {op.accuracy}%
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-3.5 pt-3 border-t border-slate-200 flex items-center justify-between gap-2">
+                <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                   <button
+                    type="button"
                     onClick={() => setBadgeOperator(op)}
-                    className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition active:scale-95 flex items-center justify-center gap-1 border border-slate-300 cursor-pointer"
+                    className="flex-1 py-1.5 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5 border border-slate-200 cursor-pointer"
                   >
-                    <Printer className="w-3.5 h-3.5" />
+                    <Printer className="w-3.5 h-3.5 text-slate-500" />
                     <span>Stampa Badge</span>
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => {
                       if (onSimulateScan) onSimulateScan(op.operatorCode);
                     }}
-                    className="py-1.5 px-2.5 bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold text-xs rounded-xl transition active:scale-95 flex items-center gap-1 border border-blue-300 cursor-pointer"
+                    className="py-1.5 px-2.5 bg-norsan-50 hover:bg-norsan-100 text-norsan-800 font-semibold text-xs rounded-xl transition active:scale-95 flex items-center gap-1 border border-norsan-200 cursor-pointer"
                     title={`Simula Scansione Barcode [${op.operatorCode}] per login`}
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                    <Sparkles className="w-3.5 h-3.5 text-norsan-600" />
                     <span>Login</span>
                   </button>
                 </div>
@@ -1387,12 +1460,12 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
       {/* Tab Content 4: Issues Queue */}
       {activeTab === "issues" && (
-        <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 shadow-sm">
-          <h3 className="text-sm font-black text-slate-900 mb-3">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <h3 className="text-sm font-bold text-slate-900 mb-3">
             Richieste di Assistenza & Rifornimento Kanban
           </h3>
           {issues.length === 0 ? (
-            <div className="text-center py-8 text-slate-400 text-xs italic">
+            <div className="text-center py-8 text-slate-400 text-xs">
               Nessuna anomalia o richiesta aperta al momento.
             </div>
           ) : (
@@ -1400,10 +1473,10 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               {issues.map((iss) => (
                 <div
                   key={iss.id}
-                  className={`p-4 rounded-2xl border-2 flex items-center justify-between gap-3 ${
+                  className={`p-4 rounded-xl border flex items-center justify-between gap-3 ${
                     iss.status === "pending"
-                      ? "bg-rose-50/60 border-rose-300"
-                      : "bg-slate-50 border-slate-200 opacity-75"
+                      ? "bg-rose-50/50 border-rose-200"
+                      : "bg-slate-50 border-slate-200/80 opacity-75"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -1417,15 +1490,15 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                       <AlertOctagon className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="text-xs font-black text-slate-900">
+                      <div className="text-xs font-bold text-slate-900">
                         {iss.type}
                       </div>
                       <div className="text-xs text-slate-600 mt-0.5">
                         {iss.note}
                       </div>
                       <div className="text-[10px] text-slate-500 font-mono mt-1">
-                        Postazione: {iss.stationId} • Operatore:{" "}
-                        {iss.operatorName} • Ordine: {iss.orderNumber}
+                        Postazione: {iss.stationId} · Operatore:{" "}
+                        {iss.operatorName} · Ordine: {iss.orderNumber}
                       </div>
                     </div>
                   </div>
@@ -1433,14 +1506,15 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   <div>
                     {iss.status === "pending" ? (
                       <button
+                        type="button"
                         onClick={() => onResolveIssue(iss.id)}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl transition active:scale-95 shadow flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
                       >
                         <CheckCircle className="w-4 h-4" />
                         <span>Risolvi & Rifornisci</span>
                       </button>
                     ) : (
-                      <span className="text-xs text-emerald-800 font-bold bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-300">
+                      <span className="text-xs text-emerald-800 font-semibold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
                         Risolto
                       </span>
                     )}
@@ -1449,6 +1523,458 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Tab Content: Control Tower Roadmap (Lead Stubs) */}
+      {activeTab === "roadmap" && (
+        <div className="space-y-4">
+          {/* Executive Header Card */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-mono font-bold tracking-wider uppercase">
+                <Lock className="w-3 h-3" />
+                <span>ROADMAP SVILUPPO · CONTROL TOWER LEAD</span>
+              </div>
+              <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                Moduli di Controllo Avanzato Team Lead (Standard Enterprise WMS)
+              </h3>
+              <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
+                Funzionalità standard presenti nei WMS di fascia enterprise (es. ShipHero, JTL-WMS), predisposte qui come anteprime visive. Ogni modulo richiede tempo dedicato di sviluppo, test su flussi reali e/o credenziali API per essere attivato in produzione.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <span className="px-3 py-1.5 rounded-xl bg-norsan-50 border border-norsan-200 text-norsan-800 text-xs font-semibold font-mono tabular-nums">
+                Fase 2 · 4 moduli prioritari
+              </span>
+              <span className="px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold font-mono tabular-nums">
+                Fase 3 · 2 moduli avanzati
+              </span>
+            </div>
+          </div>
+
+          {/* 6 Roadmap Stub Cards Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* 1. Order Locking & Force Release Multi-Banco */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex flex-col justify-between gap-4">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center shrink-0">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">
+                        Order Locking & Force Release Multi-Banco
+                      </h4>
+                      <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-800 text-[10px] font-semibold">
+                        Fase 2 · Priorità Alta
+                      </span>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-mono font-semibold shrink-0">
+                    <Lock className="w-2.5 h-2.5" />
+                    <span>In Roadmap</span>
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Impedisce a due banchi di prelevare e imballare lo stesso ordine in parallelo. Il Team Lead visualizza chi detiene il blocco in tempo reale e può forzare lo sblocco in un clic.
+                </p>
+
+                <div className="bg-[#f4f6f9] border border-dashed border-slate-300/90 rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold">
+                    <span>ANTEPRIMA DATI SIMULATI</span>
+                    <span>2 blocchi attivi</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="bg-white border border-slate-200/90 rounded-lg px-3 py-2 flex items-center justify-between gap-2 text-xs tabular-nums">
+                      <div className="flex items-center gap-2 min-w-0 font-mono">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                        <span className="font-bold text-slate-900">SEL-10421</span>
+                        <span className="text-slate-500 truncate">· OP-01 · ST-01 · 02:14</span>
+                      </div>
+                      <button
+                        type="button"
+                        disabled
+                        className="px-2 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-400 text-[11px] font-semibold cursor-not-allowed shrink-0"
+                      >
+                        Sblocca
+                      </button>
+                    </div>
+                    <div className="bg-white border border-slate-200/90 rounded-lg px-3 py-2 flex items-center justify-between gap-2 text-xs tabular-nums">
+                      <div className="flex items-center gap-2 min-w-0 font-mono">
+                        <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                        <span className="font-bold text-slate-900">AMZ-98210</span>
+                        <span className="text-slate-500 truncate">· OP-02 · ST-02 · 08:45</span>
+                      </div>
+                      <button
+                        type="button"
+                        disabled
+                        className="px-2 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-400 text-[11px] font-semibold cursor-not-allowed shrink-0"
+                      >
+                        Sblocca
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[11px] text-slate-500">
+                  <strong className="text-slate-700 font-semibold">Richiede:</strong> Lock ordini persistente SQLite + sync multi-terminale.
+                </span>
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 text-[11px] font-semibold cursor-not-allowed"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>Richiede sviluppo dedicato</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 2. Cutoff Corriere DHL & SLA Countdown Live */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex flex-col justify-between gap-4">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">
+                        Cutoff Corriere DHL & SLA Countdown Live
+                      </h4>
+                      <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-800 text-[10px] font-semibold">
+                        Fase 2 · Priorità Alta
+                      </span>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-mono font-semibold shrink-0">
+                    <Lock className="w-2.5 h-2.5" />
+                    <span>In Roadmap</span>
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Monitora il conto alla rovescia verso il ritiro giornaliero DHL e confronta il ritmo reale del turno (UPH) con il fabbisogno per azzerare i ritardi SLA Amazon FBM.
+                </p>
+
+                <div className="bg-[#f4f6f9] border border-dashed border-slate-300/90 rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold">
+                    <span>ANTEPRIMA DATI SIMULATI</span>
+                    <span>Turno Pomeriggio</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 tabular-nums">
+                    <div className="bg-white border border-slate-200/90 rounded-lg p-2.5">
+                      <div className="text-[10px] text-slate-500 font-medium">Ritiro DHL</div>
+                      <div className="text-xs font-bold font-mono text-slate-900 mt-0.5">
+                        15:30 · -01h 42m
+                      </div>
+                    </div>
+                    <div className="bg-white border border-slate-200/90 rounded-lg p-2.5">
+                      <div className="text-[10px] text-slate-500 font-medium">Pace Richiesto / Reale</div>
+                      <div className="text-xs font-bold font-mono text-emerald-700 mt-0.5">
+                        28 vs 31 colli/h
+                      </div>
+                    </div>
+                    <div className="bg-white border border-slate-200/90 rounded-lg p-2.5">
+                      <div className="text-[10px] text-slate-500 font-medium">SLA Amazon FBM</div>
+                      <div className="text-xs font-bold font-mono text-emerald-700 mt-0.5">
+                        0 a rischio
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[11px] text-slate-500">
+                  <strong className="text-slate-700 font-semibold">Richiede:</strong> Configurazione orari ritiro corriere + calcolo UPH su turno.
+                </span>
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 text-[11px] font-semibold cursor-not-allowed"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>Richiede sviluppo dedicato</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 3. Audit Trail Poka-Yoke & Heatmap Errori SKU */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex flex-col justify-between gap-4">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-norsan-50 border border-norsan-200 text-norsan-700 flex items-center justify-center shrink-0">
+                      <ShieldAlert className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">
+                        Audit Trail Poka-Yoke & Heatmap Errori SKU
+                      </h4>
+                      <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-semibold">
+                        Fase 2 · Priorità Media
+                      </span>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-mono font-semibold shrink-0">
+                    <Lock className="w-2.5 h-2.5" />
+                    <span>In Roadmap</span>
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Registra ogni scansione errata bloccata al banco, identifica gli SKU più confusi per ottimizzare lo slotting 5S e misura il risparmio sui resi evitati.
+                </p>
+
+                <div className="bg-[#f4f6f9] border border-dashed border-slate-300/90 rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold">
+                    <span>ANTEPRIMA DATI SIMULATI</span>
+                    <span>Ultimi 30 giorni</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="bg-white border border-slate-200/90 rounded-lg px-3 py-2 flex items-center justify-between text-xs tabular-nums">
+                      <span className="text-slate-700 font-medium">
+                        Total Limone ↔ Total Naturale
+                      </span>
+                      <span className="font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                        7x bloccati
+                      </span>
+                    </div>
+                    <div className="bg-white border border-slate-200/90 rounded-lg px-3 py-2 flex items-center justify-between text-xs tabular-nums">
+                      <span className="text-slate-700 font-medium">
+                        Costo resi evitati (stima ROI)
+                      </span>
+                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        € 285/mese
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[11px] text-slate-500">
+                  <strong className="text-slate-700 font-semibold">Richiede:</strong> Dashboard aggregazione /api/audit/scan + export CSV.
+                </span>
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 text-[11px] font-semibold cursor-not-allowed"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>Richiede sviluppo dedicato</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 4. Manifesto Fine Giornata DHL & Tracking Sync ERP */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex flex-col justify-between gap-4">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-sky-50 border border-sky-200 text-sky-700 flex items-center justify-center shrink-0">
+                      <Truck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">
+                        Manifesto Fine Giornata DHL & Tracking Sync ERP
+                      </h4>
+                      <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-800 text-[10px] font-semibold">
+                        Fase 2 · Priorità Alta
+                      </span>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-mono font-semibold shrink-0">
+                    <Lock className="w-2.5 h-2.5" />
+                    <span>In Roadmap</span>
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Genera in un clic la distinta di carico fine giornata per l&apos;autista DHL e verifica in tempo reale il ritorno automatico dei tracking verso Selly ERP e Amazon FBM.
+                </p>
+
+                <div className="bg-[#f4f6f9] border border-dashed border-slate-300/90 rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold">
+                    <span>ANTEPRIMA DATI SIMULATI</span>
+                    <span>Chiusura Distinta EOD</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 tabular-nums">
+                    <div className="bg-white border border-slate-200/90 rounded-lg p-2.5">
+                      <div className="text-[10px] text-slate-500 font-medium">Borderò DHL</div>
+                      <div className="text-xs font-bold font-mono text-slate-900 mt-0.5">
+                        64 colli pronti
+                      </div>
+                    </div>
+                    <div className="bg-white border border-slate-200/90 rounded-lg p-2.5">
+                      <div className="text-[10px] text-slate-500 font-medium">Push Selly ERP</div>
+                      <div className="text-xs font-bold font-mono text-emerald-700 mt-0.5">
+                        62/64 inviati
+                      </div>
+                    </div>
+                    <div className="bg-white border border-slate-200/90 rounded-lg p-2.5">
+                      <div className="text-[10px] text-slate-500 font-medium">Amazon SP-API</div>
+                      <div className="text-xs font-bold font-mono text-amber-700 mt-0.5">
+                        In attesa credenziali
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[11px] text-slate-500">
+                  <strong className="text-slate-700 font-semibold">Richiede:</strong> Credenziali DHL Business API + webhook Selly / SP-API.
+                </span>
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 text-[11px] font-semibold cursor-not-allowed"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>Richiede sviluppo dedicato</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 5. Gestione Resi (RMA) & Reclami Danni Vetro */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex flex-col justify-between gap-4">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center shrink-0">
+                      <RotateCcw className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">
+                        Gestione Resi (RMA) & Reclami Danni Vetro
+                      </h4>
+                      <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-semibold">
+                        Fase 3 · Medio Termine
+                      </span>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-mono font-semibold shrink-0">
+                    <Lock className="w-2.5 h-2.5" />
+                    <span>In Roadmap</span>
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Scansione dei pacchi rientrati con causale strutturata per separare immediatamente la merce integra da rimettere a stock dai flaconi rotti per rimborso corriere.
+                </p>
+
+                <div className="bg-[#f4f6f9] border border-dashed border-slate-300/90 rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold">
+                    <span>ANTEPRIMA DATI SIMULATI</span>
+                    <span>Causali RMA codificate</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-semibold">
+                      Rottura Vetro · Claim DHL
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-semibold">
+                      Indirizzo Errato
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-semibold">
+                      Rientro Integro · Restock FEFO
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[11px] text-slate-500">
+                  <strong className="text-slate-700 font-semibold">Richiede:</strong> Workflow RMA dedicato + archiviazione foto danni.
+                </span>
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 text-[11px] font-semibold cursor-not-allowed"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>Richiede sviluppo dedicato</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 6. Tracciabilità Lotti FEFO (HACCP) & Inventario Pallet */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex flex-col justify-between gap-4">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center shrink-0">
+                      <Database className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">
+                        Tracciabilità Lotti FEFO (HACCP) & Inventario Pallet
+                      </h4>
+                      <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-semibold">
+                        Fase 3 · Architettura pronta
+                      </span>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-mono font-semibold shrink-0">
+                    <Lock className="w-2.5 h-2.5" />
+                    <span>In Roadmap</span>
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Richiamo lotti HACCP Reg. CE 178/2002 in 10 secondi e controllo scorte su due livelli (scaffale attivo vs riserva pallet) con soglie automatiche di riordino.
+                </p>
+
+                <div className="bg-[#f4f6f9] border border-dashed border-slate-300/90 rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold">
+                    <span>ANTEPRIMA DATI SIMULATI</span>
+                    <span>HACCP & Stock 2-Livelli</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 tabular-nums">
+                    <div className="bg-white border border-slate-200/90 rounded-lg p-2.5">
+                      <div className="text-[10px] text-slate-500 font-medium">Recall Lotto</div>
+                      <div className="text-xs font-bold font-mono text-slate-900 mt-0.5">
+                        L2604N → 14 ord.
+                      </div>
+                    </div>
+                    <div className="bg-white border border-slate-200/90 rounded-lg p-2.5">
+                      <div className="text-[10px] text-slate-500 font-medium">Alert Scadenze</div>
+                      <div className="text-xs font-bold font-mono text-amber-700 mt-0.5">
+                        &lt; 90gg · 2 SKU
+                      </div>
+                    </div>
+                    <div className="bg-white border border-slate-200/90 rounded-lg p-2.5">
+                      <div className="text-[10px] text-slate-500 font-medium">Kanban Pallet</div>
+                      <div className="text-xs font-bold font-mono text-norsan-700 mt-0.5">
+                        Rifornimento OK
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[11px] text-slate-500">
+                  <strong className="text-slate-700 font-semibold">Richiede:</strong> Attivazione modulo congelato + test su dati reali di magazzino.
+                </span>
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 text-[11px] font-semibold cursor-not-allowed"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>Richiede sviluppo dedicato</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -2489,15 +3015,15 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
       {/* Modal 1: Add New Operator */}
       {isAddOperatorOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border-2 border-slate-300 animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-xl border border-slate-200/90">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 bg-norsan-50 text-norsan-700 border border-norsan-200 rounded-xl flex items-center justify-center">
                   <UserPlus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900">
+                  <h3 className="text-base font-bold text-slate-900">
                     Nuovo Operatore / Addetto Magazzino
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -2506,8 +3032,9 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsAddOperatorOpen(false)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2515,7 +3042,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
             <form onSubmit={handleCreateOperator} className="space-y-4 mt-4">
               <div>
-                <label className="block text-xs font-black uppercase text-slate-700 mb-1">
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-1">
                   Nome & Cognome
                 </label>
                 <input
@@ -2524,19 +3051,19 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   placeholder="Es. Giovanni Bianchi"
                   value={newOpName}
                   onChange={(e) => setNewOpName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:border-blue-500 focus:outline-none"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:border-norsan-600 focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-black uppercase text-slate-700 mb-1">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-1">
                     Ruolo
                   </label>
                   <select
                     value={newOpRole}
                     onChange={(e) => setNewOpRole(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-norsan-600"
                   >
                     <option value="packer">Addetto Imballaggio</option>
                     <option value="team_lead">Team Lead / Capoturno</option>
@@ -2544,13 +3071,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase text-slate-700 mb-1">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-1">
                     Postazione Assegnata
                   </label>
                   <select
                     value={newOpStation}
                     onChange={(e) => setNewOpStation(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-norsan-600"
                   >
                     <option value="Tutte le postazioni (Rotazione)">
                       Tutte le postazioni (Rotazione libera)
@@ -2566,29 +3093,28 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-black uppercase text-slate-700 mb-1">
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-1">
                   Turno di Lavoro
                 </label>
                 <input
                   type="text"
                   value={newOpShift}
                   onChange={(e) => setNewOpShift(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-norsan-600 focus:outline-none"
                 />
               </div>
 
               {/* Photo & Avatar Selection Block */}
-              <div className="pt-2 border-t border-slate-200">
-                <label className="block text-xs font-black uppercase text-slate-700 mb-2">
+              <div className="pt-2 border-t border-slate-100">
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-2">
                   Foto / Badge Avatar
                 </label>
 
-                {/* Current Photo Preview + File Upload Button */}
-                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200 mb-3">
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3">
                   <img
                     src={newOpAvatar}
                     alt="Preview"
-                    className="w-14 h-14 rounded-2xl object-cover border-2 border-blue-600 shadow-sm flex-shrink-0"
+                    className="w-14 h-14 rounded-xl object-cover border border-norsan-400 shrink-0"
                   />
                   <div>
                     <div className="text-xs font-bold text-slate-900">
@@ -2599,7 +3125,6 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                       galleria in basso.
                     </p>
 
-                    {/* Hidden file input */}
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -2611,18 +3136,17 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="mt-2 px-3 py-1.5 bg-white hover:bg-slate-100 text-blue-700 font-bold text-xs rounded-xl border border-blue-300 transition active:scale-95 flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                      className="mt-2 px-3 py-1.5 bg-white hover:bg-slate-100 text-norsan-700 font-semibold text-xs rounded-xl border border-slate-200 transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
                     >
-                      <Upload className="w-3.5 h-3.5 text-blue-600" />
-                      <span>📸 Carica Foto da File</span>
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Carica Foto da File</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Avatar Presets Gallery */}
                 <div>
-                  <div className="text-[11px] font-bold text-slate-500 uppercase mb-1.5">
-                    Oppure scegli un avatar dalla galleria:
+                  <div className="text-[11px] font-semibold text-slate-500 uppercase mb-1.5">
+                    Oppure scegli un avatar dalla galleria
                   </div>
                   <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
                     {AVATAR_PRESETS.map((presetUrl, idx) => {
@@ -2632,10 +3156,10 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                           key={idx}
                           type="button"
                           onClick={() => setNewOpAvatar(presetUrl)}
-                          className={`relative rounded-2xl overflow-hidden aspect-square border-2 transition active:scale-90 cursor-pointer ${
+                          className={`relative rounded-xl overflow-hidden aspect-square border-2 transition active:scale-90 cursor-pointer ${
                             isSelected
-                              ? "border-blue-600 ring-2 ring-blue-500/40 shadow-sm"
-                              : "border-slate-300 hover:border-slate-400 opacity-80 hover:opacity-100"
+                              ? "border-norsan-600 ring-2 ring-norsan-500/30"
+                              : "border-slate-200 hover:border-slate-300 opacity-80 hover:opacity-100"
                           }`}
                         >
                           <img
@@ -2644,7 +3168,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                             className="w-full h-full object-cover"
                           />
                           {isSelected && (
-                            <div className="absolute inset-0 bg-blue-600/30 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-norsan-600/30 flex items-center justify-center">
                               <Check className="w-4 h-4 text-white stroke-[3]" />
                             </div>
                           )}
@@ -2655,17 +3179,17 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsAddOperatorOpen(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
                 >
                   Annulla
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow transition active:scale-95 cursor-pointer"
+                  className="px-4 py-2 bg-norsan-700 hover:bg-norsan-800 text-white font-semibold text-xs rounded-xl transition active:scale-95 cursor-pointer"
                 >
                   Crea & Genera Badge
                 </button>
@@ -2677,35 +3201,32 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
       {/* Modal 2: Printable Physical Badge Modal */}
       {badgeOperator && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border-2 border-slate-400 animate-in fade-in zoom-in duration-150 flex flex-col items-center">
-            {/* Modal Header */}
-            <div className="w-full flex items-center justify-between pb-3 border-b border-slate-200">
-              <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-xl border border-slate-200/90 flex flex-col items-center">
+            <div className="w-full flex items-center justify-between pb-3 border-b border-slate-100">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Badge Operatore NORSAN
               </span>
               <button
+                type="button"
                 onClick={() => setBadgeOperator(null)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Printable ID Card (Standard CR80 Lanyard Card Layout) */}
-            <div className="w-full my-4 bg-gradient-to-b from-slate-900 to-slate-950 text-white rounded-2xl p-5 shadow-xl border-2 border-slate-700 relative overflow-hidden flex flex-col items-center text-center">
-              {/* Top Lanyard Hole Visual */}
+            <div className="w-full my-4 bg-gradient-to-b from-slate-900 to-slate-950 text-white rounded-2xl p-5 shadow-md border border-slate-800 relative overflow-hidden flex flex-col items-center text-center">
               <div className="w-12 h-2.5 bg-slate-800 border border-slate-600 rounded-full mb-3 shadow-inner" />
 
-              {/* Company Logo Header */}
-              <div className="text-[10px] uppercase font-mono tracking-widest text-cyan-400 font-black">
-                NORSAN • ZREEN LOGISTICS
+              <div className="text-[10px] uppercase font-mono tracking-widest text-cyan-400 font-bold">
+                NORSAN · ZREEN LOGISTICS
               </div>
-              <div className="text-[9px] text-slate-400 uppercase font-semibold">
-                Hub di Spedizione • Bolzano (BZ)
+              <div className="text-[9px] text-slate-400 uppercase font-medium">
+                Hub di Spedizione · Bolzano (BZ)
               </div>
 
-              {/* Photo & Role */}
               <div className="my-3 relative">
                 <img
                   src={badgeOperator.avatarUrl}
@@ -2714,10 +3235,10 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 />
               </div>
 
-              <h4 className="text-base font-black text-white">
+              <h4 className="text-base font-bold text-white">
                 {badgeOperator.name}
               </h4>
-              <div className="text-xs text-cyan-300 font-bold uppercase mt-0.5">
+              <div className="text-xs text-cyan-300 font-semibold uppercase mt-0.5">
                 {badgeOperator.role === "team_lead"
                   ? "Team Lead / Supervisore"
                   : "Addetto Imballaggio (Packer)"}
@@ -2726,7 +3247,6 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 {badgeOperator.shift}
               </div>
 
-              {/* Genuine Code 128-B Barcode */}
               <div className="w-full mt-4 bg-white text-slate-950 rounded-xl p-3 shadow-inner flex flex-col items-center">
                 {(() => {
                   const { bars, totalModules } = getCode128Bars(
@@ -2753,32 +3273,33 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                     </svg>
                   );
                 })()}
-                <span className="font-mono text-sm font-black tracking-widest text-slate-900 mt-1">
+                <span className="font-mono text-sm font-bold tracking-widest text-slate-900 mt-1">
                   {badgeOperator.operatorCode}
                 </span>
               </div>
             </div>
 
-            {/* Print & Action Buttons */}
             <div className="w-full flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => window.print()}
-                className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-xl shadow transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Printer className="w-4 h-4 text-cyan-300" />
                 <span>Stampa Badge</span>
               </button>
 
               <button
+                type="button"
                 onClick={() => {
                   if (onSimulateScan)
                     onSimulateScan(badgeOperator.operatorCode);
                   setBadgeOperator(null);
                 }}
-                className="py-2.5 px-3 bg-blue-50 hover:bg-blue-100 text-blue-900 font-black text-xs rounded-xl border border-blue-300 transition active:scale-95 flex items-center gap-1 cursor-pointer"
+                className="py-2.5 px-3 bg-norsan-50 hover:bg-norsan-100 text-norsan-800 font-semibold text-xs rounded-xl border border-norsan-200 transition active:scale-95 flex items-center gap-1 cursor-pointer"
                 title="Testa subito la scansione del badge"
               >
-                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                <Sparkles className="w-3.5 h-3.5 text-norsan-600" />
                 <span>Test Scan</span>
               </button>
             </div>
@@ -2788,21 +3309,21 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
       {/* Modal 3: Edit Operator / Team Lead Profile Modal */}
       {editingOperator && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border-2 border-slate-300 animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <div className="flex items-center gap-2">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-xl border border-slate-200/90">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
                 <div
-                  className={`p-2 rounded-xl ${
+                  className={`w-9 h-9 rounded-xl border flex items-center justify-center ${
                     editOpRole === "team_lead"
-                      ? "bg-purple-100 text-purple-700"
-                      : "bg-blue-100 text-blue-700"
+                      ? "bg-purple-50 text-purple-700 border-purple-200"
+                      : "bg-norsan-50 text-norsan-700 border-norsan-200"
                   }`}
                 >
-                  <Edit3 className="w-5 h-5" />
+                  <Edit3 className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900">
+                  <h3 className="text-base font-bold text-slate-900">
                     Modifica{" "}
                     {editOpRole === "team_lead" ? "Team Lead" : "Operatore"} (
                     {editingOperator.operatorCode})
@@ -2813,8 +3334,9 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setEditingOperator(null)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2823,7 +3345,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
             <form onSubmit={handleSaveEdit} className="space-y-4 mt-4">
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-xs font-black uppercase text-slate-700 mb-1">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-1">
                     Nome & Cognome
                   </label>
                   <input
@@ -2831,12 +3353,12 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                     required
                     value={editOpName}
                     onChange={(e) => setEditOpName(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:border-purple-500 focus:outline-none"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:border-norsan-600 focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase text-slate-700 mb-1">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-1">
                     Codice Badge
                   </label>
                   <input
@@ -2844,20 +3366,20 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                     required
                     value={editOpCode}
                     onChange={(e) => setEditOpCode(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-none uppercase"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:border-norsan-600 focus:outline-none uppercase"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-black uppercase text-slate-700 mb-1">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-1">
                     Ruolo & Privilegi
                   </label>
                   <select
                     value={editOpRole}
                     onChange={(e) => setEditOpRole(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-norsan-600"
                   >
                     <option value="packer">Addetto Imballaggio (Packer)</option>
                     <option value="team_lead">Team Lead / Supervisore</option>
@@ -2866,13 +3388,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase text-slate-700 mb-1">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-1">
                     Postazione Assegnata
                   </label>
                   <select
                     value={editOpStation}
                     onChange={(e) => setEditOpStation(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-norsan-600"
                   >
                     <option value="Tutte le postazioni (Rotazione)">
                       Tutte le postazioni (Rotazione libera)
@@ -2892,29 +3414,28 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-black uppercase text-slate-700 mb-1">
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-1">
                   Turno di Lavoro
                 </label>
                 <input
                   type="text"
                   value={editOpShift}
                   onChange={(e) => setEditOpShift(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-norsan-600 focus:outline-none"
                 />
               </div>
 
               {/* Photo & Avatar Selection Block */}
-              <div className="pt-2 border-t border-slate-200">
-                <label className="block text-xs font-black uppercase text-slate-700 mb-2">
+              <div className="pt-2 border-t border-slate-100">
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-2">
                   Foto / Badge Avatar
                 </label>
 
-                {/* Current Photo Preview + File Upload Button */}
-                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200 mb-3">
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3">
                   <img
                     src={editOpAvatar}
                     alt="Preview"
-                    className="w-14 h-14 rounded-2xl object-cover border-2 border-purple-600 shadow-sm flex-shrink-0"
+                    className="w-14 h-14 rounded-xl object-cover border border-slate-300 shrink-0"
                   />
                   <div>
                     <div className="text-xs font-bold text-slate-900">
@@ -2925,7 +3446,6 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                       galleria.
                     </p>
 
-                    {/* Hidden file input */}
                     <input
                       type="file"
                       ref={editFileInputRef}
@@ -2937,18 +3457,17 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                     <button
                       type="button"
                       onClick={() => editFileInputRef.current?.click()}
-                      className="mt-2 px-3 py-1.5 bg-white hover:bg-slate-100 text-purple-700 font-bold text-xs rounded-xl border border-purple-300 transition active:scale-95 flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                      className="mt-2 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 font-semibold text-xs rounded-xl border border-slate-200 transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
                     >
-                      <Upload className="w-3.5 h-3.5 text-purple-600" />
-                      <span>📸 Carica Nuova Foto</span>
+                      <Upload className="w-3.5 h-3.5 text-norsan-700" />
+                      <span>Carica Nuova Foto</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Avatar Presets Gallery */}
                 <div>
-                  <div className="text-[11px] font-bold text-slate-500 uppercase mb-1.5">
-                    Oppure seleziona un avatar:
+                  <div className="text-[11px] font-semibold text-slate-500 uppercase mb-1.5">
+                    Oppure seleziona un avatar
                   </div>
                   <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
                     {AVATAR_PRESETS.map((presetUrl, idx) => {
@@ -2958,10 +3477,10 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                           key={idx}
                           type="button"
                           onClick={() => setEditOpAvatar(presetUrl)}
-                          className={`relative rounded-2xl overflow-hidden aspect-square border-2 transition active:scale-90 cursor-pointer ${
+                          className={`relative rounded-xl overflow-hidden aspect-square border-2 transition active:scale-90 cursor-pointer ${
                             isSelected
-                              ? "border-purple-600 ring-2 ring-purple-500/40 shadow-sm"
-                              : "border-slate-300 hover:border-slate-400 opacity-80 hover:opacity-100"
+                              ? "border-norsan-600 ring-2 ring-norsan-500/30"
+                              : "border-slate-200 hover:border-slate-300 opacity-80 hover:opacity-100"
                           }`}
                         >
                           <img
@@ -2970,7 +3489,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                             className="w-full h-full object-cover"
                           />
                           {isSelected && (
-                            <div className="absolute inset-0 bg-purple-600/30 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-norsan-600/30 flex items-center justify-center">
                               <Check className="w-4 h-4 text-white stroke-[3]" />
                             </div>
                           )}
@@ -2981,11 +3500,11 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 flex items-center justify-between gap-2">
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={() => handleDeleteOperatorClick(editingOperator.id)}
-                  className="px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-1 cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-1 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Elimina Profilo</span>
@@ -2995,13 +3514,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setEditingOperator(null)}
-                    className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
                   >
                     Annulla
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-purple-700 hover:bg-purple-600 text-white font-black text-xs rounded-xl shadow transition active:scale-95 cursor-pointer"
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition active:scale-95 cursor-pointer"
                   >
                     Salva Modifiche
                   </button>
@@ -3014,38 +3533,40 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
       {/* Modal 4: Delete Confirmation Modal */}
       {operatorToDelete && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border-2 border-rose-300 animate-in fade-in zoom-in duration-150 flex flex-col items-center text-center">
-            <div className="p-3 bg-rose-100 text-rose-700 rounded-2xl mb-3">
-              <Trash2 className="w-8 h-8" />
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl border border-rose-200 flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-rose-50 text-rose-600 border border-rose-200 rounded-2xl mb-3 flex items-center justify-center">
+              <Trash2 className="w-6 h-6" />
             </div>
 
-            <h3 className="text-base font-black text-slate-900">
+            <h3 className="text-base font-bold text-slate-900">
               Eliminare {operatorToDelete.name}?
             </h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
               Il badge{" "}
               <strong className="font-mono text-slate-800">
                 [{operatorToDelete.operatorCode}]
               </strong>{" "}
-              verrà  revocato e l'operatore non potrà  più accedere alle
+              verrà revocato e l'operatore non potrà più accedere alle
               postazioni di magazzino.
             </p>
 
             <div className="w-full flex items-center gap-2 mt-5">
               <button
+                type="button"
                 onClick={() => setOperatorToDelete(null)}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
+                className="flex-1 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition cursor-pointer"
               >
                 Annulla
               </button>
               <button
+                type="button"
                 onClick={() => {
                   if (onDeleteOperator) onDeleteOperator(operatorToDelete.id);
                   setOperatorToDelete(null);
                   setEditingOperator(null);
                 }}
-                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs rounded-xl shadow transition active:scale-95 cursor-pointer flex items-center justify-center gap-1"
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-xl transition active:scale-95 cursor-pointer flex items-center justify-center gap-1"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Sì, Elimina</span>
@@ -3074,15 +3595,15 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
       {/* Modal 6: Selly ERP Integration & Auto-Sync Settings */}
       {isSellyConfigModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border-2 border-slate-300 animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
-                  <Key className="w-5 h-5" />
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl border border-slate-200/90">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 bg-norsan-50 text-norsan-700 border border-norsan-200 rounded-xl flex items-center justify-center">
+                  <Key className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900">
+                  <h3 className="text-base font-bold text-slate-900">
                     Integrazione Selly ERP
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -3093,7 +3614,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               <button
                 type="button"
                 onClick={() => setIsSellyConfigModalOpen(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -3101,7 +3622,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
             <form onSubmit={handleSaveSellyConfig} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   API Key / Token Selly ERP
                 </label>
                 <div className="relative">
@@ -3110,19 +3631,19 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                     value={sellyApiKey}
                     onChange={(e) => setSellyApiKey(e.target.value)}
                     placeholder="Incolla qui la chiave fornita dalla direzione..."
-                    className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 pr-10"
+                    className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-norsan-500/20 focus:border-norsan-600 pr-10"
                   />
                   <div className="absolute right-3 top-2.5 text-slate-400">
                     <Key className="w-4 h-4" />
                   </div>
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  💡 La chiave API viene fornita dal manager/direttore nel pannello amministrativo di Selly.
+                  La chiave API viene fornita dal manager/direttore nel pannello amministrativo di Selly.
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   URL Endpoint Selly
                 </label>
                 <input
@@ -3130,19 +3651,19 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                   value={sellyApiUrl}
                   onChange={(e) => setSellyApiUrl(e.target.value)}
                   placeholder="https://api.sellyerp.com/v1"
-                  className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700"
+                  className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-norsan-500/20 focus:border-norsan-600 text-slate-700"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Intervallo Poll (minuti)
                   </label>
                   <select
                     value={sellyInterval}
                     onChange={(e) => setSellyInterval(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-norsan-500/20 focus:border-norsan-600 bg-white"
                   >
                     <option value={2}>Ogni 2 minuti</option>
                     <option value={5}>Ogni 5 minuti (Consigliato)</option>
@@ -3158,21 +3679,21 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                       type="checkbox"
                       checked={sellyAutoSyncEnabled}
                       onChange={(e) => setSellyAutoSyncEnabled(e.target.checked)}
-                      className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                      className="w-4 h-4 text-norsan-700 rounded border-slate-300 focus:ring-norsan-500"
                     />
-                    <span className="text-xs font-bold text-slate-800">
+                    <span className="text-xs font-semibold text-slate-800">
                       Auto-Sync Attivo
                     </span>
                   </label>
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-[11px] text-blue-900 space-y-1">
-                <div className="font-bold flex items-center gap-1">
-                  <span>⚡ Flusso Automatico WMS:</span>
+              <div className="p-3 rounded-xl bg-norsan-50/60 border border-norsan-200 text-[11px] text-slate-700 space-y-1">
+                <div className="font-bold text-slate-900">
+                  Flusso Automatico WMS:
                 </div>
                 <p>
-                  1. Recupera gli ordini con stato "In lavorazione" da Selly.
+                  1. Recupera gli ordini con stato &quot;In lavorazione&quot; da Selly.
                 </p>
                 <p>
                   2. Filtra automaticamente le righe non logistiche (es. servizio contrassegno <code>3000-001</code>).
@@ -3182,17 +3703,17 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsSellyConfigModalOpen(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
                 >
                   Annulla
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow transition active:scale-95 cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-2 bg-norsan-700 hover:bg-norsan-800 text-white font-semibold text-xs rounded-xl transition active:scale-95 cursor-pointer flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
                   <span>Salva Configurazione</span>
@@ -3205,15 +3726,15 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
 
       {/* Modal 7: Amazon SP-API Integration Settings */}
       {isAmazonConfigModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border-2 border-amber-300 animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center justify-between border-b border-amber-200 pb-3 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-amber-100 text-amber-800 rounded-xl">
-                  <ShoppingBag className="w-5 h-5 text-amber-700" />
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl border border-amber-200">
+            <div className="flex items-center justify-between border-b border-amber-100 pb-3 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl flex items-center justify-center">
+                  <ShoppingBag className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900">
+                  <h3 className="text-base font-bold text-slate-900">
                     Credenziali Amazon SP-API
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -3224,7 +3745,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               <button
                 type="button"
                 onClick={() => setIsAmazonConfigModalOpen(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -3251,7 +3772,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               className="space-y-4"
             >
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Merchant / Seller ID
                 </label>
                 <input
@@ -3264,7 +3785,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   LWA Client ID (Login with Amazon)
                 </label>
                 <input
@@ -3277,7 +3798,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   LWA Client Secret
                 </label>
                 <input
@@ -3290,7 +3811,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Refresh Token
                 </label>
                 <textarea
@@ -3303,28 +3824,28 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({
               </div>
 
               <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-950 space-y-1">
-                <div className="font-bold flex items-center gap-1">
-                  <span>📦 Vantaggio Sostituzione Diretta:</span>
+                <div className="font-bold">
+                  Vantaggio Sostituzione Diretta:
                 </div>
                 <p>
-                  • Nessun costo mensile per il software intermediario tedesco.
+                  · Nessun costo mensile per il software intermediario tedesco.
                 </p>
                 <p>
-                  • Stampa bolla Amazon A4 e notifica automatica di spedizione (Tracking DHL inviato istantaneamente ad Amazon).
+                  · Stampa bolla Amazon A4 e notifica automatica di spedizione (Tracking DHL inviato istantaneamente ad Amazon).
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsAmazonConfigModalOpen(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
                 >
                   Annulla
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-black text-xs rounded-xl shadow transition active:scale-95 cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl transition active:scale-95 cursor-pointer flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
                   <span>Salva Credenziali Amazon</span>

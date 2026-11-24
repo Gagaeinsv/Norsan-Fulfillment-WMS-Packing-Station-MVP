@@ -50,62 +50,63 @@ export const IssueReportModal: React.FC<IssueReportModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white border-2 border-slate-300 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden select-none">
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-slate-200/90 rounded-2xl w-full max-w-lg shadow-xl overflow-hidden select-none">
         {/* Header */}
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-5 py-4 bg-white border-b border-slate-100 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-rose-100 text-rose-800 rounded-2xl border border-rose-300">
-              <AlertOctagon className="w-6 h-6" />
+            <div className="w-10 h-10 bg-rose-50 text-rose-700 rounded-xl border border-rose-200 flex items-center justify-center shrink-0">
+              <AlertOctagon className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900">
+              <h2 className="text-base font-bold text-slate-900">
                 Segnalazione Anomalia Postazione
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Riferimento Ordine:{" "}
-                <strong className="font-mono text-norsan-800">
+                <strong className="font-mono text-norsan-700">
                   {order.orderNumber}
                 </strong>
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
+            className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Body Form */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 bg-slate-100/50">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 bg-[#f4f6f9]">
           <div className="space-y-2">
-            <label className="text-xs font-black text-slate-800 uppercase tracking-wider">
-              Tipo di problema riscontrato:
+            <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
+              Tipo di problema riscontrato
             </label>
             <div className="space-y-2">
               {issueTypes.map((type) => (
                 <div
                   key={type.id}
                   onClick={() => setSelectedType(type.id)}
-                  className={`p-3.5 rounded-2xl border-2 cursor-pointer transition flex items-start gap-3 ${
+                  className={`p-3.5 rounded-xl border cursor-pointer transition flex items-start gap-3 ${
                     selectedType === type.id
-                      ? "bg-rose-50 border-rose-500 text-rose-950 shadow-xs"
-                      : "bg-white border-slate-200 hover:border-slate-300 text-slate-800"
+                      ? "bg-rose-50/70 border-rose-400 text-rose-950"
+                      : "bg-white border-slate-200/90 hover:border-slate-300 text-slate-800"
                   }`}
                 >
                   <input
                     type="radio"
                     checked={selectedType === type.id}
                     onChange={() => setSelectedType(type.id)}
-                    className="mt-1 accent-rose-600"
+                    className="mt-1 accent-rose-600 cursor-pointer"
                   />
                   <div>
-                    <div className="font-black text-xs text-slate-900">
+                    <div className="font-semibold text-xs text-slate-900">
                       {type.label}
                     </div>
-                    <div className="text-[11px] text-slate-600 mt-0.5">
+                    <div className="text-[11px] text-slate-500 mt-0.5">
                       {type.desc}
                     </div>
                   </div>
@@ -114,30 +115,30 @@ export const IssueReportModal: React.FC<IssueReportModalProps> = ({
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-black text-slate-800 uppercase tracking-wider">
-              Note aggiuntive per il Team Leader:
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
+              Note aggiuntive per il Team Leader
             </label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Descrivi brevemente lo stato o la posizione dello scaffale (es: Slot S2-A esaurito)..."
               rows={3}
-              className="w-full bg-white border-2 border-slate-300 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-rose-600 resize-none shadow-xs"
+              className="w-full bg-white border border-slate-300 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-rose-500 resize-none"
             />
           </div>
 
-          <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-200">
+          <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200/80">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold border border-slate-300 transition"
+              className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 transition cursor-pointer"
             >
               Annulla
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black transition shadow-sm flex items-center gap-1.5 active:scale-95"
+              className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition flex items-center gap-1.5 active:scale-95 cursor-pointer"
             >
               <Check className="w-4 h-4" />
               <span>Invia Segnalazione</span>

@@ -58,30 +58,31 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
   );
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-full max-w-md bg-white border-2 border-norsan-600 rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 select-none">
+    <div className="fixed bottom-4 right-4 z-50 w-full max-w-md bg-white border border-slate-200/90 rounded-2xl shadow-xl overflow-hidden transition-all duration-200 select-none">
       {/* Header */}
-      <div className="p-3.5 bg-slate-900 text-white flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-norsan-600 text-white rounded-xl">
-            <Barcode className="w-5 h-5" />
+      <div className="px-4 py-3 bg-slate-900 text-white flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 bg-norsan-700 text-white rounded-lg flex items-center justify-center shrink-0">
+            <Barcode className="w-4 h-4" />
           </div>
-          <div>
-            <h3 className="text-sm font-black flex items-center gap-1.5">
-              Simulatore Pistola Scanner
-              <span className="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-mono">
+          <div className="min-w-0">
+            <h3 className="text-xs font-bold flex items-center gap-2">
+              <span>Simulatore Pistola Scanner</span>
+              <span className="text-[10px] bg-white/15 text-slate-200 px-2 py-0.2 rounded-md font-mono font-medium">
                 Virtual Wedge
               </span>
             </h3>
-            <p className="text-[10px] text-slate-300">
+            <p className="text-[10px] text-slate-400 truncate">
               Clicca per simulare la lettura di codici a barre
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <button
+            type="button"
             onClick={() => setIsMinimized(!isMinimized)}
-            className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
             title={isMinimized ? "Espandi" : "Riduci"}
           >
             {isMinimized ? (
@@ -91,8 +92,9 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
             )}
           </button>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
             title="Chiudi simulatore"
           >
             <X className="w-4 h-4" />
@@ -101,12 +103,12 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
       </div>
 
       {!isMinimized && (
-        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto bg-slate-50">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto bg-[#f4f6f9]">
           {/* Custom Text / Barcode Input */}
           <form onSubmit={handleCustomSubmit} className="space-y-1.5">
-            <label className="text-[11px] font-black text-slate-700 uppercase tracking-wider flex items-center justify-between">
+            <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider flex items-center justify-between">
               <span>Inserimento Manuale / Tastiera</span>
-              <span className="text-[10px] text-slate-500 font-mono">
+              <span className="text-[10px] text-slate-400 font-mono normal-case">
                 Simula + Enter
               </span>
             </label>
@@ -116,13 +118,13 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
                 value={customInput}
                 onChange={(e) => setCustomInput(e.target.value)}
                 placeholder="Es: OP-042 o BOX-NOR-M o FLY-NOR-ITA"
-                className="scanner-friendly flex-1 bg-white border-2 border-slate-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-norsan-600 shadow-xs"
+                className="scanner-friendly flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-norsan-600"
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-norsan-600 hover:bg-norsan-700 text-white rounded-xl text-xs font-black flex items-center gap-1 transition active:scale-95 shadow-sm"
+                className="px-3.5 py-2 bg-norsan-700 hover:bg-norsan-800 text-white rounded-xl text-xs font-semibold flex items-center gap-1 transition active:scale-95 cursor-pointer"
               >
-                <span>Skan</span>
+                <span>Scan</span>
                 <CornerDownLeft className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -130,26 +132,27 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
 
           {/* Section 0: Operator Badges */}
           <div>
-            <div className="text-[11px] font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <div className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <UserCheck className="w-3.5 h-3.5 text-norsan-600" />
-              <span>Skan Badge Operatore</span>
+              <span>Scan Badge Operatore</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
               {operators.map((op) => (
                 <button
+                  type="button"
                   key={op.id}
                   onClick={() => onScan(op.operatorCode)}
-                  className="p-2 bg-white hover:bg-slate-100 border-2 border-slate-200 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between shadow-xs"
+                  className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-slate-300 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between cursor-pointer"
                 >
                   <div className="min-w-0">
-                    <div className="font-bold text-slate-900 truncate">
+                    <div className="font-semibold text-slate-900 truncate">
                       {op.name}
                     </div>
-                    <div className="text-[10px] font-mono font-bold text-norsan-700">
+                    <div className="text-[10px] font-mono font-semibold text-norsan-700">
                       {op.operatorCode}
                     </div>
                   </div>
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-800">
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600">
                     Login
                   </span>
                 </button>
@@ -159,16 +162,17 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
 
           {/* Section 1: Ingest Live Order from Web */}
           <div>
-            <div className="text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-cyan-600" />
+            <div className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-norsan-600" />
               <span>E-Commerce Paperless Ingestion</span>
             </div>
             <button
+              type="button"
               onClick={onSimulateIncomingWebOrder}
-              className="w-full p-2.5 bg-gradient-to-r from-cyan-600 to-norsan-600 hover:from-cyan-700 hover:to-norsan-700 text-white rounded-xl text-left text-xs font-bold transition active:scale-95 flex items-center justify-between shadow-sm"
+              className="w-full p-2.5 bg-norsan-700 hover:bg-norsan-800 text-white rounded-xl text-left text-xs font-semibold transition active:scale-95 flex items-center justify-between cursor-pointer"
             >
               <span>+ Ricevi Nuovo Ordine Online da norsan.it</span>
-              <span className="text-[10px] bg-yellow-400 text-slate-950 px-2 py-0.5 rounded-full font-black">
+              <span className="text-[10px] bg-amber-300 text-slate-950 px-2 py-0.5 rounded-full font-bold">
                 LIVE
               </span>
             </button>
@@ -176,26 +180,27 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
 
           {/* Section 2: Orders in Queue (With Brands) */}
           <div>
-            <div className="text-[11px] font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <div className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-norsan-600" />
               <span>Fogli Ordine (3 Canali di Vendita)</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
               {orders.map((ord) => (
                 <button
+                  type="button"
                   key={ord.id}
                   onClick={() => onScan(ord.barcode)}
-                  className={`p-2.5 rounded-xl border-2 text-left text-xs transition active:scale-95 shadow-xs ${
+                  className={`p-2.5 rounded-xl border text-left text-xs transition active:scale-95 cursor-pointer ${
                     activeOrder?.id === ord.id
-                      ? "bg-cyan-50 border-norsan-600 text-slate-900 ring-2 ring-norsan-600/30"
-                      : "bg-white border-slate-200 hover:border-slate-400 text-slate-800"
+                      ? "bg-norsan-50/70 border-norsan-500 text-slate-900"
+                      : "bg-white border-slate-200/90 hover:border-slate-300 text-slate-800"
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-norsan-800">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="font-mono font-bold text-norsan-800 truncate">
                       {ord.orderNumber}
                     </span>
-                    <span className="text-[9px] font-bold px-1 rounded bg-slate-100 text-slate-700">
+                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 shrink-0">
                       {ord.source
                         .replace(" Marketplace", "")
                         .replace(" Web Shop", "")}
@@ -212,28 +217,28 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
           {/* Section 3: Expected Products for Active Order */}
           {activeOrder && (
             <div>
-              <div className="text-[11px] font-black text-emerald-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <div className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Articoli Richiesti nell'Ordine Attivo</span>
               </div>
               <div className="space-y-1.5">
                 {activeOrder.items.map((item) => (
                   <button
+                    type="button"
                     key={item.product.id}
                     onClick={() => onScan(item.product.ean)}
-                    className="w-full p-2.5 bg-white hover:bg-emerald-50 border-2 border-emerald-300 rounded-xl flex items-center justify-between text-left transition active:scale-95 text-xs shadow-xs"
+                    className="w-full p-2.5 bg-white hover:bg-emerald-50/60 border border-emerald-200 hover:border-emerald-300 rounded-xl flex items-center justify-between text-left transition active:scale-95 text-xs cursor-pointer"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="font-bold text-slate-900 truncate">
+                      <div className="font-semibold text-slate-900 truncate">
                         {item.product.name}
                       </div>
-                      <div className="text-[10px] font-mono text-emerald-800 font-bold">
-                        EAN: {item.product.ean} • Pos: [
-                        {item.product.shelfLocation}]
+                      <div className="text-[10px] font-mono text-emerald-700 font-semibold">
+                        EAN: {item.product.ean} · Pos: {item.product.shelfLocation}
                       </div>
                     </div>
-                    <span className="text-[11px] font-mono font-black px-2.5 py-1 rounded-lg bg-emerald-600 text-white flex-shrink-0 ml-2">
-                      +1 Skan
+                    <span className="text-[11px] font-mono font-semibold px-2.5 py-1 rounded-lg bg-emerald-600 text-white shrink-0 ml-2">
+                      +1 Scan
                     </span>
                   </button>
                 ))}
@@ -243,27 +248,28 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
 
           {/* Section 4: Marketing Flyers Scanning */}
           <div>
-            <div className="text-[11px] font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <div className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-norsan-600" />
-              <span>Skan Codici Volantini / Opuscoli</span>
+              <span>Scan Codici Volantini / Opuscoli</span>
             </div>
             <div className="space-y-1.5">
               {MARKETING_FLYERS.map((flyer) => (
                 <button
+                  type="button"
                   key={flyer.id}
                   onClick={() => onScan(flyer.code)}
-                  className="w-full p-2 bg-white hover:bg-slate-100 border-2 border-slate-200 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between shadow-xs"
+                  className="w-full p-2.5 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-slate-300 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between cursor-pointer"
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="font-bold text-slate-900 truncate">
+                    <div className="font-semibold text-slate-900 truncate">
                       {flyer.title}
                     </div>
                     <div className="text-[10px] font-mono text-slate-500">
-                      {flyer.code} • Pos: [{flyer.shelfLocation}]
+                      {flyer.code} · Pos: {flyer.shelfLocation}
                     </div>
                   </div>
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                    Skan Flyer
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 shrink-0">
+                    Scan Flyer
                   </span>
                 </button>
               ))}
@@ -272,61 +278,64 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
 
           {/* Section 5: 3 Types of Boxes (Branding Categories) */}
           <div>
-            <div className="text-[11px] font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <div className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <Box className="w-3.5 h-3.5 text-amber-600" />
-              <span>Skan 3 Tipi di Scatole (Branding)</span>
+              <span>Scan 3 Tipi di Scatole (Branding)</span>
             </div>
             <div className="space-y-1.5">
               {/* Norsan Box */}
               <button
+                type="button"
                 onClick={() => onScan("BOX-NOR-M")}
-                className="w-full p-2 bg-cyan-50 hover:bg-cyan-100 border-2 border-norsan-400 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between"
+                className="w-full p-2.5 bg-white hover:bg-norsan-50/50 border border-norsan-200 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between cursor-pointer"
               >
                 <div>
-                  <div className="font-bold text-norsan-950">
-                    Scatola M • LOGO NORSAN
+                  <div className="font-semibold text-slate-900">
+                    Scatola M · LOGO NORSAN
                   </div>
-                  <div className="text-[10px] font-mono text-norsan-800">
-                    BOX-NOR-M • Per ordini norsan.it
+                  <div className="text-[10px] font-mono text-slate-500">
+                    BOX-NOR-M · Per ordini norsan.it
                   </div>
                 </div>
-                <span className="text-[9px] font-black px-2 py-0.5 rounded bg-norsan-600 text-white">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-norsan-700 text-white">
                   NORSAN
                 </span>
               </button>
 
               {/* ZREEN Box */}
               <button
+                type="button"
                 onClick={() => onScan("BOX-ZRE-M")}
-                className="w-full p-2 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-400 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between"
+                className="w-full p-2.5 bg-white hover:bg-emerald-50/50 border border-emerald-200 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between cursor-pointer"
               >
                 <div>
-                  <div className="font-bold text-emerald-950">
-                    Scatola M • LOGO ZREEN (Docciaria)
+                  <div className="font-semibold text-slate-900">
+                    Scatola M · LOGO ZREEN
                   </div>
-                  <div className="text-[10px] font-mono text-emerald-800">
-                    BOX-ZRE-M • Per linea ZREEN Nutraceutica
+                  <div className="text-[10px] font-mono text-slate-500">
+                    BOX-ZRE-M · Per linea ZREEN Nutraceutica
                   </div>
                 </div>
-                <span className="text-[9px] font-black px-2 py-0.5 rounded bg-emerald-700 text-white">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-600 text-white">
                   ZREEN
                 </span>
               </button>
 
               {/* Amazon Neutral Box */}
               <button
+                type="button"
                 onClick={() => onScan("BOX-AMZ-M")}
-                className="w-full p-2 bg-amber-50 hover:bg-amber-100 border-2 border-amber-400 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between"
+                className="w-full p-2.5 bg-white hover:bg-amber-50/60 border border-amber-200 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between cursor-pointer"
               >
                 <div>
-                  <div className="font-bold text-amber-950">
-                    Scatola M • NEUTRA SENZA LOGO
+                  <div className="font-semibold text-slate-900">
+                    Scatola M · NEUTRA SENZA LOGO
                   </div>
-                  <div className="text-[10px] font-mono text-amber-800">
-                    BOX-AMZ-M • Obbligatorio Amazon
+                  <div className="text-[10px] font-mono text-slate-500">
+                    BOX-AMZ-M · Obbligatorio Amazon
                   </div>
                 </div>
-                <span className="text-[9px] font-black px-2 py-0.5 rounded bg-amber-600 text-white">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500 text-slate-950">
                   AMAZON
                 </span>
               </button>
@@ -335,21 +344,23 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
 
           {/* Section 5.5: Bench Command Barcodes */}
           <div>
-            <div className="text-[11px] font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Package className="w-3.5 h-3.5 text-blue-600" />
-              <span>Comandi Barcode da Tavolo (Poka-Yoke)</span>
+            <div className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Package className="w-3.5 h-3.5 text-norsan-600" />
+              <span>Comandi Barcode da Tavolo</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => onScan("+COLLO")}
-                className="p-2 bg-blue-50 hover:bg-blue-100 border-2 border-blue-300 rounded-xl text-left text-xs transition active:scale-95 shadow-xs flex items-center justify-between cursor-pointer"
+                className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between cursor-pointer"
               >
                 <div>
-                  <div className="font-bold text-blue-900">+1 Scatola</div>
-                  <div className="text-[10px] font-mono text-blue-700">+COLLO</div>
+                  <div className="font-semibold text-slate-900">+1 Scatola</div>
+                  <div className="text-[10px] font-mono text-slate-500">
+                    +COLLO
+                  </div>
                 </div>
-                <span className="text-[9px] font-black bg-blue-600 text-white px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-semibold bg-slate-900 text-white px-2 py-0.5 rounded-md">
                   SCAN
                 </span>
               </button>
@@ -357,13 +368,15 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
               <button
                 type="button"
                 onClick={() => onScan("PRINT-DHL")}
-                className="p-2 bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-300 rounded-xl text-left text-xs transition active:scale-95 shadow-xs flex items-center justify-between cursor-pointer"
+                className="p-2.5 bg-white hover:bg-amber-50/50 border border-amber-200 rounded-xl text-left text-xs transition active:scale-95 flex items-center justify-between cursor-pointer"
               >
                 <div>
-                  <div className="font-bold text-yellow-950">Stampa DHL</div>
-                  <div className="text-[10px] font-mono text-yellow-800">PRINT-DHL</div>
+                  <div className="font-semibold text-slate-900">Stampa DHL</div>
+                  <div className="text-[10px] font-mono text-slate-500">
+                    PRINT-DHL
+                  </div>
                 </div>
-                <span className="text-[9px] font-black bg-yellow-500 text-slate-950 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-bold bg-amber-400 text-slate-950 px-2 py-0.5 rounded-md">
                   SCAN
                 </span>
               </button>
@@ -372,24 +385,25 @@ export const BarcodeSimulator: React.FC<BarcodeSimulatorProps> = ({
 
           {/* Section 6: Error Testing (Wrong Products) */}
           <div>
-            <div className="text-[11px] font-black text-rose-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <div className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-              <span>Test Errori (Scansiona Prodotto Sbagliato)</span>
+              <span>Test Errori (Prodotto Sbagliato)</span>
             </div>
             <div className="space-y-1.5">
               {wrongProducts.slice(0, 2).map((prod) => (
                 <button
+                  type="button"
                   key={prod.id}
                   onClick={() => onScan(prod.ean)}
-                  className="w-full p-2 bg-rose-50 hover:bg-rose-100 border-2 border-rose-300 rounded-xl flex items-center justify-between text-left transition active:scale-95 text-xs text-rose-900 shadow-xs"
+                  className="w-full p-2.5 bg-rose-50/60 hover:bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between text-left transition active:scale-95 text-xs text-rose-900 cursor-pointer"
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="font-bold truncate">{prod.name}</div>
+                    <div className="font-semibold truncate">{prod.name}</div>
                     <div className="text-[10px] font-mono text-rose-700">
                       EAN: {prod.ean} (Non in questo ordine)
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-1 rounded bg-rose-600 text-white flex-shrink-0 ml-2">
+                  <span className="text-[10px] font-semibold px-2 py-1 rounded-lg bg-rose-600 text-white shrink-0 ml-2">
                     Test Errore
                   </span>
                 </button>

@@ -143,47 +143,52 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fade-in select-none">
-      <div className="bg-white border-2 border-slate-300 w-full max-w-2xl rounded-3xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs select-none">
+      <div className="bg-white border border-slate-200/90 w-full max-w-2xl rounded-2xl shadow-xl flex flex-col max-h-[95vh] overflow-hidden">
         {/* Modal Header */}
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-5 py-4 bg-white border-b border-slate-100 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-amber-100 text-amber-800 border border-amber-300">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center shrink-0">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-base font-black text-slate-900 flex items-center gap-2">
+              <div className="text-base font-bold text-slate-900 flex items-center gap-2 flex-wrap">
                 <span>Risoluzione Indirizzo di Spedizione (DHL)</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-300">
+                <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-md bg-norsan-50 text-norsan-700 border border-norsan-200">
                   Smart Italian Parser
                 </span>
               </div>
-              <p className="text-xs text-slate-500">
-                Ordine <strong className="font-mono text-slate-800">{order.orderNumber}</strong> • {order.customerName}
+              <p className="text-xs text-slate-500 mt-0.5">
+                Ordine{" "}
+                <strong className="font-mono text-slate-800">
+                  {order.orderNumber}
+                </strong>{" "}
+                · {order.customerName}
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 transition"
+            className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-500 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-5 bg-slate-100/60">
-          {/* Imported raw block (Matching the photo's 'Importierte Adresse') */}
-          <div className="bg-white p-4 rounded-2xl border-2 border-slate-200 shadow-xs">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                <Info className="w-3.5 h-3.5 text-blue-600" />
-                Indirizzo Importato Grezzo (Importierte Adresse)
+        <div className="p-5 overflow-y-auto space-y-4 bg-[#f4f6f9]">
+          {/* Imported raw block */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            <div className="flex items-center justify-between mb-2.5 gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 text-norsan-600" />
+                <span>Indirizzo Importato Grezzo</span>
               </span>
               <button
                 type="button"
                 onClick={handleAutoNormalize}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition active:scale-95 shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-norsan-700 hover:bg-norsan-800 text-white font-semibold text-xs transition active:scale-95 cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Auto-Separa (1-Click)</span>
@@ -191,19 +196,28 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
             </div>
 
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 font-mono text-xs text-slate-800 space-y-0.5 select-text">
-              <div className="font-bold text-slate-900">{customerName || order.customerName}</div>
-              <div className="text-blue-900 font-semibold">{rawAddressText || order.customerAddress}</div>
+              <div className="font-bold text-slate-900">
+                {customerName || order.customerName}
+              </div>
+              <div className="text-norsan-800 font-semibold">
+                {rawAddressText || order.customerAddress}
+              </div>
               <div className="text-slate-600">
                 {zip || order.customerZip} {city || order.customerCity}
               </div>
-              <div className="text-slate-600">
-                🇮🇹 {province || order.customerProvince}, {country || order.customerCountry}
+              <div className="text-slate-600 flex items-center gap-1.5 pt-0.5">
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white border border-slate-200 text-slate-700">
+                  {country || order.customerCountry}
+                </span>
+                <span>{province || order.customerProvince}</span>
               </div>
             </div>
 
             {/* Interactive smart chips */}
             <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px]">
-              <span className="text-slate-400 font-semibold">Tocca per inserire:</span>
+              <span className="text-slate-400 font-medium">
+                Tocca per inserire:
+              </span>
               {rawAddressText
                 .split(/[\r\n,]+/)
                 .map((seg) => seg.trim())
@@ -213,7 +227,10 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
                     key={idx}
                     type="button"
                     onClick={() => {
-                      if (/^\d+[a-zA-Z]?$/.test(seg) || seg.toLowerCase() === "snc") {
+                      if (
+                        /^\d+[a-zA-Z]?$/.test(seg) ||
+                        seg.toLowerCase() === "snc"
+                      ) {
                         setHouseNumber(seg);
                       } else if (/piano|scala|int/i.test(seg)) {
                         setAddressAddition(seg);
@@ -221,7 +238,7 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
                         setStreet(seg);
                       }
                     }}
-                    className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 border border-slate-300 text-slate-700 font-mono transition"
+                    className="px-2 py-0.5 rounded-lg bg-slate-50 hover:bg-norsan-50 hover:text-norsan-800 hover:border-norsan-300 border border-slate-200 text-slate-700 font-mono transition cursor-pointer"
                   >
                     {seg}
                   </button>
@@ -230,18 +247,18 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
           </div>
 
           {/* Form fields (Straße, Hausnummer, Adresszusatz) */}
-          <div className="bg-white p-5 rounded-2xl border-2 border-slate-200 shadow-xs space-y-4">
-            <div className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center justify-between">
-              <span>Campi Strutturati per Etichetta DHL (Lieferadresse)</span>
+          <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-4">
+            <div className="text-xs font-semibold uppercase tracking-wider text-slate-700 flex items-center justify-between gap-2">
+              <span>Campi Strutturati per Etichetta DHL</span>
               {isComplete ? (
-                <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                <span className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Pronto per la stampa
+                  <span>Pronto per la stampa</span>
                 </span>
               ) : (
-                <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
+                <span className="text-[11px] font-semibold text-amber-700 flex items-center gap-1">
                   <AlertTriangle className="w-4 h-4 text-amber-600" />
-                  Campi obbligatori mancanti
+                  <span>Campi obbligatori mancanti</span>
                 </span>
               )}
             </div>
@@ -249,29 +266,31 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
             {/* Street + House Number grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="md:col-span-2">
-                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-                  Nome Via (Straße) <span className="text-red-500">*</span>
+                <label className="block text-[11px] font-semibold text-slate-600 uppercase mb-1">
+                  Nome Via (Straße) <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={street}
                   onChange={(e) => setStreet(e.target.value)}
                   placeholder="Es. Via Giuseppe Di Vittorio"
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-semibold transition ${
+                  className={`w-full px-3 py-2 rounded-xl border text-sm font-semibold focus:outline-none transition ${
                     !street
-                      ? "border-red-400 bg-red-50/30 focus:border-red-500"
-                      : "border-slate-300 bg-white focus:border-blue-500"
+                      ? "border-rose-300 bg-rose-50/40 focus:border-rose-500"
+                      : "border-slate-300 bg-white focus:border-norsan-600"
                   }`}
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1 flex items-center justify-between">
-                  <span>Civico (Nr.) <span className="text-red-500">*</span></span>
+                <label className="text-[11px] font-semibold text-slate-600 uppercase mb-1 flex items-center justify-between">
+                  <span>
+                    Civico (Nr.) <span className="text-rose-500">*</span>
+                  </span>
                   <button
                     type="button"
                     onClick={() => setHouseNumber("SNC")}
-                    className="text-[10px] text-blue-600 hover:underline lowercase font-mono"
+                    className="text-[10px] text-norsan-700 hover:underline lowercase font-mono cursor-pointer"
                   >
                     +SNC
                   </button>
@@ -281,10 +300,10 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
                   value={houseNumber}
                   onChange={(e) => setHouseNumber(e.target.value)}
                   placeholder="Es. 22 o SNC"
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-bold transition ${
+                  className={`w-full px-3 py-2 rounded-xl border text-sm font-mono font-bold focus:outline-none transition ${
                     !houseNumber
-                      ? "border-amber-400 bg-amber-50/30 focus:border-amber-500"
-                      : "border-slate-300 bg-white focus:border-blue-500"
+                      ? "border-amber-300 bg-amber-50/40 focus:border-amber-500"
+                      : "border-slate-300 bg-white focus:border-norsan-600"
                   }`}
                 />
               </div>
@@ -292,7 +311,7 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
 
             {/* Address Addition (Piano, Scala, Citofono) */}
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+              <label className="block text-[11px] font-semibold text-slate-600 uppercase mb-1">
                 Piano / Scala / Note Consegna (Adresszusatz)
               </label>
               <input
@@ -300,40 +319,40 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
                 value={addressAddition}
                 onChange={(e) => setAddressAddition(e.target.value)}
                 placeholder="Es. 2 piano, Scala B, Citofono Marchini"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold focus:border-blue-500 transition"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm font-medium focus:outline-none focus:border-norsan-600 transition"
               />
             </div>
 
             {/* ZIP, City, Province grid */}
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-                  CAP (PLZ) <span className="text-red-500">*</span>
+                <label className="block text-[11px] font-semibold text-slate-600 uppercase mb-1">
+                  CAP (PLZ) <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={zip}
                   onChange={(e) => setZip(e.target.value)}
                   placeholder="50065"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-mono font-bold"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-mono font-bold focus:outline-none focus:border-norsan-600"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-                  Città (Stadt) <span className="text-red-500">*</span>
+                <label className="block text-[11px] font-semibold text-slate-600 uppercase mb-1">
+                  Città (Stadt) <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Pontassieve"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold focus:outline-none focus:border-norsan-600"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 uppercase mb-1">
                   Provincia (Prov)
                 </label>
                 <input
@@ -341,7 +360,7 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
                   value={province}
                   onChange={(e) => setProvince(e.target.value)}
                   placeholder="FI"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-mono font-bold uppercase"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-mono font-bold uppercase focus:outline-none focus:border-norsan-600"
                 />
               </div>
             </div>
@@ -349,11 +368,11 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-white border-t border-slate-200 flex items-center justify-between gap-3">
+        <div className="px-5 py-3.5 bg-white border-t border-slate-100 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition"
+            className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold text-xs transition cursor-pointer"
           >
             Annulla
           </button>
@@ -361,10 +380,10 @@ export const AddressFixModal: React.FC<AddressFixModalProps> = ({
           <button
             type="button"
             onClick={handleSave}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition active:scale-95 shadow-md"
+            className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition active:scale-95 cursor-pointer"
           >
             <Save className="w-4 h-4" />
-            <span>Salva & Valida per Spedizione DHL</span>
+            <span>Salva & Valida per DHL</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

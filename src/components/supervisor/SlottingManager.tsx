@@ -13,6 +13,8 @@ import {
   RotateCcw,
   Search,
   ArrowLeftRight,
+  ArrowLeft,
+  FileText,
   Zap,
 } from "lucide-react";
 import { Product } from "../../types/wms";
@@ -273,44 +275,47 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
       <div
         key={slot.slot_code}
         onClick={() => !isFlyerSlot && handleOpenAssignModal(slot)}
-        className={`p-2 rounded-2xl border-2 transition-all flex flex-col justify-between min-h-[120px] shadow-xs relative group ${
+        className={`p-2.5 rounded-xl border transition-all flex flex-col justify-between min-h-[120px] relative group ${
           isFlyerSlot
-            ? "bg-cyan-50/90 border-cyan-300 cursor-default"
+            ? "bg-norsan-50/70 border-norsan-200 cursor-default"
             : isOccupied
-              ? "bg-white border-slate-300 hover:border-norsan-600 hover:shadow-md cursor-pointer"
-              : "bg-slate-50/70 border-dashed border-slate-300 hover:border-slate-400 cursor-pointer hover:bg-slate-100"
+              ? "bg-white border-slate-200/90 hover:border-norsan-500 hover:shadow-sm cursor-pointer"
+              : "bg-slate-50/70 border-dashed border-slate-300 hover:border-slate-400 cursor-pointer hover:bg-slate-100/70"
         }`}
       >
         {/* Top: Slot code, Badges & Quick Actions */}
-        <div className="flex items-center justify-between gap-1 pb-1.5 border-b border-slate-200">
+        <div className="flex items-center justify-between gap-1 pb-1.5 border-b border-slate-100">
           <div className="flex items-center gap-1">
-            <span className="font-mono font-black text-xs px-2 py-0.5 rounded-lg bg-slate-900 text-white shadow-xs">
+            <span className="font-mono font-bold text-xs px-2 py-0.5 rounded-md bg-slate-900 text-white tabular-nums">
               {slot.slot_code}
             </span>
             {isP2L && (
-              <span className="text-[8px] font-black bg-amber-400 text-slate-950 px-1 py-0.5 rounded flex items-center gap-0.5" title="Pick-to-Light LED strip">
-                <Zap className="w-2.5 h-2.5 text-amber-900 fill-amber-900" /> P2L
+              <span
+                className="text-[8px] font-bold bg-amber-100 text-amber-900 border border-amber-200 px-1 py-0.5 rounded flex items-center gap-0.5"
+                title="Pick-to-Light LED strip"
+              >
+                <Zap className="w-2.5 h-2.5 text-amber-600" /> P2L
               </span>
             )}
           </div>
 
           <div className="flex items-center gap-1">
             {isFlyerSlot ? (
-              <span className="text-[8px] font-black bg-cyan-700 text-white px-1.5 py-0.5 rounded-full">
+              <span className="text-[8px] font-bold bg-norsan-700 text-white px-1.5 py-0.5 rounded-full">
                 VOLANTINI
               </span>
             ) : isOccupied ? (
               <span
-                className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${
+                className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${
                   isZreen
-                    ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
-                    : "bg-cyan-100 text-cyan-900 border border-cyan-300"
+                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                    : "bg-norsan-50 text-norsan-800 border border-norsan-200"
                 }`}
               >
                 {slot.product_brand || (isZreen ? "ZREEN" : "NORSAN")}
               </span>
             ) : (
-              <span className="text-[8px] font-bold bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full">
+              <span className="text-[8px] font-semibold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">
                 LIBERO
               </span>
             )}
@@ -322,7 +327,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                   e.stopPropagation();
                   handleDeleteCurrentSlot(slot.slot_code);
                 }}
-                className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition"
+                className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer"
                 title="Elimina questo slot"
               >
                 <Trash2 className="w-3 h-3" />
@@ -334,18 +339,18 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
         {/* Center: Product Details */}
         {isFlyerSlot ? (
           <div className="my-1.5 text-[10px]">
-            <div className="font-black text-cyan-950 line-clamp-1">
+            <div className="font-bold text-norsan-950 line-clamp-1">
               Opuscoli NORSAN & ZREEN
             </div>
-            <div className="text-[9px] text-cyan-700">Slot Volantini Tavolo</div>
+            <div className="text-[9px] text-norsan-700">Slot Volantini Tavolo</div>
           </div>
         ) : isOccupied ? (
           <div className="my-1.5 flex items-center gap-2">
-            <div className="relative flex-shrink-0">
+            <div className="relative shrink-0">
               <img
                 src={displayImg || ""}
                 alt=""
-                className="w-10 h-10 rounded-xl object-cover border border-slate-300 bg-white"
+                className="w-10 h-10 rounded-lg object-contain border border-slate-100 bg-slate-50 p-0.5"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src =
                     "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=100&auto=format&fit=crop&q=60";
@@ -353,7 +358,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
               />
               {hasCustomPhoto && (
                 <div
-                  className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[7px] font-black border border-white shadow-xs"
+                  className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-600 text-white rounded-full flex items-center justify-center text-[7px] font-bold border border-white"
                   title="Foto personalizzata caricata dal Team Lead"
                 >
                   ✓
@@ -361,27 +366,27 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-black text-slate-900 line-clamp-2 leading-tight">
+              <div className="text-[11px] font-bold text-slate-900 line-clamp-2 leading-tight">
                 {slot.product_name}
               </div>
-              <div className="text-[9px] text-slate-500 font-mono mt-0.5 truncate">
+              <div className="text-[9px] text-slate-400 font-mono mt-0.5 truncate">
                 {slot.product_ean}
               </div>
             </div>
           </div>
         ) : (
-          <div className="my-2.5 text-center text-slate-400 text-[10px] italic font-medium">
+          <div className="my-2.5 text-center text-slate-400 text-[10px] font-medium">
             + Clicca per assegnare
           </div>
         )}
 
         {/* Bottom footer bar */}
         {!isFlyerSlot && (
-          <div className="pt-1 border-t border-slate-200 flex items-center justify-between text-[9px] text-slate-500">
+          <div className="pt-1 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-500">
             <span className="truncate max-w-[70px] font-medium">
               {isOccupied ? slot.product_volume || "Assegnato" : "Slot vuoto"}
             </span>
-            <span className="font-bold text-norsan-700 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+            <span className="font-semibold text-norsan-700 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
               Modifica <ArrowRight className="w-2.5 h-2.5" />
             </span>
           </div>
@@ -443,46 +448,56 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
 
   // Render Shelf Component (Norsan vs Zreen)
   const renderNorsanShelf = () => (
-    <div className="bg-slate-50 border-2 border-cyan-400 rounded-3xl p-4 shadow-xs space-y-4">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+    <div className="bg-slate-50/70 border border-norsan-200 rounded-2xl p-4 space-y-4">
+      <div className="flex items-center justify-between pb-2.5 border-b border-slate-200/80">
         <div className="flex items-center gap-2.5">
-          <div className="w-3.5 h-3.5 rounded-full bg-cyan-600 ring-2 ring-cyan-200" />
+          <div className="w-3 h-3 rounded-full bg-norsan-600 ring-2 ring-norsan-100" />
           <div>
-            <h3 className="font-black text-cyan-950 text-sm tracking-wide">
+            <h3 className="font-bold text-slate-900 text-sm tracking-tight">
               SCAFFALE NORSAN (Oli Liquidi & Flaconi Vetro)
             </h3>
-            <p className="text-[11px] text-cyan-800">
-              {isStation1 ? "Posizione: SINISTRA ⬅️ (Tavolo 1)" : "Posizione: DESTRA ➡️ (Tavolo 2)"}
+            <p className="text-[11px] text-norsan-800 flex items-center gap-1 mt-0.5">
+              {isStation1 ? (
+                <>
+                  <ArrowLeft className="w-3 h-3" />
+                  <span>Posizione: SINISTRA (Tavolo 1)</span>
+                </>
+              ) : (
+                <>
+                  <ArrowRight className="w-3 h-3" />
+                  <span>Posizione: DESTRA (Tavolo 2)</span>
+                </>
+              )}
             </p>
           </div>
         </div>
-        <span className="text-xs font-mono text-cyan-900 bg-cyan-100 font-bold px-2 py-0.5 rounded-lg border border-cyan-200">
+        <span className="text-xs font-mono text-norsan-900 bg-norsan-50 font-semibold px-2.5 py-0.5 rounded-lg border border-norsan-200 tabular-nums">
           {norsanSlots.length} Slot Totali
         </span>
       </div>
 
-      {/* Tier N-A (Oli & Flaconi) */}
       {/* Tier N-A (Oli, Flaconi, Capsule & Gocce) */}
       {renderTierSection(
         "Piano N-A (Slot N-A1..N-A11)",
         "Scaffale NORSAN: Oli di Pesce/Algali, Flaconi, Capsule & Gocce",
         norsanSlots.filter((s) => s.slot_code.startsWith("N-A")),
         "N-A (1..11)",
-        "bg-cyan-100 text-cyan-900 border border-cyan-300",
+        "bg-norsan-50 text-norsan-900 border border-norsan-200",
         () => onAddSlot("S", 2),
       )}
 
       {/* Volantini & Marketing Flyers (Sul Banco Imballaggio) */}
-      <div className="bg-cyan-50/70 border-2 border-dashed border-cyan-300 rounded-2xl p-3">
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-black text-xs text-cyan-950 flex items-center gap-1.5">
-            <span>📄</span> Volantini & Pubblicità (Sul Banco Imballaggio)
+      <div className="bg-norsan-50/60 border border-dashed border-norsan-300 rounded-2xl p-3">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="font-bold text-xs text-norsan-950 flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-norsan-700" />
+            <span>Volantini & Pubblicità (Sul Banco Imballaggio)</span>
           </span>
-          <span className="text-[10px] text-cyan-800 font-bold bg-white px-2 py-0.5 rounded-full border border-cyan-200">
+          <span className="text-[10px] text-norsan-800 font-semibold bg-white px-2 py-0.5 rounded-full border border-norsan-200">
             Solo Pubblicità sul Banco
           </span>
         </div>
-        <p className="text-[10px] text-cyan-800">
+        <p className="text-[11px] text-norsan-800">
           Sul banco imballaggio è posizionato <strong>esclusivamente materiale pubblicitario</strong> (FLY-NOR-ITA, FLY-ZRE-NUTRA, cartoline sconto). Nessun prodotto è stoccato sul banco.
         </p>
       </div>
@@ -490,20 +505,30 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
   );
 
   const renderZreenShelf = () => (
-    <div className="bg-slate-50 border-2 border-emerald-400 rounded-3xl p-4 shadow-xs space-y-4">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+    <div className="bg-slate-50/70 border border-emerald-200 rounded-2xl p-4 space-y-4">
+      <div className="flex items-center justify-between pb-2.5 border-b border-slate-200/80">
         <div className="flex items-center gap-2.5">
-          <div className="w-3.5 h-3.5 rounded-full bg-emerald-600 ring-2 ring-emerald-200" />
+          <div className="w-3 h-3 rounded-full bg-emerald-600 ring-2 ring-emerald-100" />
           <div>
-            <h3 className="font-black text-emerald-950 text-sm tracking-wide">
+            <h3 className="font-bold text-slate-900 text-sm tracking-tight">
               SCAFFALE ZREEN 5-TIER (Nutraceutica Condivisa)
             </h3>
-            <p className="text-[11px] text-emerald-800">
-              {isStation1 ? "Posizione: DESTRA ➡️ (Tavolo 1)" : "Posizione: SINISTRA ⬅️ (Tavolo 2)"}
+            <p className="text-[11px] text-emerald-800 flex items-center gap-1 mt-0.5">
+              {isStation1 ? (
+                <>
+                  <ArrowRight className="w-3 h-3" />
+                  <span>Posizione: DESTRA (Tavolo 1)</span>
+                </>
+              ) : (
+                <>
+                  <ArrowLeft className="w-3 h-3" />
+                  <span>Posizione: SINISTRA (Tavolo 2)</span>
+                </>
+              )}
             </p>
           </div>
         </div>
-        <span className="text-xs font-mono text-emerald-900 bg-emerald-100 font-bold px-2 py-0.5 rounded-lg border border-emerald-200">
+        <span className="text-xs font-mono text-emerald-900 bg-emerald-50 font-semibold px-2.5 py-0.5 rounded-lg border border-emerald-200 tabular-nums">
           {zreenTierASlots.length + zreenTierBSlots.length + zreenTierCSlots.length + zreenTierDSlots.length} Slot Attivi
         </span>
       </div>
@@ -565,29 +590,29 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
   );
 
   return (
-    <div className="bg-white border-2 border-slate-300 rounded-3xl p-5 space-y-5 shadow-sm select-none">
+    <div className="bg-white border border-slate-200/90 rounded-2xl p-5 space-y-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] select-none">
       {/* 1. Header with Title, Station Toggle & Action Buttons */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div className="flex items-center gap-3.5">
-          <div className="p-3 bg-amber-100 text-amber-900 border border-amber-300 rounded-2xl">
-            <Layers className="w-6 h-6" />
+          <div className="w-10 h-10 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl flex items-center justify-center shrink-0">
+            <Layers className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h2 className="text-lg font-black text-slate-900">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">
                 Mappa Scaffali & Slotting 5-Tier (Hub Bolzano)
               </h2>
-              <span className="text-xs bg-emerald-100 text-emerald-900 border border-emerald-300 font-black px-2.5 py-0.5 rounded-full font-mono">
+              <span className="text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold px-2 py-0.5 rounded-full font-mono tabular-nums">
                 {totalSlotsCount} SLOT ATTIVI
               </span>
-              <span className="text-xs bg-cyan-100 text-cyan-900 border border-cyan-300 font-black px-2 py-0.5 rounded-full font-mono">
+              <span className="text-[11px] bg-norsan-50 text-norsan-800 border border-norsan-200 font-semibold px-2 py-0.5 rounded-full font-mono tabular-nums">
                 {occupiedSlotsCount} ASSEGNATI
               </span>
-              <span className="text-xs bg-slate-100 text-slate-700 border border-slate-300 font-black px-2 py-0.5 rounded-full font-mono">
+              <span className="text-[11px] bg-slate-100 text-slate-700 border border-slate-200 font-semibold px-2 py-0.5 rounded-full font-mono tabular-nums">
                 {freeSlotsCount} LIBERI
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Configurazione reale 5-Tier: NORSAN (Oli & Tavolo Fast-Pick) + ZREEN (Tier A/B/C/D Pick-to-Light).
             </p>
           </div>
@@ -596,30 +621,30 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
         {/* Station Toggle & Actions */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Station Selector */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-300">
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
               type="button"
               onClick={() => setActiveStation("STATION_01")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
                 isStation1
-                  ? "bg-slate-900 text-white shadow-xs"
+                  ? "bg-white text-slate-900 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <span>ST-01 (Tavolo 1)</span>
-              <span className="text-[10px] text-cyan-300 font-normal">⬅️ NOR | ZRE ➡️</span>
+              <span>ST-01</span>
+              <span className="text-[10px] text-slate-500 font-mono">NOR SX · ZRE DX</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveStation("STATION_02")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
                 !isStation1
-                  ? "bg-slate-900 text-white shadow-xs"
+                  ? "bg-white text-slate-900 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <span>ST-02 (Tavolo 2)</span>
-              <span className="text-[10px] text-emerald-300 font-normal">⬅️ ZRE | NOR ➡️</span>
+              <span>ST-02</span>
+              <span className="text-[10px] text-slate-500 font-mono">ZRE SX · NOR DX</span>
             </button>
           </div>
 
@@ -627,10 +652,10 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
           <button
             type="button"
             onClick={() => setIsPhotoStudioOpen(true)}
-            className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black px-3.5 py-2 rounded-xl text-xs transition shadow-xs cursor-pointer border border-amber-600"
+            className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-semibold px-3.5 py-2 rounded-xl text-xs transition cursor-pointer tabular-nums"
           >
-            <Camera className="w-4 h-4 text-slate-950" />
-            <span>📸 Catalogo Foto Prodotti ({customPhotosCount})</span>
+            <Camera className="w-3.5 h-3.5 text-amber-300" />
+            <span>Catalogo Foto ({customPhotosCount})</span>
           </button>
 
           {/* Reset Layout Button */}
@@ -642,7 +667,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                   onResetSlotsToDefault();
                 }
               }}
-              className="flex items-center gap-1 bg-white hover:bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs transition border border-slate-300 cursor-pointer"
+              className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-3 py-2 rounded-xl text-xs transition border border-slate-200 cursor-pointer"
               title="Ripristina layout predefinito"
             >
               <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
@@ -653,7 +678,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
       </div>
 
       {/* 2. Filter Bar & Search */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#f4f6f9] p-2.5 rounded-xl border border-slate-200/80">
         {/* Tier Tabs */}
         <div className="flex flex-wrap items-center gap-1.5">
           {[
@@ -665,12 +690,13 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
             { id: "D", label: "ZREEN Tier D (P2L)" },
           ].map((tab) => (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setSelectedTierFilter(tab.id)}
-              className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 selectedTierFilter === tab.id
-                  ? "bg-slate-900 text-white shadow-xs font-black"
-                  : "bg-white text-slate-600 hover:text-slate-900 border border-slate-300"
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
               }`}
             >
               {tab.label}
@@ -680,27 +706,30 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
 
         {/* Occupancy and Search */}
         <div className="flex items-center gap-2 flex-1 max-w-md justify-end">
-          <div className="flex items-center bg-white rounded-xl border border-slate-300 p-0.5 text-xs">
+          <div className="flex items-center bg-white rounded-xl border border-slate-200 p-0.5 text-xs">
             <button
+              type="button"
               onClick={() => setOccupancyFilter("all")}
-              className={`px-2.5 py-1 rounded-lg font-bold transition ${
-                occupancyFilter === "all" ? "bg-slate-800 text-white" : "text-slate-600"
+              className={`px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
+                occupancyFilter === "all" ? "bg-slate-900 text-white" : "text-slate-600"
               }`}
             >
               Tutti
             </button>
             <button
+              type="button"
               onClick={() => setOccupancyFilter("occupied")}
-              className={`px-2.5 py-1 rounded-lg font-bold transition ${
+              className={`px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
                 occupancyFilter === "occupied" ? "bg-emerald-600 text-white" : "text-slate-600"
               }`}
             >
               Occupati
             </button>
             <button
+              type="button"
               onClick={() => setOccupancyFilter("free")}
-              className={`px-2.5 py-1 rounded-lg font-bold transition ${
-                occupancyFilter === "free" ? "bg-amber-600 text-white" : "text-slate-600"
+              className={`px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
+                occupancyFilter === "free" ? "bg-amber-500 text-slate-950" : "text-slate-600"
               }`}
             >
               Liberi
@@ -714,31 +743,31 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cerca SKU, nome o slot..."
-              className="w-full bg-white border border-slate-300 rounded-xl pl-8 pr-3 py-1 text-xs text-slate-900 font-bold focus:outline-none focus:border-norsan-600"
+              className="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-900 font-medium focus:outline-none focus:border-norsan-600"
             />
           </div>
         </div>
       </div>
 
       {/* 3. Physical Warehouse Racks (Mirror layout based on Station) */}
-      <div className="space-y-6">
+      <div className="space-y-5">
         {/* Packing Table Center Banner */}
-        <div className="bg-slate-900 text-white p-3 rounded-2xl flex items-center justify-between text-xs font-black shadow-xs">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
-            <span className="text-cyan-300">
-              {isStation1 ? "⬅️ LATO SINISTRO (SCAFFALE NORSAN)" : "⬅️ LATO SINISTRO (SCAFFALE ZREEN)"}
+        <div className="bg-slate-50 border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs font-semibold">
+          <div className="flex items-center gap-1.5 text-norsan-700">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>
+              {isStation1 ? "LATO SINISTRO (NORSAN)" : "LATO SINISTRO (ZREEN)"}
             </span>
           </div>
-          <div className="flex items-center gap-2 bg-slate-800 px-3 py-1 rounded-xl border border-slate-700">
-            <ArrowLeftRight className="w-3.5 h-3.5 text-amber-400" />
-            <span>BANCO IMBALLAGGIO ({activeStation}) — PC + SCANNER + SOLO PUBBLICITÀ/VOLANTINI</span>
+          <div className="flex items-center gap-2 bg-slate-900 text-white px-3 py-1 rounded-lg text-[11px] font-mono">
+            <ArrowLeftRight className="w-3.5 h-3.5 text-cyan-400" />
+            <span>BANCO IMBALLAGGIO ({activeStation}) · PC + SCANNER</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-300">
-              {isStation1 ? "LATO DESTRO (SCAFFALE ZREEN) ➡️" : "LATO DESTRO (SCAFFALE NORSAN) ➡️"}
+          <div className="flex items-center gap-1.5 text-emerald-700">
+            <span>
+              {isStation1 ? "LATO DESTRO (ZREEN)" : "LATO DESTRO (NORSAN)"}
             </span>
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </div>
         </div>
 
@@ -782,17 +811,17 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
 
       {/* 4. Modal for Slot Assignment & Direct Photo Upload */}
       {selectedSlot && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-slate-300 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200/90 rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
             {/* Header */}
-            <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <div className="px-5 py-4 bg-white border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-norsan-100 text-norsan-800 rounded-2xl">
+                <div className="w-10 h-10 bg-norsan-50 text-norsan-700 border border-norsan-200 rounded-xl flex items-center justify-center shrink-0">
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900">
-                    Modifica Slot [{selectedSlot.slot_code}]
+                  <h3 className="text-base font-bold text-slate-900">
+                    Modifica Slot {selectedSlot.slot_code}
                   </h3>
                   <p className="text-xs text-slate-500">
                     {selectedSlot.description || `Posizione ${selectedSlot.slot_code}`}
@@ -800,19 +829,20 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedSlot(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Body */}
-            <div className="p-6 space-y-5">
+            <div className="p-5 space-y-4 bg-[#f4f6f9]">
               {/* Product Selector */}
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                  Prodotto da Assegnare allo Slot:
+                <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                  Prodotto da Assegnare allo Slot
                 </label>
                 <select
                   value={chosenProductId}
@@ -823,7 +853,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                     const customImg = newId ? customImagesMap[newId] : null;
                     setSlotPhotoPreview(customImg || prod?.imageUrl || null);
                   }}
-                  className="w-full bg-white border-2 border-slate-300 rounded-xl p-3 text-sm font-bold text-slate-900 focus:outline-none focus:border-norsan-600 shadow-xs"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:border-norsan-600 cursor-pointer"
                 >
                   <option value="">
                     -- Nessun prodotto (Slot Libero / Vuoto) --
@@ -851,14 +881,14 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
 
               {/* Photo Upload Feature for Team Lead */}
               {chosenProductId && (
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <div className="bg-white p-4 rounded-xl border border-slate-200/90 space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                      <Camera className="w-4 h-4 text-amber-500" />
+                    <label className="text-[11px] font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Camera className="w-4 h-4 text-amber-600" />
                       <span>Foto Prodotto (Scatta / Carica per i Packer)</span>
                     </label>
                     {customImagesMap[chosenProductId] && (
-                      <span className="text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold px-2 py-0.5 rounded-full">
                         Foto Personalizzata Attiva
                       </span>
                     )}
@@ -866,14 +896,14 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
 
                   <div className="flex items-start gap-4">
                     {/* Thumbnail Preview */}
-                    <div className="relative group/thumb">
+                    <div className="relative shrink-0">
                       <img
                         src={
                           slotPhotoPreview ||
                           "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=150&auto=format&fit=crop&q=80"
                         }
                         alt="Product preview"
-                        className="w-20 h-20 rounded-2xl object-cover border-2 border-slate-300 bg-white shadow-xs"
+                        className="w-20 h-20 rounded-xl object-contain border border-slate-200 bg-slate-50 p-1"
                       />
                     </div>
 
@@ -883,7 +913,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                         <button
                           type="button"
                           onClick={() => slotFileInputRef.current?.click()}
-                          className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
+                          className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
                         >
                           <Camera className="w-3.5 h-3.5 text-amber-300" />
                           <span>Scatta / Carica Foto</span>
@@ -893,7 +923,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                           <button
                             type="button"
                             onClick={() => handleRemoveProductPhoto(chosenProductId)}
-                            className="px-2.5 py-1.5 rounded-xl bg-white border border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold transition cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-semibold transition cursor-pointer"
                           >
                             Resetta Default
                           </button>
@@ -919,19 +949,19 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
 
               {/* Feedback Success Badge */}
               {saveSuccess && (
-                <div className="bg-emerald-50 text-emerald-800 border border-emerald-300 p-3 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <span>Posizione e foto salvate con successo nel sistema WMS!</span>
+                <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 p-3 rounded-xl text-xs font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Posizione e foto salvate con successo nel sistema WMS.</span>
                 </div>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+            <div className="px-5 py-3.5 bg-white border-t border-slate-100 flex items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={() => handleDeleteCurrentSlot(selectedSlot.slot_code)}
-                className="px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>Elimina Slot</span>
@@ -941,7 +971,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedSlot(null)}
-                  className="px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-100 transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition cursor-pointer"
                 >
                   Annulla
                 </button>
@@ -949,7 +979,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                   type="button"
                   onClick={handleSaveAssignment}
                   disabled={isSaving}
-                  className="px-5 py-2.5 rounded-xl bg-norsan-600 hover:bg-norsan-700 active:scale-95 text-white text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-norsan-700 hover:bg-norsan-800 active:scale-95 text-white text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
                   <span>
@@ -964,16 +994,16 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
 
       {/* 5. Dedicated "Catalogo Foto Prodotti" Studio Modal */}
       {isPhotoStudioOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-slate-300 rounded-3xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200/90 rounded-2xl w-full max-w-4xl shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
             {/* Studio Header */}
-            <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <div className="px-5 py-4 bg-white border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-2xl">
-                  <Camera className="w-6 h-6" />
+                <div className="w-10 h-10 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl flex items-center justify-center shrink-0">
+                  <Camera className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900">
+                  <h3 className="text-base font-bold text-slate-900">
                     Gestore Foto Prodotti per il Team Lead
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -984,23 +1014,24 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
               <button
                 type="button"
                 onClick={() => setIsPhotoStudioOpen(false)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Studio Filters */}
-            <div className="p-4 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <div className="px-5 py-3 bg-[#f4f6f9] border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-1.5">
                 {(["ALL", "NORSAN", "ZREEN"] as const).map((brand) => (
                   <button
+                    type="button"
                     key={brand}
                     onClick={() => setPhotoStudioBrand(brand)}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
                       photoStudioBrand === brand
-                        ? "bg-slate-900 text-white font-black"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        ? "bg-slate-900 text-white"
+                        : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
                     }`}
                   >
                     {brand === "ALL" ? "Tutti i Brand" : brand}
@@ -1015,13 +1046,13 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                   value={photoStudioSearch}
                   onChange={(e) => setPhotoStudioSearch(e.target.value)}
                   placeholder="Cerca prodotto o SKU..."
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-900 font-bold focus:outline-none focus:border-norsan-600"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-900 font-medium focus:outline-none focus:border-norsan-600"
                 />
               </div>
             </div>
 
             {/* Studio Product Grid */}
-            <div className="p-4 overflow-y-auto flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="p-4 overflow-y-auto flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 bg-[#f4f6f9]">
               {products
                 .filter((p) => {
                   if (photoStudioBrand !== "ALL" && p.brand !== photoStudioBrand) {
@@ -1044,17 +1075,17 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                   return (
                     <div
                       key={prod.id}
-                      className="bg-slate-50 border border-slate-300 rounded-2xl p-3 flex flex-col justify-between space-y-2 hover:border-slate-400 transition"
+                      className="bg-white border border-slate-200/90 rounded-2xl p-3 flex flex-col justify-between space-y-2 hover:border-slate-300 transition shadow-2xs"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="relative flex-shrink-0">
+                        <div className="relative shrink-0">
                           <img
                             src={currentImg}
                             alt=""
-                            className="w-14 h-14 rounded-xl object-cover border border-slate-300 bg-white"
+                            className="w-14 h-14 rounded-xl object-contain border border-slate-100 bg-slate-50 p-1"
                           />
                           {hasCustom && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[8px] font-black border border-white">
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-600 text-white rounded-full flex items-center justify-center text-[8px] font-bold border border-white">
                               ✓
                             </span>
                           )}
@@ -1063,35 +1094,35 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <span
-                              className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${
+                              className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md ${
                                 prod.brand === "NORSAN"
-                                  ? "bg-cyan-100 text-cyan-900"
-                                  : "bg-emerald-100 text-emerald-900"
+                                  ? "bg-norsan-50 text-norsan-800 border border-norsan-200"
+                                  : "bg-emerald-50 text-emerald-800 border border-emerald-200"
                               }`}
                             >
                               {prod.brand}
                             </span>
-                            <span className="text-[9px] font-mono font-bold text-slate-500">
-                              [{prod.shelfCoordinate || prod.shelfLocation || "N/A"}]
+                            <span className="text-[10px] font-mono font-semibold text-slate-500">
+                              {prod.shelfCoordinate || prod.shelfLocation || "N/A"}
                             </span>
                           </div>
-                          <div className="text-xs font-black text-slate-900 line-clamp-2 leading-tight mt-0.5">
+                          <div className="text-xs font-bold text-slate-900 line-clamp-2 leading-tight mt-0.5">
                             {prod.name}
                           </div>
-                          <div className="text-[9px] text-slate-500 font-mono mt-0.5 truncate">
-                            {prod.sku} • {prod.ean}
+                          <div className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">
+                            {prod.sku} · {prod.ean}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 pt-1 border-t border-slate-200">
+                      <div className="flex items-center gap-2 pt-1.5 border-t border-slate-100">
                         <button
                           type="button"
                           onClick={() => {
                             setStudioTargetProduct(prod);
                             studioFileInputRef.current?.click();
                           }}
-                          className="flex-1 py-1.5 px-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition active:scale-95 cursor-pointer"
+                          className="flex-1 py-1.5 px-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
                         >
                           <Camera className="w-3 h-3 text-amber-300" />
                           <span>{hasCustom ? "Cambia Foto" : "Carica Foto"}</span>
@@ -1101,7 +1132,7 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
                           <button
                             type="button"
                             onClick={() => handleRemoveProductPhoto(prod.id)}
-                            className="py-1.5 px-2 bg-white border border-rose-300 text-rose-700 hover:bg-rose-50 rounded-xl text-[10px] font-bold transition cursor-pointer"
+                            className="py-1.5 px-2.5 bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 rounded-xl text-[11px] font-semibold transition cursor-pointer"
                             title="Ripristina foto default"
                           >
                             Resetta
@@ -1124,14 +1155,14 @@ export const SlottingManager: React.FC<SlottingManagerProps> = ({
             />
 
             {/* Studio Footer */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <div className="px-5 py-3.5 bg-white border-t border-slate-100 flex items-center justify-between">
               <span className="text-xs text-slate-500">
                 Tutte le foto modificate vengono salvate localmente nel browser del terminale.
               </span>
               <button
                 type="button"
                 onClick={() => setIsPhotoStudioOpen(false)}
-                className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-800 transition cursor-pointer"
+                className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition cursor-pointer"
               >
                 Chiudi Catalogo
               </button>

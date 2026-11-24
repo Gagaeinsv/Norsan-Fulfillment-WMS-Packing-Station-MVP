@@ -268,39 +268,40 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none">
-      <div className="bg-white border-2 border-slate-300 rounded-3xl w-full max-w-2xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-150">
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 select-none">
+      <div className="bg-white border border-slate-200/90 rounded-2xl w-full max-w-2xl max-h-[95vh] flex flex-col shadow-xl overflow-hidden">
         {/* Modal Top Bar */}
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-5 py-4 bg-white border-b border-slate-100 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-100 text-emerald-800 rounded-2xl border border-emerald-300">
-              <CheckCircle className="w-6 h-6" />
+            <div className="w-10 h-10 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 flex items-center justify-center shrink-0">
+              <CheckCircle className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-                <span>Ordine Verificato ✓ • Etichetta DHL Generata</span>
+              <h2 className="text-base font-bold text-slate-900">
+                Ordine Verificato · Etichetta DHL Generata
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Distinta d'ordine {order.orderNumber} ({order.customerName})
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition cursor-pointer"
+            className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Multi-Collo Configuration Bar */}
-        <div className="bg-blue-50/90 px-6 py-2.5 border-b border-blue-200 flex flex-wrap items-center justify-between gap-3">
+        <div className="bg-slate-50 px-5 py-2.5 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Package className="w-4 h-4 text-blue-700" />
-            <span className="text-xs font-black text-blue-900">
+            <Package className="w-4 h-4 text-norsan-700" />
+            <span className="text-xs font-semibold text-slate-700">
               Numero di Scatole / Colli:
             </span>
-            <div className="flex items-center gap-1 bg-white border border-blue-300 rounded-xl p-0.5 shadow-2xs">
+            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-0.5 tabular-nums">
               <button
                 type="button"
                 onClick={() => {
@@ -313,11 +314,11 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
                   }
                 }}
                 disabled={packageCount <= 1}
-                className="w-7 h-7 flex items-center justify-center font-black text-sm text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-40 transition cursor-pointer"
+                className="w-7 h-7 flex items-center justify-center font-bold text-sm text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-40 transition cursor-pointer"
               >
                 -
               </button>
-              <span className="font-mono font-black text-xs px-2.5 text-blue-900">
+              <span className="font-mono font-bold text-xs px-2.5 text-slate-900">
                 {packageCount} {packageCount === 1 ? "collo" : "colli"}
               </span>
               <button
@@ -327,7 +328,7 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
                   setPackageCount(newCount);
                   onUpdatePackageCount?.(order.id, newCount);
                 }}
-                className="w-7 h-7 flex items-center justify-center font-black text-sm text-slate-700 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+                className="w-7 h-7 flex items-center justify-center font-bold text-sm text-slate-700 hover:bg-slate-100 rounded-lg transition cursor-pointer"
               >
                 +
               </button>
@@ -336,18 +337,19 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
 
           <div className="flex items-center gap-3">
             {packageCount > 1 && (
-              <div className="flex items-center gap-1.5 text-xs font-bold text-blue-800">
-                <Layers className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 tabular-nums">
+                <Layers className="w-3.5 h-3.5 text-slate-400" />
                 <span>Anteprima:</span>
                 <div className="flex gap-1">
                   {Array.from({ length: packageCount }).map((_, idx) => (
                     <button
+                      type="button"
                       key={idx}
                       onClick={() => setActiveColloIdx(idx)}
-                      className={`px-2 py-0.5 rounded text-[11px] font-bold border transition cursor-pointer ${
+                      className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold border transition cursor-pointer ${
                         activeColloIdx === idx
-                          ? "bg-blue-600 text-white border-blue-700"
-                          : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                          ? "bg-slate-900 text-white border-slate-900"
+                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
                       }`}
                     >
                       {idx + 1}/{packageCount}
@@ -358,12 +360,12 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
             )}
 
             {/* Auto-print toggle */}
-            <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer select-none bg-white px-2 py-1 rounded-lg border border-blue-200">
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 cursor-pointer select-none bg-white px-2.5 py-1 rounded-lg border border-slate-200">
               <input
                 type="checkbox"
                 checked={autoPrintEnabled}
                 onChange={toggleAutoPrint}
-                className="rounded text-blue-600 focus:ring-blue-500"
+                className="rounded border-slate-300 text-norsan-700 focus:ring-norsan-500 cursor-pointer"
               />
               <span>Stampa Auto</span>
             </label>
@@ -372,14 +374,14 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
 
         {/* Status Notification */}
         {autoPrintStatus && (
-          <div className="bg-emerald-50 border-b border-emerald-200 px-6 py-1.5 text-xs text-emerald-800 font-bold flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+          <div className="bg-emerald-50 border-b border-emerald-200 px-5 py-1.5 text-xs text-emerald-800 font-semibold flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
             <span>{autoPrintStatus}</span>
           </div>
         )}
 
         {/* Printable DHL Thermal Label Card (Screen Preview) */}
-        <div className="p-4 overflow-y-auto flex-1 flex flex-col items-center justify-center bg-slate-100">
+        <div className="p-4 overflow-y-auto flex-1 flex flex-col items-center justify-center bg-[#f4f6f9]">
           <div id="screen-dhl-label">
             <SingleDHLCard
               order={order}
@@ -432,12 +434,13 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
         </div>
 
         {/* Modal Footer Controls */}
-        <div className="p-4 bg-white border-t border-slate-200 flex items-center justify-between gap-4">
+        <div className="px-5 py-3.5 bg-white border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
           <button
+            type="button"
             onClick={handlePrint}
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs border border-slate-300 transition active:scale-95 shadow-xs cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs border border-slate-200 transition active:scale-95 cursor-pointer"
           >
-            <Printer className="w-4 h-4 text-blue-700" />
+            <Printer className="w-4 h-4 text-norsan-700" />
             <span>
               {packageCount > 1
                 ? `Ristampa Tutte le ${packageCount} Etichette DHL`
@@ -446,11 +449,12 @@ export const ShippingLabelModal: React.FC<ShippingLabelModalProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={onCompleteAndNext}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm transition active:scale-95 shadow-md cursor-pointer"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition active:scale-95 cursor-pointer"
             title="Premi Invio (Enter) per avanzare immediatamente al prossimo ordine"
           >
-            <span>Conferma & Prossimo Ordine (Enter ↵)</span>
+            <span>Conferma & Prossimo Ordine (Enter)</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
