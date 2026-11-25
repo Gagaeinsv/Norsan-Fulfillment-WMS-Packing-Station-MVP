@@ -88,3 +88,17 @@ L'interfaccia adotta lo stile **Swiss-Light Industrial** (`#f4f6f9`, card bianch
    - Lo schermo mostra foto prodotto, posizione sullo scaffale speculare a 5 piani (`Sinistra / Destra / Tavolo`), tipo scatola (**NORSAN vs Neutra Amazon**) e promemoria volantini/omaggi/B2B.
    - La scansione del singolo codice EAN resta opzionale (utile per verificare nuovi lotti o associare barcode sconosciuti).
 5. **Chiusura & Coda Outbox (`api_outbox`)**: Alla scansione della bolla successiva o al clic su **`Completa & Prossimo`**, il backend rilascia il lock, registra `packing_completed_at` e inserisce l'ordine in `api_outbox` (`pending_api`) pronto per il ritorno automatico dei tracking verso Selly ERP e Amazon SP-API non appena le credenziali ufficiali saranno inserite in `.env`.
+
+---
+
+## Requisiti Registrati per Fase 2 — Fatture Consolidate Multi-Ordine & Brand `foten`
+
+1. **Fatture Consolidate Multi-Ordine (`Progressivo ordine cliente 1, 2...`):**
+   - **Caso reale Bolzano:** un unico documento cartaceo per lo stesso destinatario può contenere più ordini provenienti da siti diversi con codici a barre separati (es. `INT55813` per ZREEN `5000-097` + `IT101778` per NORSAN `1000-002`, includendo il prefisso `IT...` oltre a `INT...` e `ORDVE...`).
+   - **Regola operativa:** gli ordini sullo stesso foglio vengono sempre confezionati insieme in **1 sola scatola con 1 sola etichetta DHL**.
+   - **Specifica tecnica prevista in Fase 2:** modello `1 spedizione = N linkedOrderNumbers` (`barcodes[]`). La scansione di qualsiasi codice a barre del foglio apre l'ordine unificato mostrando tutti gli articoli e i volantini previsti e stampa **1 sola etichetta DHL**; la scansione del secondo codice a barre sullo stesso documento non genera una seconda etichetta; `api_outbox` propaga lo stesso numero di tracking DHL verso **tutti** gli ordini collegati su Selly ERP.
+
+2. **Terzo Canale / Brand `foten`:**
+   - Nuovo sito e-commerce (`foten`) affiancato ai canali esistenti `NORSAN` e `ZREEN`.
+   - **Regole operative confermate:** nessuna scatola brandizzata dedicata, **volantino promozionale dedicato presente**, anagrafica SKU `foten` da importare e mappare dal catalogo completo Selly ERP in Fase 2 (oggi `src/data/products/` censisce esclusivamente SKU NORSAN e ZREEN).
+

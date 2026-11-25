@@ -63,7 +63,7 @@ Hub di Bolzano &middot; Versione 2.0 &middot; Stato: Fase 1 + Nucleo Multi-Banco
 <table>
 <tr><th style="width:18%">Priorità</th><th>Funzionalità</th></tr>
 <tr><td><b>Must have (Realizzato)</b></td><td>Login badge/PIN &middot; flusso rapido 1-Scan bolla &rarr; stampa DHL layout A6 (<code>+COLLO</code>) &middot; Order Locking atomico SQLite + Force Release &middot; import CSV Selly + parser indirizzi IT &middot; guida 5 piani NORSAN/ZREEN + scatola neutra Amazon &middot; persistenza condivisa anomalie Kanban &amp; associazioni barcode</td></tr>
-<tr><td><b>Must have (Fase 2 API)</b></td><td>Collegamento API ufficiale DHL (tracking reali via <code>carrierService</code>) &middot; sync automatica Selly ERP &amp; ritorno tracking via <code>api_outbox</code> &middot; server persistente dedicato in LAN o VPS</td></tr>
+<tr><td><b>Must have (Fase 2 API)</b></td><td>Collegamento API ufficiale DHL (tracking reali via <code>carrierService</code>) &middot; sync automatica Selly ERP &amp; ritorno tracking via <code>api_outbox</code> &middot; gestione fatture consolidate multi-ordine (1 scatola / 1 etichetta DHL per ordini <code>INT</code> + <code>IT</code> dello stesso cliente) &middot; supporto 3&deg; brand <code>foten</code> (volantino dedicato, nessuna scatola brandizzata, import SKU da Selly) &middot; server persistente dedicato in LAN o VPS</td></tr>
 <tr><td><b>Should have</b></td><td>Dashboard Control Tower Team Lead (UPH, Cutoff DHL live, SLA Amazon) &middot; report aggregato audit scansioni opzionali &middot; Slotting 5S configurabile</td></tr>
 <tr><td><b>Could have</b></td><td>Controllo peso USB &middot; gestione Resi RMA (reclami rottura vetro) &middot; attivazione moduli FEFO/HACCP e stock pallet 2-livelli (oggi congelati via feature flag)</td></tr>
 <tr><td><b>Won't have (ora)</b></td><td>Scansione obbligatoria per ogni singolo flacone (esclusa per massimizzare velocità) &middot; hardware LED Pick-to-Light fisico &middot; funzioni contabili/fatturazione (Selly ERP)</td></tr>
@@ -109,6 +109,7 @@ Hub di Bolzano &middot; Versione 2.0 &middot; Stato: Fase 1 + Nucleo Multi-Banco
 <ul>
 <li><b>Allocazione formale ore:</b> conferma monte ore settimanale dedicato al Project Manager / PO per completamento connettori e rilascio in reparto.</li>
 <li><b>Credenziali tecniche in <code>.env</code>:</b> chiavi sandbox/produzione per <b>DHL Business API</b> (o aggregatore spedizioni), <b>Selly ERP API</b> ed eventualmente <b>Amazon SP-API</b>.</li>
+<li><b>Catalogo &amp; Regole Selly ERP:</b> export completo SKU <b><code>foten</code></b> (con volantino dedicato e nessuna scatola brandizzata) e verifica della regola di raggruppamento ordini consolidati (<code>Progressivo ordine cliente 1, 2...</code>) per spedizioni multi-sito in 1 sola scatola/etichetta.</li>
 <li><b>Infrastruttura condivisa:</b> attivazione di un host Docker/Node in rete locale Bolzano oppure VPS con disco persistente per condividere code ordini e lock tra tutti i banchi.</li>
 </ul>
 

@@ -110,6 +110,9 @@
 <li>L'adapter corriere (<code>server/services/carrierService.ts</code>) usa oggi tracking simulati <code>JJD...</code> (<code>CARRIER_MODE=mock</code>); inserendo <code>DHL_API_KEY</code> e <code>DHL_ACCOUNT_NUMBER</code> si attiva l'invio reale senza modificare l'interfaccia banco.</li>
 <li>Ogni ordine completato scrive in <code>api_outbox</code> su SQLite in attesa del worker di invio tracking verso Selly ERP e Amazon SP-API.</li>
 </ol>
+<div class="note"><b>Requisiti operativi registrati per la Fase 2 (senza codice in Fase 1):</b><br>
+&bull; <b>Fatture consolidate multi-ordine (<code>Progressivo ordine cliente 1, 2...</code>):</b> uno stesso foglio può raggruppare più ordini/barcode di siti diversi (es. <code>INT...</code> ZREEN + <code>IT...</code> NORSAN) per il medesimo cliente. Vanno sempre in <b>1 sola scatola con 1 sola etichetta DHL</b>: in Fase 2 lo scan di qualsiasi barcode aprirà l'ordine unificato bloccando stampe duplicate e propagando il tracking a tutti gli ordini in <code>api_outbox</code>.<br>
+&bull; <b>Terzo brand <code>foten</code>:</b> nessuna scatola brandizzata dedicata, <b>volantino dedicato previsto</b>, SKU da censire in Fase 2 dall'export completo Selly ERP.</div>
 <div class="note"><b>Istruzioni dettagliate backend e deploy:</b> vedere <code>docs/BACKEND_DEPLOY_GUIDE.md</code> e il template <code>.env.example</code>.</div>
 
 <h2>5. Interfacce API del backend (Principali)</h2>
