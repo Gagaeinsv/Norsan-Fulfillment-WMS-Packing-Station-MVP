@@ -426,6 +426,32 @@ app.get("/api/orders", (_req, res) => {
         }
       }
 
+      let linkedOrderNumbers: string[] = [];
+      try {
+        const parsedLinked = JSON.parse(o.linked_order_numbers_json || "[]");
+        if (Array.isArray(parsedLinked)) {
+          linkedOrderNumbers = parsedLinked.filter((v) => typeof v === "string" && v.trim());
+        }
+      } catch {
+        linkedOrderNumbers = [];
+      }
+      if (linkedOrderNumbers.length === 0 && o.order_number) {
+        linkedOrderNumbers = [o.order_number];
+      }
+
+      let linkedBarcodes: string[] = [];
+      try {
+        const parsedBarcodes = JSON.parse(o.linked_barcodes_json || "[]");
+        if (Array.isArray(parsedBarcodes)) {
+          linkedBarcodes = parsedBarcodes.filter((v) => typeof v === "string" && v.trim());
+        }
+      } catch {
+        linkedBarcodes = [];
+      }
+      if (linkedBarcodes.length === 0) {
+        linkedBarcodes = [o.barcode || o.order_number];
+      }
+
       const isLockActive = Boolean(
         o.locked_by_operator_id &&
           o.locked_at &&
@@ -470,6 +496,8 @@ app.get("/api/orders", (_req, res) => {
         addressStatus: o.address_status || addressDetails?.status || "valid",
         packingStartedAt: o.packing_started_at || undefined,
         packingCompletedAt: o.packing_completed_at || undefined,
+        linkedOrderNumbers,
+        linkedBarcodes,
       };
     });
 
@@ -500,9 +528,10 @@ app.post("/api/orders/bulk", (req, res) => {
           courier, tracking_number, priority, box_recommendation, box_branding,
           status, special_notes, created_at, is_subscription, subscription_cycle,
           retention_gift, requires_physical_doc, gift_confirmed, physical_doc_confirmed,
-          marketing_flyers_json, package_count, address_details_json, address_status
+          marketing_flyers_json, package_count, address_details_json, address_status,
+          linked_order_numbers_json, linked_barcodes_json
         ) VALUES (
-          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
       `);
 
@@ -513,6 +542,15 @@ app.post("/api/orders/bulk", (req, res) => {
       `);
 
       for (const ord of orders) {
+        const linkedNums =
+          Array.isArray(ord.linkedOrderNumbers) && ord.linkedOrderNumbers.length > 0
+            ? ord.linkedOrderNumbers
+            : [ord.orderNumber];
+        const linkedCodes =
+          Array.isArray(ord.linkedBarcodes) && ord.linkedBarcodes.length > 0
+            ? ord.linkedBarcodes
+            : [ord.barcode || ord.orderNumber];
+
         insertOrder.run(
           ord.id,
           ord.orderNumber,
@@ -542,6 +580,8 @@ app.post("/api/orders/bulk", (req, res) => {
           Math.max(1, Number(ord.packageCount) || 1),
           ord.addressDetails ? JSON.stringify(ord.addressDetails) : null,
           ord.addressStatus || ord.addressDetails?.status || "valid",
+          JSON.stringify(linkedNums),
+          JSON.stringify(linkedCodes),
         );
 
         // Delete existing items if replacing this order
@@ -741,7 +781,7 @@ app.patch("/api/orders/:id/status", (req, res) => {
   try {
     const existing = db
       .prepare(
-        "SELECT id, order_number, source, courier, tracking_number, package_count, status FROM orders WHERE id = ?",
+        "SELECT id, order_number, source, courier, tracking_number, package_count, status, linked_order_numbers_json FROM orders WHERE id = ?",
       )
       .get(id) as any;
 
@@ -762,7 +802,22 @@ app.patch("/api/orders/:id/status", (req, res) => {
         ).run(status, now, id);
 
         if (existing) {
-          db.prepare(
+          let linkedNums: string[] = [];
+          try {
+            const parsed = JSON.parse(existing.linked_order_numbers_json || "[]");
+            if (Array.isArray(parsed)) {
+              linkedNums = parsed
+                .filter((v) => typeof v === "string" && v.trim())
+                .map((v) => v.trim());
+            }
+          } catch {
+            linkedNums = [];
+          }
+          const allOrderNums = Array.from(
+            new Set([existing.order_number, ...linkedNums].filter(Boolean)),
+          );
+
+          const upsertOutbox = db.prepare(
             `
             INSERT INTO api_outbox (
               order_id, order_number, channel, tracking_number, package_count, status, created_at
@@ -771,14 +826,22 @@ app.patch("/api/orders/:id/status", (req, res) => {
               tracking_number = excluded.tracking_number,
               package_count = excluded.package_count
           `,
-          ).run(
-            existing.id,
-            existing.order_number,
-            existing.source || "Selly ERP",
-            existing.tracking_number || null,
-            existing.package_count || 1,
-            now,
           );
+
+          for (const ordNum of allOrderNums) {
+            const outboxKey =
+              ordNum === existing.order_number
+                ? existing.id
+                : `${existing.id}::${ordNum}`;
+            upsertOutbox.run(
+              outboxKey,
+              ordNum,
+              existing.source || "Selly ERP",
+              existing.tracking_number || null,
+              existing.package_count || 1,
+              now,
+            );
+          }
         }
       } else if (stationId && status === "packing") {
         db.prepare(

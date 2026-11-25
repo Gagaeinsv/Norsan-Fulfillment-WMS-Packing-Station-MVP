@@ -1,5 +1,5 @@
-import { Order, OrderItem, Product, BoxType, BoxBranding } from "../types/wms";
-import { isSellyErpServiceSku } from "../data/marketingFlyers";
+import { Order, OrderItem, Product, BoxType, BoxBranding, BrandFamily, MarketingFlyer } from "../types/wms";
+import { MARKETING_FLYERS, isSellyErpServiceSku } from "../data/marketingFlyers";
 import { NORSAN_PRODUCTS } from "../data/norsanProducts";
 import { parseItalianAddress } from "./italianAddressParser";
 
@@ -212,6 +212,247 @@ function isServiceLine(sku: string, description: string): boolean {
   return serviceKeywords.some((kw) => text.includes(kw));
 }
 
+function detectFallbackBrand(sku: string, description: string): BrandFamily {
+  const upperSku = (sku || "").toUpperCase();
+  const lowerDesc = (description || "").toLowerCase();
+
+  if (
+    upperSku.startsWith("5000-") ||
+    upperSku.includes("ZRE") ||
+    lowerDesc.includes("zreen")
+  ) {
+    return "ZREEN";
+  }
+
+  if (upperSku.includes("FOT") || lowerDesc.includes("foten")) {
+    return "FOTEN";
+  }
+
+  return "NORSAN";
+}
+
+function getFlyerByCode(code: string): MarketingFlyer | undefined {
+  const found = MARKETING_FLYERS.find((f) => f.code === code);
+  return found ? { ...found, isIncluded: false } : undefined;
+}
+
+function resolveShipmentPackagingAndFlyers(
+  items: OrderItem[],
+  existingFlyers: MarketingFlyer[] = [],
+  preserveAmazonNeutral: boolean = false,
+): {
+  boxRecommendation: BoxType;
+  boxBranding: BoxBranding;
+  marketingFlyers: MarketingFlyer[];
+} {
+  const totalUnits = items.reduce((s, it) => s + it.quantityRequired, 0);
+  const brands = new Set<BrandFamily>(items.map((it) => it.product.brand));
+  const sizeSuffix: "S" | "M" | "L" =
+    totalUnits > 5 ? "L" : totalUnits > 2 ? "M" : "S";
+
+  let boxRecommendation: BoxType = `BOX-NOR-${sizeSuffix}`;
+  let boxBranding: BoxBranding = "norsan_logo";
+
+  if (preserveAmazonNeutral) {
+    boxRecommendation = `BOX-AMZ-${sizeSuffix}`;
+    boxBranding = "neutral_unbranded";
+  } else if (brands.size === 1 && brands.has("ZREEN")) {
+    boxRecommendation = totalUnits > 5 ? "BOX-ZRE-L" : "BOX-ZRE-M";
+    boxBranding = "zreen_logo";
+  } else if (brands.size === 1 && brands.has("FOTEN")) {
+    // foten has no dedicated branded box
+    boxRecommendation = `BOX-AMZ-${sizeSuffix}`;
+    boxBranding = "neutral_unbranded";
+  } else if (brands.has("NORSAN")) {
+    boxRecommendation = `BOX-NOR-${sizeSuffix}`;
+    boxBranding = "norsan_logo";
+  } else if (brands.has("ZREEN")) {
+    boxRecommendation = `BOX-ZRE-${sizeSuffix}`;
+    boxBranding = "zreen_logo";
+  }
+
+  if (preserveAmazonNeutral) {
+    return {
+      boxRecommendation,
+      boxBranding,
+      marketingFlyers: existingFlyers,
+    };
+  }
+
+  const flyersMap = new Map<string, MarketingFlyer>();
+  const addByCode = (code: string) => {
+    if (flyersMap.has(code)) return;
+    const preset = getFlyerByCode(code);
+    if (preset) flyersMap.set(code, preset);
+  };
+
+  if (brands.has("NORSAN")) addByCode("FLY-NOR-ITA");
+  if (brands.has("ZREEN")) addByCode("FLY-ZRE-NUTRA");
+  if (brands.has("FOTEN")) addByCode("FLY-FOTEN");
+
+  for (const f of existingFlyers) {
+    if (!flyersMap.has(f.code)) {
+      flyersMap.set(f.code, { ...f });
+    } else if (f.isIncluded) {
+      flyersMap.set(f.code, { ...flyersMap.get(f.code)!, isIncluded: true });
+    }
+  }
+
+  if (flyersMap.size === 0) {
+    addByCode("FLY-NOR-ITA");
+  }
+
+  return {
+    boxRecommendation,
+    boxBranding,
+    marketingFlyers: Array.from(flyersMap.values()),
+  };
+}
+
+function normalizeConsolidationPart(value?: string): string {
+  return (value || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function isAmazonChannelOrder(order: Order): boolean {
+  return (
+    order.source === "Amazon Marketplace" ||
+    order.boxBranding === "neutral_unbranded" ||
+    Boolean(order.boxRecommendation?.startsWith("BOX-AMZ"))
+  );
+}
+
+/**
+ * Merges orders from different channels/sites (e.g. INT... + IT...) belonging to the
+ * same customer and shipping destination into one unified shipment (1 box / 1 DHL label).
+ */
+export function consolidateMultiOrderShipments(orders: Order[]): Order[] {
+  const result: Order[] = [];
+  const groups = new Map<string, number>();
+
+  for (const ord of orders) {
+    const baseLinkedNums = Array.from(
+      new Set(
+        (ord.linkedOrderNumbers && ord.linkedOrderNumbers.length > 0
+          ? ord.linkedOrderNumbers
+          : [ord.orderNumber]
+        ).filter(Boolean),
+      ),
+    );
+    const baseLinkedBarcodes = Array.from(
+      new Set(
+        (ord.linkedBarcodes && ord.linkedBarcodes.length > 0
+          ? ord.linkedBarcodes
+          : [ord.barcode || ord.orderNumber, ...baseLinkedNums]
+        )
+          .filter(Boolean)
+          .map((c) => c.trim().toUpperCase()),
+      ),
+    );
+
+    const normalizedOrd: Order = {
+      ...ord,
+      linkedOrderNumbers: baseLinkedNums,
+      linkedBarcodes: baseLinkedBarcodes,
+    };
+
+    const normName = normalizeConsolidationPart(normalizedOrd.customerName);
+    const normAddr = normalizeConsolidationPart(normalizedOrd.customerAddress);
+    const normZip = normalizeConsolidationPart(normalizedOrd.customerZip);
+    const normCity = normalizeConsolidationPart(normalizedOrd.customerCity);
+
+    const isEligible =
+      normalizedOrd.status !== "packed" &&
+      normalizedOrd.status !== "shipped" &&
+      Boolean(normName) &&
+      normName !== "cliente selly erp" &&
+      Boolean(normAddr) &&
+      normAddr !== "indirizzo non specificato";
+
+    if (!isEligible) {
+      result.push(normalizedOrd);
+      continue;
+    }
+
+    const isAmz = isAmazonChannelOrder(normalizedOrd);
+    const key = `${isAmz ? "AMZ" : "STD"}|${normName}|${normZip}|${normCity}|${normAddr}`;
+    const existingIdx = groups.get(key);
+
+    if (existingIdx === undefined) {
+      groups.set(key, result.length);
+      result.push(normalizedOrd);
+      continue;
+    }
+
+    const primary = result[existingIdx];
+
+    // Merge items cleanly by product ID or SKU
+    const mergedItemsMap = new Map<string, OrderItem>();
+    for (const it of [...primary.items, ...normalizedOrd.items]) {
+      const itemKey = it.product.id || it.product.sku;
+      const existingItem = mergedItemsMap.get(itemKey);
+      if (existingItem) {
+        const req = existingItem.quantityRequired + it.quantityRequired;
+        const sc = existingItem.quantityScanned + it.quantityScanned;
+        mergedItemsMap.set(itemKey, {
+          ...existingItem,
+          quantityRequired: req,
+          quantityScanned: sc,
+          status: sc >= req ? "completed" : sc > 0 ? "in_progress" : "pending",
+        });
+      } else {
+        mergedItemsMap.set(itemKey, { ...it });
+      }
+    }
+    const mergedItems = Array.from(mergedItemsMap.values());
+
+    const mergedOrderNums = Array.from(
+      new Set([
+        ...(primary.linkedOrderNumbers || [primary.orderNumber]),
+        ...(normalizedOrd.linkedOrderNumbers || [normalizedOrd.orderNumber]),
+      ]),
+    );
+    const mergedBarcodes = Array.from(
+      new Set([
+        ...(primary.linkedBarcodes || []),
+        ...(normalizedOrd.linkedBarcodes || []),
+      ]),
+    );
+
+    const { boxRecommendation, boxBranding, marketingFlyers } =
+      resolveShipmentPackagingAndFlyers(
+        mergedItems,
+        [...(primary.marketingFlyers || []), ...(normalizedOrd.marketingFlyers || [])],
+        isAmz,
+      );
+
+    const unifiedTag = `ORDINE UNIFICATO (${mergedOrderNums.join(" + ")}) · 1 scatola / 1 etichetta DHL`;
+    const noteParts = Array.from(
+      new Set(
+        [primary.specialNotes, normalizedOrd.specialNotes, unifiedTag]
+          .filter((n): n is string => Boolean(n && n.trim()))
+          .map((n) => n.trim()),
+      ),
+    );
+
+    result[existingIdx] = {
+      ...primary,
+      items: mergedItems,
+      linkedOrderNumbers: mergedOrderNums,
+      linkedBarcodes: mergedBarcodes,
+      boxRecommendation,
+      boxBranding,
+      marketingFlyers,
+      isSubscription: primary.isSubscription || normalizedOrd.isSubscription,
+      requiresPhysicalDocument:
+        Boolean(primary.requiresPhysicalDocument) ||
+        Boolean(normalizedOrd.requiresPhysicalDocument),
+      specialNotes: noteParts.join(" · "),
+    };
+  }
+
+  return result;
+}
+
 /**
  * Main Selly ERP CSV Parser
  */
@@ -411,6 +652,7 @@ export function parseSellyOrdersCsv(
         unrecognizedSkusSet.add(rawItem.sku || rawItem.description);
         const safeFallbackCode =
           rawItem.sku || `UNBOUND-${orderNum}-${orderItems.length + 1}`;
+        const inferredBrand = detectFallbackBrand(rawItem.sku, rawItem.description);
         // Create resilient fallback product without colliding with any real product EAN
         matchedProd = {
           id: `selly-${rawItem.sku || Math.random().toString(36).substring(7)}`,
@@ -419,7 +661,7 @@ export function parseSellyOrdersCsv(
           italianName: rawItem.description || rawItem.sku || "Articolo Selly ERP",
           ean: safeFallbackCode,
           category: "oil",
-          brand: rawItem.sku.toUpperCase().includes("ZRE") ? "ZREEN" : "NORSAN",
+          brand: inferredBrand,
           volume: "200 ml",
           packageType: "glass_bottle",
           shelfLocation: "N-TEMP",
@@ -446,20 +688,8 @@ export function parseSellyOrdersCsv(
 
     if (orderItems.length === 0) return;
 
-    const totalUnits = orderItems.reduce((s, it) => s + it.quantityRequired, 0);
-    const hasZreenOnly = orderItems.every((it) => it.product.brand === "ZREEN");
-
-    let boxRec: BoxType = "BOX-NOR-S";
-    let boxBrand: BoxBranding = "norsan_logo";
-
-    if (hasZreenOnly) {
-      boxRec = "BOX-ZRE-M";
-      boxBrand = "zreen_logo";
-    } else if (totalUnits > 5) {
-      boxRec = "BOX-NOR-L";
-    } else if (totalUnits > 2) {
-      boxRec = "BOX-NOR-M";
-    }
+    const { boxRecommendation, boxBranding, marketingFlyers } =
+      resolveShipmentPackagingAndFlyers(orderItems);
 
     const parsedAddr = parseItalianAddress(group.customerAddress);
 
@@ -467,6 +697,8 @@ export function parseSellyOrdersCsv(
       id: `ord-selly-${orderNum}`,
       orderNumber: orderNum,
       barcode: orderNum,
+      linkedOrderNumbers: [orderNum],
+      linkedBarcodes: [orderNum.toUpperCase()],
       source: "Selly ERP Import",
       createdAt: Date.now(),
       customerName: group.customerName,
@@ -478,22 +710,12 @@ export function parseSellyOrdersCsv(
       courier: group.courier as any,
       trackingNumber: group.trackingNumber,
       priority: group.courier.includes("Express") ? "express" : "standard",
-      boxBranding: boxBrand,
-      boxRecommendation: boxRec,
+      boxBranding,
+      boxRecommendation,
       addressDetails: parsedAddr,
       addressStatus: parsedAddr.status,
       items: orderItems,
-      marketingFlyers: [
-        {
-          id: "fly-selly-01",
-          code: "FLY-NOR-ITA",
-          title: "Opuscolo NORSAN Italia Guida Omega-3",
-          italianTitle: "Guida Introduttiva Omega-3 per il Consumatore",
-          shelfLocation: "D3-C",
-          brand: "NORSAN",
-          isIncluded: false,
-        },
-      ],
+      marketingFlyers,
       status: "ready_to_pack",
       isSubscription: group.specialNotes.toLowerCase().includes("abbonament"),
       customerOrderCount: 1,
@@ -505,12 +727,14 @@ export function parseSellyOrdersCsv(
     finalOrders.push(newOrder);
   });
 
+  const consolidatedOrders = consolidateMultiOrderShipments(finalOrders);
+
   return {
-    orders: finalOrders,
+    orders: consolidatedOrders,
     errors,
     summary: {
       totalRows: rows.length,
-      totalOrders: finalOrders.length,
+      totalOrders: consolidatedOrders.length,
       totalItems: totalItemsCount,
       skippedServiceRows,
       unrecognizedSkus: Array.from(unrecognizedSkusSet),

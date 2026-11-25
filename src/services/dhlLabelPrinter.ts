@@ -128,7 +128,7 @@ function generateSingleDhlHtml(
             ${isFragile ? `<span style="color: #dc2626; font-weight: 900;">⚠️ VETRO / FRAGILE</span>` : `<span style="color: #16a34a;">STANDARD</span>`}
           </div>
           <div style="font-family: monospace;">
-            Rif. Ordine: <b>${order.orderNumber}</b> (${totalUnits} pz)${totalColli > 1 ? ` [${colloIdx + 1}/${totalColli}]` : ""}
+            Rif. Ordine: <b>${order.linkedOrderNumbers && order.linkedOrderNumbers.length > 1 ? order.linkedOrderNumbers.join(" + ") : order.orderNumber}</b> (${totalUnits} pz)${totalColli > 1 ? ` [${colloIdx + 1}/${totalColli}]` : ""}
           </div>
         </div>
 

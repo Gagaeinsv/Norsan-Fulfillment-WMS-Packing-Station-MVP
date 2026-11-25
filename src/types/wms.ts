@@ -3,7 +3,7 @@ export type ProductCategory =
 export type PackageType =
   "glass_bottle" | "plastic_bottle" | "blister_box" | "dropper" | "jar_powder";
 export type RackSide = "S" | "D"; // S = Sinistra (Left), D = Destra (Right) per standard italiano magazzino
-export type BrandFamily = "NORSAN" | "ZREEN" | "AMAZON_WHITE_LABEL";
+export type BrandFamily = "NORSAN" | "ZREEN" | "FOTEN" | "AMAZON_WHITE_LABEL";
 
 export interface Product {
   id: string;
@@ -63,10 +63,12 @@ export type CourierService = "DHL Express" | "DHL Paket";
 export type OrderSource =
   | "norsan.it Web Shop"
   | "zreen.it Shop"
+  | "foten.it Shop"
   | "Amazon Marketplace"
   | "B2B Farmacia EDI"
   | "WhatsApp / Telefono"
   | "SellyErp INT" // Internet orders: INT50953
+  | "SellyErp IT" // Additional site prefix: IT101778
   | "SellyErp ORDVE" // B2B orders: ORDVE2026121172
   | "Selly ERP Import"; // Manual CSV export from Selly
 
@@ -145,6 +147,9 @@ export interface Order {
   lockedByOperatorName?: string | null;
   lockedByStationId?: string | null;
   lockedAt?: number | null;
+  // Multi-Order Consolidated Invoice Support (1 shipment = N linked orders)
+  linkedOrderNumbers?: string[];
+  linkedBarcodes?: string[];
 }
 
 export interface AddressDetails {

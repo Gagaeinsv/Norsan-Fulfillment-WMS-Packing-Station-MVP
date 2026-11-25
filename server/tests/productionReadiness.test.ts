@@ -246,4 +246,55 @@ describe("Production Readiness: Multi-Bench Locking, Shared Sync & API Outbox", 
     expect(Array.isArray(auditSummary.body.topErrors)).toBe(true);
     expect(Array.isArray(auditSummary.body.recentLogs)).toBe(true);
   });
+
+  it("persists consolidated linkedOrderNumbers/linkedBarcodes and fans out api_outbox per linked order", async () => {
+    await request(app)
+      .post("/api/orders/bulk")
+      .send({
+        replace: false,
+        orders: [
+          {
+            id: "ord-unified-1",
+            orderNumber: "INT55813",
+            barcode: "INT55813",
+            linkedOrderNumbers: ["INT55813", "IT101778"],
+            linkedBarcodes: ["INT55813", "IT101778"],
+            source: "Selly ERP Import",
+            customerName: "Ester Walker",
+            customerAddress: "Via Dott. Alice 15",
+            customerCity: "Bolzano",
+            customerZip: "39100",
+            customerProvince: "BZ",
+            customerCountry: "IT",
+            courier: "DHL Express",
+            trackingNumber: "JJD0000055813",
+            priority: "express",
+            boxRecommendation: "BOX-NOR-M",
+            boxBranding: "norsan_logo",
+            status: "ready_to_pack",
+            marketingFlyers: [],
+            items: [{ productId: seedProductId, quantityRequired: 2, quantityScanned: 0 }],
+          },
+        ],
+      })
+      .expect(200);
+
+    const listRes = await request(app).get("/api/orders").expect(200);
+    const saved = listRes.body.find((o: any) => o.id === "ord-unified-1");
+    expect(saved.linkedOrderNumbers).toEqual(["INT55813", "IT101778"]);
+    expect(saved.linkedBarcodes).toEqual(["INT55813", "IT101778"]);
+
+    await request(app)
+      .patch("/api/orders/ord-unified-1/status")
+      .send({ status: "packed", operatorId: "op-01", stationId: "ST-01" })
+      .expect(200);
+
+    const outboxRows = db
+      .prepare(
+        "SELECT order_id, order_number, tracking_number FROM api_outbox WHERE tracking_number = ?",
+      )
+      .all("JJD0000055813") as any[];
+    expect(outboxRows).toHaveLength(2);
+    expect(outboxRows.map((r) => r.order_number).sort()).toEqual(["INT55813", "IT101778"]);
+  });
 });

@@ -64,6 +64,16 @@ export const MARKETING_FLYERS: MarketingFlyer[] = [
     shelfCoordinate: "N-A8",
     isIncluded: false,
   },
+  {
+    id: "fly-07",
+    code: "FLY-FOTEN",
+    title: "Opuscolo foten",
+    italianTitle: "Opuscolo informativo foten",
+    shelfLocation: "TAVOLO-VOLANTINI",
+    shelfCoordinate: "TAVOLO-VOLANTINI",
+    brand: "FOTEN",
+    isIncluded: false,
+  },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────

@@ -9,6 +9,7 @@ import {
   Package,
   AlertTriangle,
   Lock,
+  Layers,
 } from "lucide-react";
 import { Order } from "../../types/wms";
 import {
@@ -347,6 +348,15 @@ export const OrderQueue: React.FC<OrderQueueProps> = ({
                       <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded border border-amber-300 shrink-0 uppercase">
                         <Package className="w-2.5 h-2.5" />
                         <span>AMZ</span>
+                      </span>
+                    )}
+                    {order.linkedOrderNumbers && order.linkedOrderNumbers.length > 1 && (
+                      <span
+                        className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-indigo-50 text-indigo-800 px-1.5 py-0.5 rounded border border-indigo-200 shrink-0"
+                        title={`Ordini consolidati: ${order.linkedOrderNumbers.join(" + ")}`}
+                      >
+                        <Layers className="w-2.5 h-2.5" />
+                        <span>Unificato ({order.linkedOrderNumbers.length})</span>
                       </span>
                     )}
                   </div>

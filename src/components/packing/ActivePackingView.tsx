@@ -28,6 +28,7 @@ import {
   PackageSearch,
   Plus,
   Lock,
+  Layers,
 } from "lucide-react";
 import { Order, BoxType, ScanEvent, Product } from "../../types/wms";
 import { BOX_TYPES } from "../../data/norsanProducts";
@@ -211,6 +212,15 @@ export const ActivePackingView: React.FC<ActivePackingViewProps> = ({
                 </>
               )}
             </span>
+
+            {order.linkedOrderNumbers && order.linkedOrderNumbers.length > 1 && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border bg-indigo-50 text-indigo-800 border-indigo-200 shrink-0 font-mono">
+                <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                <span>
+                  ORDINE UNIFICATO · {order.linkedOrderNumbers.join(" + ")} · 1 Etichetta DHL
+                </span>
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap justify-end">

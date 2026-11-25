@@ -1058,14 +1058,42 @@ export function useWarehouseState() {
         return;
       }
 
-      // 1. Check if it's an Order Barcode (e.g. "ORD-2026-8812")
+      // 1. Check if it's an Order Barcode (supports consolidated multi-order barcodes & linkedOrderNumbers)
       const matchedOrder = orders.find(
         (o) =>
           o.barcode.toUpperCase() === rawCode ||
-          o.orderNumber.toUpperCase() === rawCode,
+          o.orderNumber.toUpperCase() === rawCode ||
+          (o.linkedBarcodes &&
+            o.linkedBarcodes.some((c) => c.trim().toUpperCase() === rawCode)) ||
+          (o.linkedOrderNumbers &&
+            o.linkedOrderNumbers.some((n) => n.trim().toUpperCase() === rawCode)),
       );
 
       if (matchedOrder) {
+        // Anti-double-print guard for consolidated multi-order invoices already open on this bench
+        if (
+          activeOrder &&
+          matchedOrder.id === activeOrder.id &&
+          activeOrder.status === "packing"
+        ) {
+          const refs =
+            matchedOrder.linkedOrderNumbers &&
+            matchedOrder.linkedOrderNumbers.length > 1
+              ? matchedOrder.linkedOrderNumbers.join(" + ")
+              : matchedOrder.orderNumber;
+          if (!isMuted) playScanSuccess();
+          setLastScan({
+            id: Math.random().toString(),
+            rawCode,
+            resultType: "order_switch",
+            status: "info",
+            title: "Ordine Già Incluso in Questa Spedizione",
+            message: `${rawCode} è già accorpato in questa spedizione (${refs}). Nessuna seconda etichetta DHL stampata.`,
+            timestamp: Date.now(),
+          });
+          return;
+        }
+
         if (
           matchedOrder.status !== "packed" &&
           matchedOrder.lockedByOperatorId &&

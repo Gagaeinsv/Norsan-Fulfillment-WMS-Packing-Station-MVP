@@ -198,6 +198,8 @@ export function initDatabase() {
     "ALTER TABLE orders ADD COLUMN address_status TEXT DEFAULT 'valid'",
     "ALTER TABLE orders ADD COLUMN packing_started_at INTEGER",
     "ALTER TABLE orders ADD COLUMN packing_completed_at INTEGER",
+    "ALTER TABLE orders ADD COLUMN linked_order_numbers_json TEXT DEFAULT '[]'",
+    "ALTER TABLE orders ADD COLUMN linked_barcodes_json TEXT DEFAULT '[]'",
   ];
   for (const sql of orderColumnMigrations) {
     try {
@@ -684,6 +686,17 @@ export function initDatabase() {
       "NORSAN",
     );
   }
+
+  db.prepare(
+    "INSERT OR IGNORE INTO marketing_flyers (id, code, title, italian_title, slot_code, brand) VALUES (?, ?, ?, ?, ?, ?)",
+  ).run(
+    "fly-07",
+    "FLY-FOTEN",
+    "Opuscolo foten",
+    "Opuscolo informativo foten",
+    "TAVOLO-VOLANTINI",
+    "FOTEN",
+  );
 
   // Seed Boxes (9 standard warehouse box types)
   const countBoxes = db
